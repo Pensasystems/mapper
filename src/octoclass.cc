@@ -203,7 +203,7 @@ void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
                                 const algebra_3d::FrustumPlanes &frustum) {
     // set camera origin
     const tf::Vector3 v = tf_cam2world.getOrigin();
-    const octomap::point3d cam_origin = octomap::point3d(v.getX(), v.getY(), v.getZ());
+    const octomap::point3d pcl_origin = octomap::point3d(v.getX(), v.getY(), v.getZ());
     const double min_threshold_sqr = min_range_*min_range_;
     const uint32_t width = cloud.width;
     const uint32_t height = cloud.height;
@@ -272,22 +272,108 @@ void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
 
     // Calculate free nodes
     octomap::KeySet occ_cells_in_range, free_cells, inflated_free_cells;
-    ComputeUpdate(endpoints_inflated, endpoints, cam_origin, max_range_,
+    ComputeUpdate(endpoints_inflated, endpoints, pcl_origin, max_range_,
                   &occ_cells_in_range, &free_cells, &inflated_free_cells);
 
     for (octomap::KeySet::iterator it = endpoints_inflated.begin(); it != endpoints_inflated.end(); ++it) {
         // Only add nodes that are being added to the slim tree as well
-        // if (free_cells.find(*it) != free_cells.end()) {
+        if (free_cells.find(*it) != free_cells.end()) {
             tree_inflated_.updateNode(*it, true);
-        // } else if (endpoints.find(*it) != endpoints.end()) {
-        //     tree_inflated_.updateNode(*it, true);
-        // }
+        } else if (endpoints.find(*it) != endpoints.end()) {
+            tree_inflated_.updateNode(*it, true);
+        }
     }
     for (octomap::KeySet::iterator it = occ_cells_in_range.begin(); it != occ_cells_in_range.end(); ++it) {
-        // const octomap::point3d& p = tree_.keyToCoord(*it);
-        // if ((p - cam_origin).norm() <= max_range_) {
+        const octomap::point3d& p = tree_.keyToCoord(*it);
+        if ((p - pcl_origin).norm() <= max_range_) {
             tree_.updateNode(*it, true);
-        // }
+        }
+    }
+    for (octomap::KeySet::iterator it = inflated_free_cells.begin(); it != inflated_free_cells.end(); ++it) {
+            tree_inflated_.updateNode(*it, false);
+            tree_.updateNode(*it, false);
+    }
+}
+
+void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
+                                const tf::StampedTransform &tf_cam2world) {
+    // set camera origin
+    const tf::Vector3 v = tf_cam2world.getOrigin();
+    const octomap::point3d pcl_origin = octomap::point3d(v.getX(), v.getY(), 0.0);
+    const double min_threshold_sqr = min_range_*min_range_;
+    const uint32_t width = cloud.width;
+    const uint32_t height = cloud.height;
+    static double range_sqr;
+
+    // discretize point cloud
+    // octomap::Pointcloud octoCloud, inflatedSafeCloud;
+    // octoCloud.reserve(cloud.height*cloud.width);
+    octomap::KeySet endpoints, endpoints_inflated;
+    static octomap::point3d central_point, cur_point;
+    const double max_range_sqr = max_range_*max_range_;
+    pcl::PointXYZ point;
+    for (uint32_t i = 0; i < height; i++) {
+        for (uint32_t j = 0; j < width; j++) {
+            if (cloud.is_dense) {
+                point = cloud.at(j);
+            } else {
+                point = cloud.at(j, i);
+            }
+            point.z = 0.0;
+
+            // Check if the point is invalid
+            if (std::isnan(point.x) || std::isnan(point.y) || std::isnan(point.z)) {
+                continue;
+            }
+
+            // points too close to origin of camera are not added
+            range_sqr = this->VectorNormSquared(v.getX()-point.x,
+                                                v.getY()-point.y,
+                                                v.getZ()-point.z);
+            if ((range_sqr < min_threshold_sqr)) {
+                continue;
+            }
+
+            // create discretized octocloud
+            octomap::OcTreeKey k = tree_.coordToKey(octomap::point3d(point.x,
+                                                                     point.y,
+                                                                     point.z));
+            // Add non-repeated nodes to keysets (inflated and non-inflated)
+            std::pair<octomap::KeySet::iterator, bool> ret = endpoints.insert(k);
+            octomap::OcTreeKey key;
+            if (ret.second) {  // insertion took place => k was not in set
+                // insert points in inflated octomap
+                if (range_sqr < max_range_sqr) {
+                    central_point = tree_.keyToCoord(k);
+                    for (uint jj = 0; jj < sphere_.size(); jj++) {
+                        cur_point = central_point + octomap::point3d(sphere_[jj][0], sphere_[jj][1], sphere_[jj][2]);
+                        if (tree_.coordToKeyChecked(cur_point, key)) {
+                           endpoints_inflated.insert(key);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Calculate free nodes
+    octomap::KeySet occ_cells_in_range, free_cells, inflated_free_cells;
+    ComputeUpdate(endpoints_inflated, endpoints, pcl_origin, max_range_,
+                  &occ_cells_in_range, &free_cells, &inflated_free_cells);
+
+    for (octomap::KeySet::iterator it = endpoints_inflated.begin(); it != endpoints_inflated.end(); ++it) {
+        // Only add nodes that are being added to the slim tree as well
+        if (free_cells.find(*it) != free_cells.end()) {
+            tree_inflated_.updateNode(*it, true);
+        } else if (endpoints.find(*it) != endpoints.end()) {
+            tree_inflated_.updateNode(*it, true);
+        }
+    }
+    for (octomap::KeySet::iterator it = occ_cells_in_range.begin(); it != occ_cells_in_range.end(); ++it) {
+        const octomap::point3d& p = tree_.keyToCoord(*it);
+        if ((p - pcl_origin).norm() <= max_range_) {
+            tree_.updateNode(*it, true);
+        }
     }
     for (octomap::KeySet::iterator it = inflated_free_cells.begin(); it != inflated_free_cells.end(); ++it) {
             tree_inflated_.updateNode(*it, false);
@@ -587,7 +673,7 @@ void OctoClass::InflatedVisMarkers(visualization_msgs::MarkerArray* obstacles,
     for (unsigned i= 0; i < obstacles->markers.size(); ++i) {
         const double size = tree_inflated_.getNodeSize(i);
 
-        obstacles->markers[i].header.frame_id = "map";
+        obstacles->markers[i].header.frame_id = inertial_frame_id_;
         obstacles->markers[i].header.stamp = rostime;
         obstacles->markers[i].ns = "obstacleMap";
         obstacles->markers[i].id = i;

@@ -69,6 +69,8 @@ class OctoClass{
     void PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
                           const tf::StampedTransform &tf_cam2world,
                           const algebra_3d::FrustumPlanes &frustum);    // Map obstacles and free area
+    void PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
+                          const tf::StampedTransform &tf_cam2world);    // Same as above, but without frustum filtering (for lidar)
     void ComputeUpdate(const octomap::KeySet &occ_inflated,  // Inflated endpoints
                        const octomap::KeySet &occ_slim,      // Non-inflated endpoints
                        const octomap::point3d& origin,

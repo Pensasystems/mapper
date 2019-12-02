@@ -86,15 +86,27 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     nh->getParam("depth_cam_prefix", depth_cam_prefix);
     nh->getParam("depth_cam_suffix", depth_cam_suffix);
 
+    // Load lidar topic names
+    std::vector<std::string> lidar_names;
+    std::string lidar_prefix, lidar_suffix;
+    nh->getParam("lidar_names", lidar_names);
+    nh->getParam("lidar_prefix", lidar_prefix);
+    nh->getParam("lidar_suffix", lidar_suffix);
+
     // Load frame ids
     std::string inertial_frame_id;
     std::vector<std::string> cam_frame_id;
+    std::vector<std::string> lidar_frame_id;
     nh->getParam("inertial_frame_id", inertial_frame_id);
     nh->getParam("cam_frame_id", cam_frame_id);
+    nh->getParam("lidar_frame_id", lidar_frame_id);
 
-    // Check if number of cameras added match the number of frame_id for each of them
+    // Check if number of cameras/lidar added match the number of frame_id for each of them
     if (depth_cam_names.size() != cam_frame_id.size()) {
-        ROS_ERROR("Number of cameras is different from camera tf frame_id!");
+        ROS_ERROR("Number of cameras is different from camera tf frame_ids!");
+    }
+    if (lidar_names.size() != lidar_frame_id.size()) {
+        ROS_ERROR("Number of lidar topics is different from lidar tf frame_ids!");
     }
 
     // Load service names
@@ -151,8 +163,11 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
 
     // Set tf vector to have as many entries as the number of cameras
     globals_.tf_cameras2world.resize(depth_cam_names.size());
+    globals_.tf_lidar2world.resize(lidar_names.size());
     h_cameras_tf_thread_.resize(depth_cam_names.size());
+    h_lidar_tf_thread_.resize(lidar_names.size());
     cameras_sub_.resize(depth_cam_names.size());
+    lidar_sub_.resize(lidar_names.size());
 
     // threads --------------------------------------------------
     h_octo_thread_ = std::thread(&MapperClass::OctomappingTask, this);
@@ -164,9 +179,18 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     for (uint i = 0; i < depth_cam_names.size(); i++) {
         std::string cam_topic = depth_cam_prefix + depth_cam_names[i] + depth_cam_suffix;
         cameras_sub_[i] = nh->subscribe<sensor_msgs::PointCloud2>
-              (cam_topic, 10, boost::bind(&MapperClass::PclCallback, this, _1, i));
-        h_cameras_tf_thread_[i] = std::thread(&MapperClass::TfTask, this, inertial_frame_id, cam_frame_id[i], i);
+              (cam_topic, 10, boost::bind(&MapperClass::CameraPclCallback, this, _1, i));
+        h_cameras_tf_thread_[i] = std::thread(&MapperClass::CameraTfTask, this, inertial_frame_id, cam_frame_id[i], i);
         ROS_INFO("[mapper] Subscribed to camera topic: %s", cameras_sub_[i].getTopic().c_str());
+    }
+
+    // Lidar subscribers and tf threads ----------------------------------------------
+    for (uint i = 0; i < lidar_names.size(); i++) {
+        std::string lidar_topic = lidar_prefix + lidar_names[i] + lidar_suffix;
+        lidar_sub_[i] = nh->subscribe<sensor_msgs::PointCloud2>
+              (lidar_topic, 10, boost::bind(&MapperClass::LidarPclCallback, this, _1, i));
+        h_lidar_tf_thread_[i] = std::thread(&MapperClass::LidarTfTask, this, inertial_frame_id, lidar_frame_id[i], i);
+        ROS_INFO("[mapper] Subscribed to camera topic: %s", lidar_sub_[i].getTopic().c_str());
     }
 
     // Create services ------------------------------------------
@@ -186,17 +210,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
         process_pcl_srv_name, &MapperClass::OctomapProcessPCL, this);
     rrg_srv_ = nh->advertiseService(
         rrg_srv_name, &MapperClass::RRGService, this);
-
-    // if (use_haz_cam) {
-    //     std::string cam = TOPIC_HARDWARE_NAME_HAZ_CAM;
-    //     haz_sub_ = nh->subscribe(cam_prefix + cam + cam_suffix, 10, &MapperClass::PclCallback, this);
-    // }
-    // if (use_perch_cam) {
-    //     std::string cam = TOPIC_HARDWARE_NAME_PERCH_CAM;
-    //     perch_sub_ = nh->subscribe(cam_prefix + cam + cam_suffix, 10, &MapperClass::PclCallback, this);
-    // }
-    // segment_sub_ = nh->subscribe(TOPIC_GNC_CTL_SEGMENT, 10, &MapperClass::SegmentCallback, this);
-
+    
     // Publishers -----------------------------------------------
     sentinel_pub_ =
         nh->advertise<geometry_msgs::PointStamped>(collision_detection_topic, 10);

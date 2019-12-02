@@ -3,9 +3,12 @@
     <arg name="namespace" default="LM_Mapper"/>
     <arg name="launch_rviz" default="true" />
     <arg name="process_pcl_at_startup" default="true" />
+    <arg name="map_3d" default="true" />
     <arg name="inertial_frame_id" default="/map" />
     <arg name="depth_cam_prefix" default="/" />
     <arg name="depth_cam_suffix" default="/camera/depth/compressed_points" />
+    <arg name="lidar_prefix" default="/" />
+    <arg name="lidar_suffix" default="" />
 
     <group ns="$(arg namespace)">
         <node pkg="mapper"
@@ -18,18 +21,26 @@
 
             <!-- Set of depth camera topics -->
             <param name="depth_cam_prefix" value="$(arg depth_cam_prefix)"/>
-            <rosparam param="depth_cam_names"> ["Sauron"] </rosparam>
+            <rosparam param="depth_cam_names"> [] </rosparam>
             <param name="depth_cam_suffix" value="$(arg depth_cam_suffix)"/>
 
             <!-- tf frame ID for the cameras above -->
-            <rosparam param="cam_frame_id"> ["/Sauron/camera_depth_optical_frame"] </rosparam>
+            <rosparam param="cam_frame_id"> [] </rosparam>
+
+            <!-- Set of lidar topics -->
+            <param name="lidar_prefix" value="$(arg lidar_prefix)"/>
+            <rosparam param="lidar_names"> ["laser/scan/cloud"] </rosparam>
+            <param name="lidar_suffix" value="$(arg lidar_suffix)"/>
+
+            <!-- tf frame ID for the lidars above -->
+            <rosparam param="lidar_frame_id"> ["/laser_frame"] </rosparam>
 
             <!-- Inertial frame name (used for getting tf tree information) -->
             <param name="inertial_frame_id" value="$(arg inertial_frame_id)"/>
 
             <!-- Set parameters for the mapper -->
             <param name="map_resolution" value="0.10"/>          <!-- meters -->
-            <param name="max_range" value="6"/>                 <!-- meters -->
+            <param name="max_range" value="15"/>                 <!-- meters -->
             <param name="min_range" value="0.5"/>              <!-- meters -->
 
             <!-- Time to forget information (set as negative if infinity) -->
@@ -89,6 +100,9 @@
             <!-- Whether or not PCL data is processed at startup -->
             <!-- If chosen as false, pcl processing only starts after request through a service -->
             <param name="process_pcl_at_startup" value="$(arg process_pcl_at_startup)"/>
+
+            <!-- Map in 3d or in a plane -->
+            <param name="map_3d" value="$(arg map_3d)"/>            
 
         </node>
 

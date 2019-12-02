@@ -79,9 +79,13 @@ class MapperClass {
 
  protected:
   // Callbacks (see callbacks.cc for implementation) ----------------
-  // Callback for handling incoming point cloud messages
-  void PclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg,
-                   const uint& cam_index);
+  // Callback for handling incoming camera point cloud messages
+  void CameraPclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg,
+                         const uint& cam_index);
+
+  // Callback for handling incoming lidar point cloud messages
+  void LidarPclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg,
+                         const uint& cam_index);
 
   // Callback for handling incoming new trajectory messages
   void SegmentCallback(const mapper::Segment::ConstPtr &msg);
@@ -128,9 +132,12 @@ class MapperClass {
   void HazTfTask();
   void PerchTfTask();
   void BodyTfTask();
-  void TfTask(const std::string& parent_frame,
-              const std::string& child_frame,
-              const uint& index); // Returns the transform from child to parent frame, expressed in parent frame
+  void CameraTfTask(const std::string& parent_frame,
+                    const std::string& child_frame,
+                    const uint& index); // Returns the transform from child to parent frame, expressed in parent frame
+  void LidarTfTask(const std::string& parent_frame,
+                   const std::string& child_frame,
+                   const uint& index); // Same as before, but for lidar data
 
   // Thread for collision checking
   void CollisionCheckTask();
@@ -152,10 +159,12 @@ class MapperClass {
   std::thread h_octo_thread_, h_fade_thread_, h_collision_check_thread_;
   std::thread h_keyboard_thread_;
   std::vector<std::thread> h_cameras_tf_thread_;
+  std::vector<std::thread> h_lidar_tf_thread_;
 
   // Subscriber variables
   ros::Subscriber haz_sub_, perch_sub_, segment_sub_;
   std::vector<ros::Subscriber> cameras_sub_;
+  std::vector<ros::Subscriber> lidar_sub_;
 
   // Octomap services
   ros::ServiceServer resolution_srv_, memory_time_srv_;

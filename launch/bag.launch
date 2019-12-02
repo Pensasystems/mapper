@@ -1,0 +1,39 @@
+<launch>
+  <param name="robot_description"
+    textfile="$(find mapper)/urdf/cinderella.urdf" />
+
+  <node name="robot_state_publisher" pkg="robot_state_publisher"
+    type="robot_state_publisher" />
+
+    <!-- publish odom with twist in body frame to base_link -->
+  <!-- <node name="odom_in_body" pkg="odom_relay"
+    type="odom_relay_twist_body" /> -->
+
+    <!-- Publish tf from odometry origin to base_link link -->
+  <node pkg="odom_relay" type="odom_relay_tf" name="odom_tf"
+    output="screen">
+    <param name="odom_topic" value="/vislam/odometry"/> 
+    <param name="frame_id" value="vislam_odom"/> 
+    <param name="child_frame_id" value="odom_frame"/> 
+  </node>
+
+  <!-- <node type="laser_scan_assembler" pkg="laser_assembler"
+        name="my_assembler">
+    <remap from="scan" to="/laser/scan"/>
+    <param name="max_scans" type="int" value="1" />
+    <param name="fixed_frame" type="string" value="laser_link" />
+  </node> -->
+
+  <include file="$(find mapper)/launch/mapper.launch">
+    <arg name="namespace" value="cinderella" />
+    <arg name="launch_rviz"            value="true" />
+    <arg name="process_pcl_at_startup" value="true" />
+    <arg name="map_3d"                 value="true" />
+    <arg name="inertial_frame_id" default="/vislam_odom" />
+  </include>
+
+<!--   <node name="rviz" pkg="rviz" type="rviz" required="true"
+      args="-d $(find cartographer_ros)/configuration_files/cindy_3d.rviz" />
+ -->
+
+</launch>

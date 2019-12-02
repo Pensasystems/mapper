@@ -39,6 +39,7 @@ namespace mapper {
 struct stampedPcl {
     pcl::PointCloud<pcl::PointXYZ> cloud;
     tf::StampedTransform tf_cam2world;
+    bool is_lidar;
 };
 
 struct globalVariables {
@@ -47,16 +48,19 @@ struct globalVariables {
     tf::StampedTransform tf_perch2world;
     tf::StampedTransform tf_body2world;
     std::vector<tf::StampedTransform> tf_cameras2world;
+    std::vector<tf::StampedTransform> tf_lidar2world;
     octoclass::OctoClass octomap = octoclass::OctoClass(0.05, "map");
     sampled_traj::SampledTrajectory3D sampled_traj;
     std::queue<stampedPcl> pcl_queue;
     bool update_map;
+    const uint max_queue_size = 2;
 };
 
 class mutexStruct {
  public:
     pthread_mutex_t sampled_traj;
-    pthread_mutex_t tf;
+    pthread_mutex_t cam_tf;
+    pthread_mutex_t lidar_tf;
     pthread_mutex_t octomap;
     pthread_mutex_t point_cloud;
     pthread_mutex_t update_map;
@@ -64,14 +68,16 @@ class mutexStruct {
     // Methods
     mutexStruct() {
         pthread_mutex_init(&sampled_traj, NULL);
-        pthread_mutex_init(&tf, NULL);
+        pthread_mutex_init(&cam_tf, NULL);
+        pthread_mutex_init(&lidar_tf, NULL);
         pthread_mutex_init(&octomap, NULL);
         pthread_mutex_init(&point_cloud, NULL);
         pthread_mutex_init(&update_map, NULL);
     }
     void destroy() {
         pthread_mutex_destroy(&sampled_traj);
-        pthread_mutex_destroy(&tf);
+        pthread_mutex_destroy(&cam_tf);
+        pthread_mutex_destroy(&lidar_tf);
         pthread_mutex_destroy(&octomap);
         pthread_mutex_destroy(&point_cloud);
         pthread_mutex_destroy(&update_map);
