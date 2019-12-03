@@ -18,7 +18,8 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
   message_generation
   cmake_modules
-  std_srvs)
+  std_srvs
+  pensa_msgs)
 
 find_package(
   Eigen REQUIRED)
@@ -117,4 +118,6 @@ target_link_libraries( mapper
 )
 
 #This makes sure that messages and services are compiled before the rest
-add_dependencies(mapper mapper_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+add_dependencies(mapper mapper_generate_messages_cpp 
+                        pensa_msgs_generate_messages_cpp
+                        ${catkin_EXPORTED_TARGETS})

@@ -99,6 +99,14 @@ geometry_msgs::Quaternion array_to_ros_quat(float* array) {
   return q;
 }
 
+geometry_msgs::Quaternion identity_quaternion() {
+  geometry_msgs::Quaternion q;
+  q.x = 0.0;
+  q.y = 0.0;
+  q.z = 0.0;
+  q.w = 1.0;
+}
+
 void ros_to_array_vector(const geometry_msgs::Vector3 & v, float* array) {
   array[0] = v.x;
   array[1] = v.y;

@@ -25,7 +25,7 @@ namespace mapper {
 
 // Thread for fading memory of the octomap
 void MapperClass::FadeTask() {
-    ROS_DEBUG("Fading Memory Thread started with rate %f: ", fading_memory_update_rate_);
+    ROS_INFO("Fading Memory Thread started with rate %f: ", fading_memory_update_rate_);
 
     // Rate at which this thread will run
     ros::Rate loop_rate(fading_memory_update_rate_);
@@ -365,6 +365,18 @@ void MapperClass::OctomappingTask() {
                 globals_.octomap.cam_frustum_.VisualizeFrustum(point_cloud.header.frame_id, &frustum_markers);
             pthread_mutex_unlock(&mutexes_.octomap);
             cam_frustum_pub_.publish(frustum_markers);
+        } else if ((is_lidar) && (cam_frustum_pub_.getNumSubscribers() > 0)) {
+            visualization_msgs::Marker lidar_range_marker;
+            Eigen::Vector3d lidar_origin = transform.translation();
+            pthread_mutex_lock(&mutexes_.octomap);
+                if(!globals_.octomap.IsMap3d()) {
+                    lidar_origin[2] = 0.0;
+                }
+                globals_.octomap.lidar_range_.VisualizeRange(
+                    globals_.octomap.GetInertialFrameId(), lidar_origin,
+                    &lidar_range_marker);
+            pthread_mutex_unlock(&mutexes_.octomap);
+            cam_frustum_pub_.publish(lidar_range_marker);
         }
 
         // Notify the collision checker to check for collision due to map update

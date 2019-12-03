@@ -226,6 +226,42 @@ class FrustumPlanes{
     }
 };
 
+class PlanarLidar{
+ public:
+    double min_range_, max_range_;
+
+    // Constructor: saves lidar ranges
+    PlanarLidar(const double min_range, const double max_range) {
+        min_range_ = min_range;
+        max_range_ = max_range;
+    }
+
+    PlanarLidar() {}
+
+    // Methods
+    // Return visualization markers for lidar range visualization
+    void VisualizeRange(const std::string &frame_id,
+                        const Eigen::Vector3d &pos,
+                        visualization_msgs::Marker *range_marker) {
+        // Initialize array
+        range_marker->header.frame_id = frame_id;
+        range_marker->header.stamp = ros::Time::now();
+        range_marker->ns = "lidar/" + frame_id;
+        range_marker->action = visualization_msgs::Marker::ADD;
+        range_marker->pose.position = msg_conversions::eigen_to_ros_point(pos);
+        range_marker->pose.orientation = msg_conversions::identity_quaternion();
+        range_marker->type = visualization_msgs::Marker::CYLINDER;
+        range_marker->id = 0;
+        range_marker->scale.x = 2*max_range_;
+        range_marker->scale.y = 2*max_range_;
+        range_marker->scale.z = 0.01;
+        range_marker->color = visualization_functions::Color::Yellow();
+        range_marker->color.a = 0.1;
+        range_marker->lifetime = ros::Duration(1);  // Disappears in 1 second
+    }
+
+};
+
 }  // namespace algebra_3d
 
 #endif  // MAPPER_LINEAR_ALGEBRA_H_

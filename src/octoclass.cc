@@ -24,12 +24,15 @@
 
 namespace octoclass {
 
-OctoClass::OctoClass(const double &resolution, const std::string &inertial_frame_id) {
+OctoClass::OctoClass(const double &resolution,
+                     const std::string &inertial_frame_id,
+                     const bool &map_3d) {
     tree_.setResolution(resolution);
     tree_inflated_.setResolution(resolution);
     tree_depth_ = tree_.getTreeDepth();
     resolution_ = resolution;
     inertial_frame_id_ = inertial_frame_id;
+    map_3d_ = map_3d;
 }
 
 OctoClass::OctoClass() {
@@ -78,6 +81,10 @@ void OctoClass::SetMapInflation(const double &inflate_radius_xy, const double &i
     inflate_radius_xy_ = inflate_radius_xy;
     inflate_radius_z_ = inflate_radius_z;
 
+    if (!map_3d_) {
+        inflate_radius_z_ = 0.0001;
+    }
+
     this->ResetMap();
 
     sphere_.clear();
@@ -90,9 +97,9 @@ void OctoClass::SetMapInflation(const double &inflate_radius_xy, const double &i
     for (int x = -max_xy; x <= max_xy; x++) {
         for (int y = -max_xy; y <= max_xy; y++) {
             for (int z = -max_z; z <= max_z; z++) {
-                xyz_normalized << x*resolution_/inflate_radius_xy,
-                                  y*resolution_/inflate_radius_xy,
-                                  z*resolution_/inflate_radius_z;
+                xyz_normalized << x*resolution_/inflate_radius_xy_,
+                                  y*resolution_/inflate_radius_xy_,
+                                  z*resolution_/inflate_radius_z_;
                 xyz << x*resolution_, y*resolution_, z*resolution_;
 
                 // Check if point is inside ellipse using ellipse equation
@@ -112,6 +119,12 @@ void OctoClass::SetMapInflation(const double &inflate_radius) {
 void OctoClass::SetCamFrustum(const double fov,
                               const double aspect_ratio) {
     cam_frustum_ = algebra_3d::FrustumPlanes(fov, aspect_ratio);
+    ROS_DEBUG("Cam frustum was set!");
+}
+
+void OctoClass::SetLidarRange(const double &min_range,
+                              const double &max_range) {
+    lidar_range_ = algebra_3d::PlanarLidar(min_range, max_range);
     ROS_DEBUG("Cam frustum was set!");
 }
 
@@ -162,6 +175,13 @@ void OctoClass::SetClampingThresholds(const double clamping_threshold_min,
     ROS_DEBUG("Clamping threshold maximum: %f", clamping_threshold_max);
 }
 
+void OctoClass::SetMap3d(const bool &map_3d) {
+    map_3d_ = map_3d;
+    if (!map_3d_) {
+        this->SetMapInflation(inflate_radius_xy_, 0.0);
+    }
+}
+
 // Function obtained from https://github.com/OctoMap/octomap_ros
 void OctoClass::PointsOctomapToPointCloud2(const octomap::point3d_list& points,
                                            sensor_msgs::PointCloud2& cloud) {
@@ -202,7 +222,10 @@ void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
                                 const tf::StampedTransform &tf_cam2world,
                                 const algebra_3d::FrustumPlanes &frustum) {
     // set camera origin
-    const tf::Vector3 v = tf_cam2world.getOrigin();
+    tf::Vector3 v = tf_cam2world.getOrigin();
+    if (!map_3d_) {
+        v.setZ(0.0);
+    }
     const octomap::point3d pcl_origin = octomap::point3d(v.getX(), v.getY(), v.getZ());
     const double min_threshold_sqr = min_range_*min_range_;
     const uint32_t width = cloud.width;
@@ -222,6 +245,10 @@ void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
                 point = cloud.at(j);
             } else {
                 point = cloud.at(j, i);
+            }
+
+            if (!map_3d_) {
+                point.z = 0.0;
             }
 
             // Check if the point is invalid
@@ -298,12 +325,17 @@ void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
 void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
                                 const tf::StampedTransform &tf_cam2world) {
     // set camera origin
-    const tf::Vector3 v = tf_cam2world.getOrigin();
-    const octomap::point3d pcl_origin = octomap::point3d(v.getX(), v.getY(), 0.0);
+    tf::Vector3 v = tf_cam2world.getOrigin();
+    if (!map_3d_) {
+        v.setZ(0.0);
+    }
+    const octomap::point3d pcl_origin = octomap::point3d(v.getX(), v.getY(), v.getZ());
     const double min_threshold_sqr = min_range_*min_range_;
     const uint32_t width = cloud.width;
     const uint32_t height = cloud.height;
     static double range_sqr;
+    // double closest_range_sqr = 100;
+    // Eigen::Vector3d closest_point, cur_position(v.getX(), v.getY(), v.getZ());
 
     // discretize point cloud
     // octomap::Pointcloud octoCloud, inflatedSafeCloud;
@@ -319,7 +351,10 @@ void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
             } else {
                 point = cloud.at(j, i);
             }
-            point.z = 0.0;
+
+            if (!map_3d_) {
+                point.z = 0.0;
+            }
 
             // Check if the point is invalid
             if (std::isnan(point.x) || std::isnan(point.y) || std::isnan(point.z)) {
@@ -330,6 +365,10 @@ void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
             range_sqr = this->VectorNormSquared(v.getX()-point.x,
                                                 v.getY()-point.y,
                                                 v.getZ()-point.z);
+            // if (range_sqr < closest_range_sqr) {
+            //     closest_range_sqr = range_sqr;
+            //     closest_point = Eigen::Vector3d(point.x, point.y, point.z);
+            // }
             if ((range_sqr < min_threshold_sqr)) {
                 continue;
             }
@@ -355,6 +394,9 @@ void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
             }
         }
     }
+    // std::cout << "Closest range: " << sqrt(closest_range_sqr) << std::endl;
+    // std::cout << "Closest point: " << closest_point.transpose() << std::endl;
+    // std::cout << "Current point: " << cur_position.transpose() << std::endl;
 
     // Calculate free nodes
     octomap::KeySet occ_cells_in_range, free_cells, inflated_free_cells;

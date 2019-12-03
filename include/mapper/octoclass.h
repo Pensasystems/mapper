@@ -42,9 +42,12 @@ class OctoClass{
     octomap::OcTree tree_inflated_ = octomap::OcTree(0.1);  // create empty tree with resolution 0.1
     double memory_time_;  // Fading memory of the tree in seconds
     algebra_3d::FrustumPlanes cam_frustum_;
+    algebra_3d::PlanarLidar lidar_range_;
 
     // Constructor
-    explicit OctoClass(const double &resolution, const std::string &inertial_frame_id);  // Resolution in meters
+    explicit OctoClass(const double &resolution, 
+                       const std::string &inertial_frame_id, // Resolution in meters
+                       const bool &map_3d);
     OctoClass();
 
     // Mapping methods
@@ -59,11 +62,16 @@ class OctoClass{
     void SetMapInflation(const double &inflate_radius_xy, const double &inflate_radius_z);  // Set inflation radius (xy and z different)
     void SetCamFrustum(const double fov,
                        const double aspect_ratio);
+    void SetLidarRange(const double &min_range,
+                       const double &max_range);
     void SetOccupancyThreshold(const double occupancy_threshold);
     void SetHitMissProbabilities(const double probability_hit,
                                  const double probability_miss);
     void SetClampingThresholds(const double clamping_threshold_min,
                                const double clamping_threshold_max);
+    void SetMap3d(const bool &map_3d);
+    std::string GetInertialFrameId() {return inertial_frame_id_;};
+    bool IsMap3d() {return map_3d_;};
     void PointsOctomapToPointCloud2(const octomap::point3d_list& points,
                                     sensor_msgs::PointCloud2& cloud);  // Convert from octomap to pointcloud2
     void PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
@@ -168,6 +176,7 @@ class OctoClass{
     std::vector<Eigen::Vector3d> sphere_;  // Discretized sphere used in map inflation
     std::vector<double> depth_volumes_;     // Volume per depth in the tree
     std::string inertial_frame_id_;
+    bool map_3d_;
 
     // Methods
     double VectorNormSquared(const double &x,

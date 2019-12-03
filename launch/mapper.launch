@@ -40,11 +40,11 @@
 
             <!-- Set parameters for the mapper -->
             <param name="map_resolution" value="0.10"/>          <!-- meters -->
-            <param name="max_range" value="15"/>                 <!-- meters -->
-            <param name="min_range" value="0.5"/>              <!-- meters -->
+            <param name="max_range" value="6"/>                 <!-- meters -->
+            <param name="min_range" value="0.25"/>              <!-- meters -->
 
             <!-- Time to forget information (set as negative if infinity) -->
-            <param name="memory_time" value="-30.0"/>           <!-- seconds -->
+            <param name="memory_time" value="-10.0"/>           <!-- seconds -->
 
             <!-- Fading memory thread update rate (Hz) -->
             <param name="fading_memory_update_rate" value="1"/><!-- Hz -->

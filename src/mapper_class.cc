@@ -55,7 +55,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     double occupancy_threshold, probability_hit, probability_miss;
     double clamping_threshold_max, clamping_threshold_min;
     double traj_resolution, compression_max_dev;
-    bool process_pcl_at_startup;
+    bool process_pcl_at_startup, map_3d;
     nh->getParam("map_resolution", map_resolution);
     nh->getParam("max_range", max_range);
     nh->getParam("min_range", min_range);
@@ -142,6 +142,9 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     // Parameter defining whether or not the map processes point clouds at startup
     nh->getParam("process_pcl_at_startup", process_pcl_at_startup);
 
+    // Parameter to map in 3d or in planar 2d (z height set to 0)
+    nh->getParam("map_3d", map_3d);
+
     // Set mapper to update on startup
     globals_.update_map = process_pcl_at_startup;
 
@@ -153,9 +156,11 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     globals_.octomap.SetMemory(memory_time);
     globals_.octomap.SetMapInflation(inflate_radius_xy, inflate_radius_z);
     globals_.octomap.SetCamFrustum(cam_fov, aspect_ratio);
+    globals_.octomap.SetLidarRange(min_range, max_range);
     globals_.octomap.SetOccupancyThreshold(occupancy_threshold);
     globals_.octomap.SetHitMissProbabilities(probability_hit, probability_miss);
     globals_.octomap.SetClampingThresholds(clamping_threshold_min, clamping_threshold_max);
+    globals_.octomap.SetMap3d(map_3d);
 
     // update trajectory discretization parameters (used in collision check)
     globals_.sampled_traj.SetMaxDev(compression_max_dev);

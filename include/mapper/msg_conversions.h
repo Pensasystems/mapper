@@ -50,6 +50,7 @@ namespace msg_conversions {
   void                      eigen_to_array_quat(const Eigen::Quaterniond & q, float* array);
   void                      ros_to_array_quat(const geometry_msgs::Quaternion & q, float* array);
   geometry_msgs::Quaternion array_to_ros_quat(float* array);
+  geometry_msgs::Quaternion identity_quaternion();
   Eigen::Affine3d           ros_pose_to_eigen_transform(const geometry_msgs::Pose & p);
   Eigen::Affine3d           ros_to_eigen_transform(const geometry_msgs::Transform & p);
 

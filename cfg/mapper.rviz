@@ -6,8 +6,6 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /ObstaclesInflated1
-        - /ObstaclesInflated1/Status1
         - /TF1/Frames1
       Splitter Ratio: 0.5
     Tree Height: 775
@@ -62,13 +60,13 @@ Visualization Manager:
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: false
+      Enabled: true
       Marker Topic: /cinderella/mapper_node/free_space_markers
       Name: FreeArea
       Namespaces:
-        {}
+        obstacleMap: true
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /cinderella/mapper_node/obstacle_markers
@@ -82,7 +80,7 @@ Visualization Manager:
       Marker Topic: /cinderella/mapper_node/inflated_obstacle_markers
       Name: ObstaclesInflated
       Namespaces:
-        {}
+        obstacleMap: true
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -100,15 +98,15 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 3.4293198e-06
+      Max Intensity: 0
       Min Color: 0; 0; 0
-      Min Intensity: -1.43699481e-06
+      Min Intensity: 0
       Name: PointCloud2
       Position Transformer: XYZ
       Queue Size: 1
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.00999999978
+      Size (m): 0.0399999991
       Style: Flat Squares
       Topic: /laser/scan/cloud
       Unreliable: false
@@ -145,6 +143,14 @@ Visualization Manager:
                 {}
       Update Interval: 0
       Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /cinderella/mapper_node/frustum_markers
+      Name: Marker
+      Namespaces:
+        lidar//vislam_odom: true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 0; 0; 0
@@ -170,25 +176,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 10.0861893
+      Distance: 12.4361925
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.900286973
-        Y: -0.179465681
-        Z: 0.0426614918
+        X: -1.83312249
+        Y: 2.78752518
+        Z: 0.424035907
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.620204926
+      Pitch: 1.16479707
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.4036057
+      Yaw: 3.2136066
     Saved: ~
 Window Geometry:
   Displays:
