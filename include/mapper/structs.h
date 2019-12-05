@@ -34,6 +34,9 @@
 #include "mapper/octoclass.h"
 #include "mapper/sampled_trajectory.h"
 
+// Pensa-ros msg types
+#include <pensa_msgs/trapezoidal_p2pAction.h>
+
 namespace mapper {
 
 struct stampedPcl {
@@ -51,14 +54,22 @@ struct globalVariables {
     std::vector<tf::StampedTransform> tf_lidar2world;
     octoclass::OctoClass octomap = octoclass::OctoClass(0.05, "map", true);
     sampled_traj::SampledTrajectory3D sampled_traj;
+    pensa_msgs::trapezoidal_p2pFeedback traj_status;
     std::queue<stampedPcl> pcl_queue;
     bool update_map;
+    bool map_3d;
     const uint max_queue_size = 2;
+
+    globalVariables() {
+        traj_status.current_time = 0.0;
+        traj_status.final_time = 0.0;
+    }
 };
 
 class mutexStruct {
  public:
     pthread_mutex_t sampled_traj;
+    pthread_mutex_t traj_status;
     pthread_mutex_t cam_tf;
     pthread_mutex_t lidar_tf;
     pthread_mutex_t octomap;
@@ -68,6 +79,7 @@ class mutexStruct {
     // Methods
     mutexStruct() {
         pthread_mutex_init(&sampled_traj, NULL);
+        pthread_mutex_init(&traj_status, NULL);
         pthread_mutex_init(&cam_tf, NULL);
         pthread_mutex_init(&lidar_tf, NULL);
         pthread_mutex_init(&octomap, NULL);
@@ -76,6 +88,7 @@ class mutexStruct {
     }
     void destroy() {
         pthread_mutex_destroy(&sampled_traj);
+        pthread_mutex_destroy(&traj_status);
         pthread_mutex_destroy(&cam_tf);
         pthread_mutex_destroy(&lidar_tf);
         pthread_mutex_destroy(&octomap);

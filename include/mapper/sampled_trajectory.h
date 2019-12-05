@@ -31,6 +31,9 @@
 #include <iostream>
 #include <vector>
 
+// Pensa-ros msg types
+#include "pensa_msgs/VecPVA_4d.h"
+
 #include "mapper/polynomials.h"
 #include "mapper/linear_algebra.h"
 #include "mapper/visualization_functions.h"
@@ -66,18 +69,23 @@ class SampledTrajectory3D{
     double resolution_;
     double thickness_;
 
+    // World frame id
+    std::string inertial_frame_id_;
+
 
     // Constructor
     SampledTrajectory3D(const double &dt,
                         const polynomials::Trajectory3D &poly_trajectories);
     SampledTrajectory3D(const std::vector<double> &time_vec,
                         const pcl::PointCloud<pcl::PointXYZ> &pos_vec);
+    SampledTrajectory3D(const pensa_msgs::VecPVA_4d &pva_vec);
     SampledTrajectory3D();
 
     // Methods
     void PrintSamples();
     void SetMaxDev(const double &max_dev);
     void SetResolution(const double &resolution);
+    void SetInertialFrame(const std::string &inertial_frame_id);
     void DeleteSample(const int &index);
     void CompressSamples();
     void Bresenham(const Eigen::Vector3d &p0,
@@ -87,11 +95,16 @@ class SampledTrajectory3D{
                         const Eigen::Vector3d &pf);          // Thick bresenham line algorithm por printing a line
     void ThickTrajToPcl();
     void CreateKdTree();
-    void SortCollisions(const std::vector<octomap::point3d> &colliding_nodes,
-                        std::vector<geometry_msgs::PointStamped> *samples);
+    void SortCollisionsByTime(const std::vector<octomap::point3d> &colliding_nodes,
+                              std::vector<geometry_msgs::PointStamped> *samples);
+    void SortCollisionsByDistance(const std::vector<octomap::point3d> &colliding_nodes,
+                                  const geometry_msgs::Point &origin,
+                                  std::vector<geometry_msgs::PointStamped> *samples);
     void TrajVisMarkers(visualization_msgs::MarkerArray* marker_array);
     void SamplesVisMarkers(visualization_msgs::MarkerArray* marker_array);
     void CompressedVisMarkers(visualization_msgs::MarkerArray* marker_array);
+    void ReferenceVisMarker(const geometry_msgs::Point pos, 
+                            visualization_msgs::MarkerArray* marker_array);
     void ClearObject();  // Clear all the data within this object
 };
 
@@ -99,7 +112,13 @@ class SampledTrajectory3D{
 bool ComparePointStamped(const geometry_msgs::PointStamped &sample1,
                          const geometry_msgs::PointStamped &sample2);
 
+// Comparison function used in sort algorithm
+bool ComparePointDistance(const geometry_msgs::PointStamped &sample1,
+                          const geometry_msgs::PointStamped &sample2,
+                          const geometry_msgs::Point &origin);
 
 }  // namespace sampled_traj
+
+
 
 #endif  // MAPPER_SAMPLED_TRAJECTORY_H_

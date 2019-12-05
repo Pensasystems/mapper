@@ -71,7 +71,6 @@ class OctoClass{
                                const double clamping_threshold_max);
     void SetMap3d(const bool &map_3d);
     std::string GetInertialFrameId() {return inertial_frame_id_;};
-    bool IsMap3d() {return map_3d_;};
     void PointsOctomapToPointCloud2(const octomap::point3d_list& points,
                                     sensor_msgs::PointCloud2& cloud);  // Convert from octomap to pointcloud2
     void PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,

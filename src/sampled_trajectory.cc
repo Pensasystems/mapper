@@ -56,6 +56,18 @@ SampledTrajectory3D::SampledTrajectory3D(const std::vector<double> &time_vec,
     n_points_ = time_.size();
 }
 
+SampledTrajectory3D::SampledTrajectory3D(const pensa_msgs::VecPVA_4d &pva_vec) {
+    pcl::PointXYZ pos;
+    n_points_ = pva_vec.pva_vec.size();
+    for (int i = 0; i < n_points_; i++) {
+        time_.push_back(pva_vec.pva_vec[i].time);
+        pos.x = pva_vec.pva_vec[i].pos.x;
+        pos.y = pva_vec.pva_vec[i].pos.y;
+        pos.z = pva_vec.pva_vec[i].pos.z;
+        pos_.push_back(pos);
+    }
+}
+
 SampledTrajectory3D::SampledTrajectory3D() {
     n_points_ = 0;
     // Pos = std::vector<Eigen::Vector3d>;
@@ -80,6 +92,10 @@ void SampledTrajectory3D::SetResolution(const double &resolution) {
     thick_traj_.setResolution(resolution_);
     thick_traj_.clear();
     ROS_DEBUG("Trajectory resolution is set to: %f", resolution_);
+}
+
+void SampledTrajectory3D::SetInertialFrame(const std::string &inertial_frame_id) {
+    inertial_frame_id_ = inertial_frame_id;
 }
 
 void SampledTrajectory3D::DeleteSample(const int &index) {
@@ -396,7 +412,7 @@ void SampledTrajectory3D::CreateKdTree() {
     kdtree_pos_.setInputCloud(cloud_ptr_);
 }
 
-void SampledTrajectory3D::SortCollisions(const std::vector<octomap::point3d> &colliding_nodes,
+void SampledTrajectory3D::SortCollisionsByTime(const std::vector<octomap::point3d> &colliding_nodes,
                                          std::vector<geometry_msgs::PointStamped> *samples) {
     pcl::PointXYZ search_point;
     int K = 1;  // Search for 1 nearest neighbor
@@ -418,6 +434,32 @@ void SampledTrajectory3D::SortCollisions(const std::vector<octomap::point3d> &co
         (*samples)[i] = sample;
     }
     std::sort(samples->begin(), samples->end(), ComparePointStamped);
+}
+
+void SampledTrajectory3D::SortCollisionsByDistance(const std::vector<octomap::point3d> &colliding_nodes,
+                                                   const geometry_msgs::Point &origin,
+                                                   std::vector<geometry_msgs::PointStamped> *samples) {
+    pcl::PointXYZ search_point;
+    int K = 1;  // Search for 1 nearest neighbor
+    std::vector<int> point_idx(K);
+    std::vector<float> point_sqr_dist(K);
+    geometry_msgs::PointStamped sample;
+    samples->resize(colliding_nodes.size());
+
+    for (uint i = 0; i < colliding_nodes.size(); i++) {
+        search_point.x = colliding_nodes[i].x();
+        search_point.y = colliding_nodes[i].y();
+        search_point.z = colliding_nodes[i].z();
+        kdtree_pos_.nearestKSearch(search_point, K, point_idx, point_sqr_dist);
+        sample.point.x = cloud_ptr_->points[point_idx[0]].x;
+        sample.point.y = cloud_ptr_->points[point_idx[0]].y;
+        sample.point.z = cloud_ptr_->points[point_idx[0]].z;
+        sample.header.stamp = ros::Time(time_[point_idx[0]]);
+        sample.header.seq = point_idx[0];
+        sample.header.frame_id = inertial_frame_id_;
+        (*samples)[i] = sample;
+    }
+    std::sort(samples->begin(), samples->end(), std::bind(ComparePointDistance, std::placeholders::_1, std::placeholders::_2, origin));
 }
 
 
@@ -456,7 +498,7 @@ void SampledTrajectory3D::TrajVisMarkers(visualization_msgs::MarkerArray* marker
     for (unsigned i= 0; i < marker_array->markers.size(); ++i) {
         double size = thick_traj_.getNodeSize(i);
 
-        marker_array->markers[i].header.frame_id = "world";
+        marker_array->markers[i].header.frame_id = inertial_frame_id_;
         marker_array->markers[i].header.stamp = rostime;
         marker_array->markers[i].ns = "thick_traj";
         marker_array->markers[i].id = i;
@@ -466,10 +508,11 @@ void SampledTrajectory3D::TrajVisMarkers(visualization_msgs::MarkerArray* marker
         marker_array->markers[i].scale.z = size;
         marker_array->markers[i].pose.orientation.w = 1.0;
 
-        if (marker_array->markers[i].points.size() > 0)
+        if (marker_array->markers[i].points.size() > 0){
             marker_array->markers[i].action = visualization_msgs::Marker::ADD;
-        else
+        } else {
             marker_array->markers[i].action = visualization_msgs::Marker::DELETE;
+        }
     }
 }
 
@@ -496,7 +539,7 @@ void SampledTrajectory3D::SamplesVisMarkers(visualization_msgs::MarkerArray* mar
     }
 
     // Set marker properties
-    marker.header.frame_id = "world";
+    marker.header.frame_id = inertial_frame_id_;
     marker.header.stamp = rostime;
     marker.ns = "SampledTraj";
     marker.id = 0;
@@ -537,7 +580,7 @@ void SampledTrajectory3D::CompressedVisMarkers(visualization_msgs::MarkerArray* 
     }
 
     // Set marker properties
-    marker.header.frame_id = "world";
+    marker.header.frame_id = inertial_frame_id_;
     marker.header.stamp = rostime;
     marker.ns = "compressedTraj";
     marker.id = 0;
@@ -551,6 +594,42 @@ void SampledTrajectory3D::CompressedVisMarkers(visualization_msgs::MarkerArray* 
         marker.action = visualization_msgs::Marker::ADD;
     else
         marker.action = visualization_msgs::Marker::DELETE;
+
+    marker_array->markers.push_back(marker);
+}
+
+void SampledTrajectory3D::ReferenceVisMarker(const geometry_msgs::Point pos, 
+                                             visualization_msgs::MarkerArray* marker_array) {
+    // marker_array->markers.resize(1);
+    const ros::Time rostime = ros::Time::now();
+    visualization_msgs::Marker marker;
+
+    // Set color parameters
+    std_msgs::ColorRGBA color;
+    color = visualization_functions::Color::Red();
+    color.a = 0.9;
+
+    // Set position
+    marker.points.push_back(pos);
+    marker.colors.push_back(color);
+
+    // Set marker properties
+    marker.header.frame_id = inertial_frame_id_;
+    marker.header.stamp = rostime;
+    marker.ns = "ReferencePos";
+    marker.id = 0;
+    marker.type = visualization_msgs::Marker::SPHERE_LIST;
+    marker.scale.x = 0.15;
+    marker.scale.y = 0.15;
+    marker.scale.z = 0.15;
+    marker.pose.orientation.w = 1.0;
+    marker.lifetime = ros::Duration(1.0);
+
+    if (marker.points.size() > 0) {
+        marker.action = visualization_msgs::Marker::ADD;
+    } else {
+        marker.action = visualization_msgs::Marker::DELETE;
+    }
 
     marker_array->markers.push_back(marker);
 }
@@ -574,4 +653,16 @@ bool ComparePointStamped(const geometry_msgs::PointStamped &sample1,
     return sample1.header.stamp.toSec() < sample2.header.stamp.toSec();
 }
 
+// Return the sample with lowest distance to the origin
+bool ComparePointDistance(const geometry_msgs::PointStamped &sample1,
+                          const geometry_msgs::PointStamped &sample2,
+                          const geometry_msgs::Point &origin) {
+    // return sample1.header.stamp.toSec() < sample2.header.stamp.toSec();
+    Eigen::Vector3d p0 = msg_conversions::ros_point_to_eigen_vector(origin);
+    Eigen::Vector3d p1 = msg_conversions::ros_point_to_eigen_vector(sample1.point);
+    Eigen::Vector3d p2 = msg_conversions::ros_point_to_eigen_vector(sample2.point);
+    return ((p1-p0).norm() < (p2-p0).norm());
+}
+
 }  // namespace sampled_traj
+

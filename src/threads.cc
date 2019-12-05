@@ -201,50 +201,75 @@ void MapperClass::CollisionCheckTask() {
             path_marker_pub_.publish(compressed_samples_markers);
         pthread_mutex_unlock(&mutexes_.sampled_traj);
 
+        // Get trajectory status
+        pensa_msgs::trapezoidal_p2pFeedback traj_status;
+        pthread_mutex_lock(&mutexes_.traj_status);
+            traj_status = globals_.traj_status;
+        pthread_mutex_unlock(&mutexes_.traj_status);
 
         // Stop execution if there are no points in the trajectory structure
         cloudsize = point_cloud_traj.size();
         if (cloudsize <= 0) {
-            visualization_functions::DrawCollidingNodes(colliding_nodes, "world", 0.0, &collision_markers);
+            visualization_functions::DrawCollidingNodes(colliding_nodes, inertial_frame_id_, 0.015, &collision_markers);
             path_marker_pub_.publish(traj_markers);
             path_marker_pub_.publish(collision_markers);
             continue;
         }
 
         // Stop execution if the current time is beyond the final time of the trajectory
-        if (time_now.toSec() > time.back()) {
+        if (traj_status.current_time >= traj_status.final_time) {
             pthread_mutex_lock(&mutexes_.sampled_traj);
                 globals_.sampled_traj.ClearObject();
                 globals_.sampled_traj.TrajVisMarkers(&traj_markers);
             pthread_mutex_unlock(&mutexes_.sampled_traj);
-            visualization_functions::DrawCollidingNodes(colliding_nodes, "world", 0.0, &collision_markers);
+            visualization_functions::DrawCollidingNodes(colliding_nodes, inertial_frame_id_, 0.015, &collision_markers);
             path_marker_pub_.publish(traj_markers);
             path_marker_pub_.publish(collision_markers);
             continue;
         }
+
+        // Get visualization marker for current set point
+        globals_.sampled_traj.ReferenceVisMarker(traj_status.current_position, &traj_markers);
+
+        // // Stop execution if the current time is beyond the final time of the trajectory
+        // if (time_now.toSec() > time.back()) {
+        //     pthread_mutex_lock(&mutexes_.sampled_traj);
+        //         globals_.sampled_traj.ClearObject();
+        //         globals_.sampled_traj.TrajVisMarkers(&traj_markers);
+        //     pthread_mutex_unlock(&mutexes_.sampled_traj);
+        //     visualization_functions::DrawCollidingNodes(colliding_nodes, "world", 0.0, &collision_markers);
+        //     path_marker_pub_.publish(traj_markers);
+        //     path_marker_pub_.publish(collision_markers);
+        //     continue;
+        // }
 
         // Check if trajectory collides with points in the point-cloud
         pthread_mutex_lock(&mutexes_.octomap);
             double res = globals_.octomap.tree_inflated_.getResolution();
             globals_.octomap.FindCollidingNodesInflated(point_cloud_traj, &colliding_nodes);
         pthread_mutex_unlock(&mutexes_.octomap);
+        // ROS_INFO("Colliding nodes: %d", int(colliding_nodes.size()) );
 
         if (colliding_nodes.size() > 0) {
             // Sort collision time (use kdtree for nearest neighbor)
             std::vector<geometry_msgs::PointStamped> sorted_collisions;
             pthread_mutex_lock(&mutexes_.sampled_traj);
-                globals_.sampled_traj.SortCollisions(colliding_nodes, &sorted_collisions);
+                globals_.sampled_traj.SortCollisionsByDistance(colliding_nodes, traj_status.current_position, &sorted_collisions);
             pthread_mutex_unlock(&mutexes_.sampled_traj);
 
             double collision_time = (sorted_collisions[0].header.stamp - ros::Time::now()).toSec();
+            Eigen::Vector3d p0 = msg_conversions::ros_point_to_eigen_vector(traj_status.current_position);
+            Eigen::Vector3d p1 = msg_conversions::ros_point_to_eigen_vector(sorted_collisions[0].point);
+            double collision_distance = (p1-p0).norm();
             // uint lastCollisionIdx = sorted_collisions.back().header.seq;
-            if (collision_time > 0) {
-                ROS_WARN("Imminent collision within %.3f seconds!", collision_time);
+            // if (collision_time > 0) {
+                // ROS_WARN("Imminent collision within %.3f seconds!", collision_time);
+                // ROS_WARN("Imminent collision within %.3f meters!", collision_distance);
                 sentinel_pub_.publish(sorted_collisions[0]);
-                pthread_mutex_lock(&mutexes_.sampled_traj);
-                    globals_.sampled_traj.ClearObject();
-                pthread_mutex_unlock(&mutexes_.sampled_traj);
-            }
+                // pthread_mutex_lock(&mutexes_.sampled_traj);
+                //     globals_.sampled_traj.ClearObject();
+                // pthread_mutex_unlock(&mutexes_.sampled_traj);
+            // }
         }
 
         // Draw colliding markers (delete if none)
@@ -369,7 +394,7 @@ void MapperClass::OctomappingTask() {
             visualization_msgs::Marker lidar_range_marker;
             Eigen::Vector3d lidar_origin = transform.translation();
             pthread_mutex_lock(&mutexes_.octomap);
-                if(!globals_.octomap.IsMap3d()) {
+                if(!globals_.map_3d) {
                     lidar_origin[2] = 0.0;
                 }
                 globals_.octomap.lidar_range_.VisualizeRange(

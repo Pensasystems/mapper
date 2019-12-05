@@ -131,5 +131,54 @@ void MapperClass::SegmentCallback(const mapper::Segment::ConstPtr &msg) {
     // ROS_DEBUG("Time to compute octotraj: %f", solver_time.toSec());
 }
 
+void MapperClass::SampledTrajectoryCallback(const pensa_msgs::VecPVA_4d::ConstPtr &msg) {
+    ROS_INFO("New trajectory!");
+    ros::Time t0 = ros::Time::now();
+    while (t0.toSec() == 0) {
+        t0 = ros::Time::now();
+    }
+
+    if (msg->pva_vec.size() == 0) {  // Empty trajectory
+        return;
+    }
+
+    // Transform VecPVA_4d into SampledTrajectory3D
+    sampled_traj::SampledTrajectory3D sampled_traj(*msg);
+    std::cout << "Number of samples in trajectory: " << sampled_traj.pos_.size() << std::endl;
+
+    pthread_mutex_lock(&mutexes_.sampled_traj);
+        globals_.sampled_traj.pos_ = sampled_traj.pos_;
+        globals_.sampled_traj.time_ = sampled_traj.time_;
+        globals_.sampled_traj.n_points_ = sampled_traj.n_points_;
+
+        // compress trajectory into points with max deviation of 1cm from original trajectory
+        globals_.sampled_traj.CompressSamples();
+        std::cout << "Number of compressed samples in trajectory: " << globals_.sampled_traj.n_compressed_points_ << std::endl;
+
+        //  Transform compressed trajectory into a set of pixels in octomap
+        //  Octomap insertion avoids repeated points
+        globals_.sampled_traj.thick_traj_.clear();
+        for (int i = 0; i < globals_.sampled_traj.n_compressed_points_-1; i++) {
+            globals_.sampled_traj.ThickBresenham(globals_.sampled_traj.compressed_pos_[i],
+                                                globals_.sampled_traj.compressed_pos_[i+1]);
+        }
+
+        // populate trajectory node centers in a point cloud
+        globals_.sampled_traj.ThickTrajToPcl();
+
+        // populate kdtree for finding nearest neighbor w.r.t. collisions
+        globals_.sampled_traj.CreateKdTree();
+    pthread_mutex_unlock(&mutexes_.sampled_traj);
+
+    // Notify the collision checker to check for collision
+    sem_post(&semaphores_.collision_check);
+}
+
+void MapperClass::TrajectoryStatusCallback(const pensa_msgs::trapezoidal_p2pActionFeedbackConstPtr &msg) {
+    pthread_mutex_lock(&mutexes_.traj_status);
+        globals_.traj_status = msg->feedback;
+    pthread_mutex_unlock(&mutexes_.traj_status);
+}
+
 
 }  // namespace mapper

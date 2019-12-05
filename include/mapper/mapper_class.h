@@ -51,11 +51,15 @@
 #include <exception>
 #include <thread>         // std::thread
 
-// Astrobee message types
+// Mapper message types
 #include "mapper/Segment.h"
 #include "mapper/ControlState.h"
 
-// // Classes
+// Pensa-ros msg types
+#include "pensa_msgs/VecPVA_4d.h"
+#include <pensa_msgs/trapezoidal_p2pAction.h>
+
+// Classes
 #include "mapper/tf_class.h"
 #include "mapper/octoclass.h"
 #include "mapper/polynomials.h"
@@ -87,9 +91,14 @@ class MapperClass {
   void LidarPclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg,
                          const uint& cam_index);
 
-  // Callback for handling incoming new trajectory messages
+  // Callback for handling incoming new trajectory messages (astrobee type - deprecated)
   void SegmentCallback(const mapper::Segment::ConstPtr &msg);
 
+  // Callback for handling incoming sampled trajectory
+  void SampledTrajectoryCallback(const pensa_msgs::VecPVA_4d::ConstPtr &msg);
+
+  // // Callback to know the current status of trajectory tracking
+  void TrajectoryStatusCallback(const pensa_msgs::trapezoidal_p2pActionFeedbackConstPtr &msg);
 
   // Services (see services.cc for implementation) -----------------
   // Update resolution of the map
@@ -155,14 +164,13 @@ class MapperClass {
   semaphoreStruct semaphores_;
 
   // Thread variables
-  std::thread h_haz_tf_thread_, h_perch_tf_thread_, h_body_tf_thread_;
   std::thread h_octo_thread_, h_fade_thread_, h_collision_check_thread_;
-  std::thread h_keyboard_thread_;
+  // std::thread h_keyboard_thread_;
   std::vector<std::thread> h_cameras_tf_thread_;
   std::vector<std::thread> h_lidar_tf_thread_;
 
   // Subscriber variables
-  ros::Subscriber haz_sub_, perch_sub_, segment_sub_;
+  ros::Subscriber trajectory_sub_, trajectory_status_sub_;
   std::vector<ros::Subscriber> cameras_sub_;
   std::vector<ros::Subscriber> lidar_sub_;
 
@@ -183,6 +191,9 @@ class MapperClass {
   // Path strings
   std::string local_path_;
 
+  // Inertial frame id
+  std::string inertial_frame_id_;
+
   // Marker publishers
   ros::Publisher sentinel_pub_;
   ros::Publisher obstacle_marker_pub_;
@@ -191,7 +202,6 @@ class MapperClass {
   ros::Publisher inflated_free_space_marker_pub_;
   ros::Publisher path_marker_pub_;
   ros::Publisher cam_frustum_pub_;
-  ros::Publisher map_keep_in_out_pub_;
 
   // Path planning publishers
   ros::Publisher graph_tree_marker_pub_;

@@ -32,6 +32,8 @@
     <arg name="inertial_frame_id" default="/vislam_odom" />
   </include>
 
+    <node pkg="motion_planner" type="motion_planner_node" name="motion_planner" output="screen" required = "true">  </node>
+
 <!--   <node name="rviz" pkg="rviz" type="rviz" required="true"
       args="-d $(find cartographer_ros)/configuration_files/cindy_3d.rviz" />
  -->

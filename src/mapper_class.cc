@@ -30,15 +30,18 @@ MapperClass::MapperClass() {
 
 MapperClass::~MapperClass() {
     // Join all threads
-    h_haz_tf_thread_.join();
-    h_perch_tf_thread_.join();
-    h_body_tf_thread_.join();
+    // h_haz_tf_thread_.join();
+    // h_perch_tf_thread_.join();
+    // h_body_tf_thread_.join();
     h_octo_thread_.join();
     h_fade_thread_.join();
     h_collision_check_thread_.join();
 
     for(uint i = 0; i < h_cameras_tf_thread_.size(); i++) {
       h_cameras_tf_thread_[i].join();
+    }
+    for(uint i = 0; i < h_lidar_tf_thread_.size(); i++) {
+      h_lidar_tf_thread_[i].join();
     }
 
     // destroy mutexes and semaphores
@@ -94,10 +97,9 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     nh->getParam("lidar_suffix", lidar_suffix);
 
     // Load frame ids
-    std::string inertial_frame_id;
     std::vector<std::string> cam_frame_id;
     std::vector<std::string> lidar_frame_id;
-    nh->getParam("inertial_frame_id", inertial_frame_id);
+    nh->getParam("inertial_frame_id", inertial_frame_id_);
     nh->getParam("cam_frame_id", cam_frame_id);
     nh->getParam("lidar_frame_id", lidar_frame_id);
 
@@ -148,11 +150,14 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     // Set mapper to update on startup
     globals_.update_map = process_pcl_at_startup;
 
+    // Set global variable to map 3d
+    globals_.map_3d = map_3d;
+
     // update tree parameters
     globals_.octomap.SetResolution(map_resolution);
     globals_.octomap.SetMaxRange(max_range);
     globals_.octomap.SetMinRange(min_range);
-    globals_.octomap.SetInertialFrame(inertial_frame_id);
+    globals_.octomap.SetInertialFrame(inertial_frame_id_);
     globals_.octomap.SetMemory(memory_time);
     globals_.octomap.SetMapInflation(inflate_radius_xy, inflate_radius_z);
     globals_.octomap.SetCamFrustum(cam_fov, aspect_ratio);
@@ -165,6 +170,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     // update trajectory discretization parameters (used in collision check)
     globals_.sampled_traj.SetMaxDev(compression_max_dev);
     globals_.sampled_traj.SetResolution(traj_resolution);
+    globals_.sampled_traj.SetInertialFrame(inertial_frame_id_);
 
     // Set tf vector to have as many entries as the number of cameras
     globals_.tf_cameras2world.resize(depth_cam_names.size());
@@ -185,7 +191,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
         std::string cam_topic = depth_cam_prefix + depth_cam_names[i] + depth_cam_suffix;
         cameras_sub_[i] = nh->subscribe<sensor_msgs::PointCloud2>
               (cam_topic, 10, boost::bind(&MapperClass::CameraPclCallback, this, _1, i));
-        h_cameras_tf_thread_[i] = std::thread(&MapperClass::CameraTfTask, this, inertial_frame_id, cam_frame_id[i], i);
+        h_cameras_tf_thread_[i] = std::thread(&MapperClass::CameraTfTask, this, inertial_frame_id_, cam_frame_id[i], i);
         ROS_INFO("[mapper] Subscribed to camera topic: %s", cameras_sub_[i].getTopic().c_str());
     }
 
@@ -194,9 +200,14 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
         std::string lidar_topic = lidar_prefix + lidar_names[i] + lidar_suffix;
         lidar_sub_[i] = nh->subscribe<sensor_msgs::PointCloud2>
               (lidar_topic, 10, boost::bind(&MapperClass::LidarPclCallback, this, _1, i));
-        h_lidar_tf_thread_[i] = std::thread(&MapperClass::LidarTfTask, this, inertial_frame_id, lidar_frame_id[i], i);
+        h_lidar_tf_thread_[i] = std::thread(&MapperClass::LidarTfTask, this, inertial_frame_id_, lidar_frame_id[i], i);
         ROS_INFO("[mapper] Subscribed to camera topic: %s", lidar_sub_[i].getTopic().c_str());
     }
+
+    // Subscriber for trajectories
+    trajectory_sub_ = nh->subscribe<pensa_msgs::VecPVA_4d>("/motion_planner/current_trajectory", 1, &MapperClass::SampledTrajectoryCallback, this);
+    trajectory_status_sub_ = nh->subscribe<pensa_msgs::trapezoidal_p2pActionFeedback>
+        ("/trapezoidal_p2p_action/feedback", 1, &MapperClass::TrajectoryStatusCallback, this);
 
     // Create services ------------------------------------------
     resolution_srv_ = nh->advertiseService(
