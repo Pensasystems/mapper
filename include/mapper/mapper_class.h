@@ -138,9 +138,8 @@ class MapperClass {
   void FadeTask();
 
   // Threads for constantly updating the tfTree values
-  void HazTfTask();
-  void PerchTfTask();
-  void BodyTfTask();
+  void BodyTfTask(const std::string& parent_frame,
+                  const std::string& child_frame);
   void CameraTfTask(const std::string& parent_frame,
                     const std::string& child_frame,
                     const uint& index); // Returns the transform from child to parent frame, expressed in parent frame
@@ -165,7 +164,7 @@ class MapperClass {
 
   // Thread variables
   std::thread h_octo_thread_, h_fade_thread_, h_collision_check_thread_;
-  // std::thread h_keyboard_thread_;
+  std::thread h_body_tf_thread_;
   std::vector<std::thread> h_cameras_tf_thread_;
   std::vector<std::thread> h_lidar_tf_thread_;
 
@@ -191,8 +190,8 @@ class MapperClass {
   // Path strings
   std::string local_path_;
 
-  // Inertial frame id
-  std::string inertial_frame_id_;
+  // Inertial and robot frame ids
+  std::string inertial_frame_id_, robot_frame_id_;
 
   // Marker publishers
   ros::Publisher sentinel_pub_;

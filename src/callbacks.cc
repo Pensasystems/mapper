@@ -143,8 +143,8 @@ void MapperClass::SampledTrajectoryCallback(const pensa_msgs::VecPVA_4d::ConstPt
     }
 
     // Transform VecPVA_4d into SampledTrajectory3D
-    sampled_traj::SampledTrajectory3D sampled_traj(*msg);
-    std::cout << "Number of samples in trajectory: " << sampled_traj.pos_.size() << std::endl;
+    sampled_traj::SampledTrajectory3D sampled_traj(*msg, globals_.map_3d);
+    ROS_INFO("Number of samples in trajectory: %zu", sampled_traj.pos_.size());
 
     pthread_mutex_lock(&mutexes_.sampled_traj);
         globals_.sampled_traj.pos_ = sampled_traj.pos_;
@@ -153,7 +153,7 @@ void MapperClass::SampledTrajectoryCallback(const pensa_msgs::VecPVA_4d::ConstPt
 
         // compress trajectory into points with max deviation of 1cm from original trajectory
         globals_.sampled_traj.CompressSamples();
-        std::cout << "Number of compressed samples in trajectory: " << globals_.sampled_traj.n_compressed_points_ << std::endl;
+        ROS_INFO("Number of compressed samples in trajectory: %d", globals_.sampled_traj.n_compressed_points_);
 
         //  Transform compressed trajectory into a set of pixels in octomap
         //  Octomap insertion avoids repeated points

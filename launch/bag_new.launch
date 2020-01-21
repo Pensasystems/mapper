@@ -1,6 +1,6 @@
 <launch>
   <param name="use_sim_time" value="true"/>  
-  
+
   <param name="robot_description"
     textfile="$(find mapper)/urdf/cinderella_new.urdf" />
 
@@ -9,7 +9,11 @@
 
   <!-- Store frame -->
   <node name="board_to_cam" pkg="tf" type="static_transform_publisher" output="screen" 
-  args="0 0 0 3.141593 0 0 store vislam_odom 1"/>
+  args="0 0 0 3.141593 0 0 store vislam_odom 10"/>
+
+  <!-- Map frame -->
+  <node name="vislam_to_map" pkg="tf" type="static_transform_publisher" output="screen" 
+  args="0 0 0 0 0 0 store map 10"/>
 
     <!-- publish odom with twist in body frame to base_link -->
   <!-- <node name="odom_in_body" pkg="odom_relay"
@@ -31,11 +35,12 @@
   </node> -->
 
   <include file="$(find mapper)/launch/mapper.launch">
-    <arg name="namespace" value="cinderella" />
+    <arg name="namespace"              value="cinderella" />
     <arg name="launch_rviz"            value="true" />
     <arg name="process_pcl_at_startup" value="true" />
     <arg name="map_3d"                 value="false" />
-    <arg name="inertial_frame_id" default="/store" />
+    <arg name="inertial_frame_id"      value="/store" />
+    <arg name="robot_frame_id"         value="/base_link" />
   </include>
 
     <node pkg="motion_planner" type="motion_planner_node" name="motion_planner" output="screen" required = "true">  </node>

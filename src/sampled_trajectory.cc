@@ -47,6 +47,7 @@ SampledTrajectory3D::SampledTrajectory3D(const double &dt,
         poly_trajectories.TrajectoryAtTime(time, &point);
         pos_.push_back(point);
     }
+    // traj_initial_time_ = ros::Time(0.0);
 }
 
 SampledTrajectory3D::SampledTrajectory3D(const std::vector<double> &time_vec,
@@ -54,22 +55,30 @@ SampledTrajectory3D::SampledTrajectory3D(const std::vector<double> &time_vec,
     time_ = time_vec;
     pos_ = pos_vec;
     n_points_ = time_.size();
+    // traj_initial_time_ = ros::Time(0.0);
 }
 
-SampledTrajectory3D::SampledTrajectory3D(const pensa_msgs::VecPVA_4d &pva_vec) {
+SampledTrajectory3D::SampledTrajectory3D(const pensa_msgs::VecPVA_4d &pva_vec,
+                                         const bool &map_3d) {
     pcl::PointXYZ pos;
     n_points_ = pva_vec.pva_vec.size();
     for (int i = 0; i < n_points_; i++) {
         time_.push_back(pva_vec.pva_vec[i].time);
         pos.x = pva_vec.pva_vec[i].pos.x;
         pos.y = pva_vec.pva_vec[i].pos.y;
-        pos.z = pva_vec.pva_vec[i].pos.z;
+        if (map_3d) {
+            pos.z = pva_vec.pva_vec[i].pos.z;
+        } else {
+            pos.z = 0.0;
+        }
         pos_.push_back(pos);
     }
+    // traj_initial_time_ = ros::Time::now();
 }
 
 SampledTrajectory3D::SampledTrajectory3D() {
     n_points_ = 0;
+    // traj_initial_time_ = ros::Time(0.0);
     // Pos = std::vector<Eigen::Vector3d>;
 }
 

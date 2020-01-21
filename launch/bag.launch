@@ -25,11 +25,12 @@
   </node> -->
 
   <include file="$(find mapper)/launch/mapper.launch">
-    <arg name="namespace" value="cinderella" />
+    <arg name="namespace"              value="cinderella" />
     <arg name="launch_rviz"            value="true" />
     <arg name="process_pcl_at_startup" value="true" />
     <arg name="map_3d"                 value="false" />
-    <arg name="inertial_frame_id" default="/vislam_odom" />
+    <arg name="inertial_frame_id"      value="/vislam_odom" />
+    <arg name="robot_frame_id"         value="/base_link" />
   </include>
 
     <node pkg="motion_planner" type="motion_planner_node" name="motion_planner" output="screen" required = "true">  </node>

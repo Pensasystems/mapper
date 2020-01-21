@@ -32,7 +32,7 @@ MapperClass::~MapperClass() {
     // Join all threads
     // h_haz_tf_thread_.join();
     // h_perch_tf_thread_.join();
-    // h_body_tf_thread_.join();
+    h_body_tf_thread_.join();
     h_octo_thread_.join();
     h_fade_thread_.join();
     h_collision_check_thread_.join();
@@ -100,6 +100,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     std::vector<std::string> cam_frame_id;
     std::vector<std::string> lidar_frame_id;
     nh->getParam("inertial_frame_id", inertial_frame_id_);
+    nh->getParam("robot_frame_id", robot_frame_id_);
     nh->getParam("cam_frame_id", cam_frame_id);
     nh->getParam("lidar_frame_id", lidar_frame_id);
 
@@ -184,6 +185,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     h_octo_thread_ = std::thread(&MapperClass::OctomappingTask, this);
     h_fade_thread_ = std::thread(&MapperClass::FadeTask, this);
     h_collision_check_thread_ = std::thread(&MapperClass::CollisionCheckTask, this);
+    h_body_tf_thread_ = std::thread(&MapperClass::BodyTfTask, this, inertial_frame_id_, robot_frame_id_);
     // h_keyboard_thread_ = std::thread(&MapperClass::KeyboardTask, this);
 
     // Camera subscribers and tf threads ----------------------------------------------

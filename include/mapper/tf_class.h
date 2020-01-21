@@ -56,6 +56,13 @@ class TfClass{
                   << yaw*180.0/M_PI << "]" << std::endl;
     }
 
+    void PrintOrigin() {
+      tf::Vector3 v = transform_.getOrigin();
+      std::cout << "- Translation: [" << v.getX() << ", "
+                                      << v.getY() << ", "
+                                      << v.getZ() << "]" << std::endl;
+    }
+
     // Get transform from original to target frame
     bool GetTransform(const std::string &original_frame,
                       const std::string &target_frame) {

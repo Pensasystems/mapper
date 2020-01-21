@@ -47,8 +47,6 @@ struct stampedPcl {
 
 struct globalVariables {
     // Mutex protected variables
-    tf::StampedTransform tf_cam2world;
-    tf::StampedTransform tf_perch2world;
     tf::StampedTransform tf_body2world;
     std::vector<tf::StampedTransform> tf_cameras2world;
     std::vector<tf::StampedTransform> tf_lidar2world;
@@ -70,6 +68,7 @@ class mutexStruct {
  public:
     pthread_mutex_t sampled_traj;
     pthread_mutex_t traj_status;
+    pthread_mutex_t body_tf;
     pthread_mutex_t cam_tf;
     pthread_mutex_t lidar_tf;
     pthread_mutex_t octomap;
@@ -80,6 +79,7 @@ class mutexStruct {
     mutexStruct() {
         pthread_mutex_init(&sampled_traj, NULL);
         pthread_mutex_init(&traj_status, NULL);
+        pthread_mutex_init(&body_tf, NULL);
         pthread_mutex_init(&cam_tf, NULL);
         pthread_mutex_init(&lidar_tf, NULL);
         pthread_mutex_init(&octomap, NULL);
@@ -89,6 +89,7 @@ class mutexStruct {
     void destroy() {
         pthread_mutex_destroy(&sampled_traj);
         pthread_mutex_destroy(&traj_status);
+        pthread_mutex_destroy(&body_tf);
         pthread_mutex_destroy(&cam_tf);
         pthread_mutex_destroy(&lidar_tf);
         pthread_mutex_destroy(&octomap);

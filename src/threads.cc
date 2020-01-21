@@ -48,61 +48,21 @@ void MapperClass::FadeTask() {
     ROS_DEBUG("Exiting Fading Memory Thread...");
 }
 
-// Thread for constantly updating the tfTree values
-void MapperClass::HazTfTask() {
-    ROS_DEBUG("haz_cam tf Thread started with rate %f: ", tf_update_rate_);
-    tf_listener::TfClass obj_cam2world;
-    // TfClass obj_haz2body;
-    ros::Rate loop_rate(tf_update_rate_);
-
-    while (ros::ok()) {
-        // Get the transforms
-        obj_cam2world.GetTransform("/haz_cam", "/world");
-        // obj_haz2body.getTransform("/haz_cam", "/body");
-
-        pthread_mutex_lock(&mutexes_.cam_tf);
-            globals_.tf_cam2world = obj_cam2world.transform_;
-        pthread_mutex_unlock(&mutexes_.cam_tf);
-
-        // obj_haz2body.printTransform();
-        loop_rate.sleep();
-    }
-
-    ROS_DEBUG("Exiting haz_cam tf Thread...");
-}
-
-// Thread for constantly updating the tfTree values
-void MapperClass::PerchTfTask() {
-    ROS_DEBUG("perch_cam tf Thread started with rate %f: ", tf_update_rate_);
-    tf_listener::TfClass obj_perch2world;
-    ros::Rate loop_rate(tf_update_rate_);
-
-    while (ros::ok()) {
-        // Get the transform
-        obj_perch2world.GetTransform("/perch_cam", "/world");
-
-        pthread_mutex_lock(&mutexes_.cam_tf);
-            globals_.tf_perch2world = obj_perch2world.transform_;
-        pthread_mutex_unlock(&mutexes_.cam_tf);
-        loop_rate.sleep();
-    }
-
-    ROS_DEBUG("Exiting  perch_cam tf Thread...");
-}
-
-// Thread for updating the tfTree values
-void MapperClass::BodyTfTask() {
-    ROS_DEBUG("body tf Thread started with rate %f: ", tf_update_rate_);
+// Thread for updating the body tfTree values
+void MapperClass::BodyTfTask(const std::string& parent_frame,
+                             const std::string& child_frame) {
+    ROS_DEBUG("robot frame tf Thread started with rate %f: ", tf_update_rate_);
     tf_listener::TfClass obj_body2world;
     ros::Rate loop_rate(tf_update_rate_);
 
     while (ros::ok()) {
         // Get the transform
-        obj_body2world.GetTransform("/body", "/world");
+        obj_body2world.GetTransform(child_frame, parent_frame);
+        // obj_body2world.PrintOrigin();
 
-        pthread_mutex_lock(&mutexes_.cam_tf);
+        pthread_mutex_lock(&mutexes_.body_tf);
             globals_.tf_body2world = obj_body2world.transform_;
-        pthread_mutex_unlock(&mutexes_.cam_tf);
+        pthread_mutex_unlock(&mutexes_.body_tf);
         loop_rate.sleep();
     }
 
@@ -121,13 +81,10 @@ void MapperClass::CameraTfTask(const std::string& parent_frame,
     while (ros::ok()) {
         // Get the transform
         obj_tf.GetTransform(child_frame, parent_frame);
+        // obj_tf.PrintOrigin();
 
         pthread_mutex_lock(&mutexes_.cam_tf);
             globals_.tf_cameras2world[index] = obj_tf.transform_;
-            // tf::Vector3 v = globals_.tf_cameras2world[index].getOrigin();
-            // std::cout << "- Translation: [" << v.getX() << ", "
-            //                                 << v.getY() << ", "
-            //                                 << v.getZ() << "]" << std::endl;
         pthread_mutex_unlock(&mutexes_.cam_tf);
         loop_rate.sleep();
     }
@@ -146,13 +103,10 @@ void MapperClass::LidarTfTask(const std::string& parent_frame,
     while (ros::ok()) {
         // Get the transform
         obj_tf.GetTransform(child_frame, parent_frame);
+        // obj_tf.PrintOrigin();
 
         pthread_mutex_lock(&mutexes_.lidar_tf);
             globals_.tf_lidar2world[index] = obj_tf.transform_;
-            // tf::Vector3 v = globals_.tf_lidar2world[index].getOrigin();
-            // std::cout << "- Translation: [" << v.getX() << ", "
-            //                                 << v.getY() << ", "
-            //                                 << v.getZ() << "]" << std::endl;
         pthread_mutex_unlock(&mutexes_.lidar_tf);
         loop_rate.sleep();
     }
@@ -207,6 +161,11 @@ void MapperClass::CollisionCheckTask() {
             traj_status = globals_.traj_status;
         pthread_mutex_unlock(&mutexes_.traj_status);
 
+        // Set current trajectory to z=0 if working with 2D maps only
+        if(!globals_.map_3d) {
+            traj_status.current_position.z = 0.0;
+        }
+
         // Stop execution if there are no points in the trajectory structure
         cloudsize = point_cloud_traj.size();
         if (cloudsize <= 0) {
@@ -217,31 +176,19 @@ void MapperClass::CollisionCheckTask() {
         }
 
         // Stop execution if the current time is beyond the final time of the trajectory
-        if (traj_status.current_time >= traj_status.final_time) {
-            pthread_mutex_lock(&mutexes_.sampled_traj);
-                globals_.sampled_traj.ClearObject();
-                globals_.sampled_traj.TrajVisMarkers(&traj_markers);
-            pthread_mutex_unlock(&mutexes_.sampled_traj);
-            visualization_functions::DrawCollidingNodes(colliding_nodes, inertial_frame_id_, 0.015, &collision_markers);
-            path_marker_pub_.publish(traj_markers);
-            path_marker_pub_.publish(collision_markers);
-            continue;
-        }
-
-        // Get visualization marker for current set point
-        globals_.sampled_traj.ReferenceVisMarker(traj_status.current_position, &traj_markers);
-
-        // // Stop execution if the current time is beyond the final time of the trajectory
-        // if (time_now.toSec() > time.back()) {
+        // if (traj_status.current_time >= traj_status.final_time) {
         //     pthread_mutex_lock(&mutexes_.sampled_traj);
         //         globals_.sampled_traj.ClearObject();
         //         globals_.sampled_traj.TrajVisMarkers(&traj_markers);
         //     pthread_mutex_unlock(&mutexes_.sampled_traj);
-        //     visualization_functions::DrawCollidingNodes(colliding_nodes, "world", 0.0, &collision_markers);
+        //     visualization_functions::DrawCollidingNodes(colliding_nodes, inertial_frame_id_, 0.015, &collision_markers);
         //     path_marker_pub_.publish(traj_markers);
         //     path_marker_pub_.publish(collision_markers);
         //     continue;
         // }
+
+        // Get visualization marker for current set point
+        globals_.sampled_traj.ReferenceVisMarker(traj_status.current_position, &traj_markers);
 
         // Check if trajectory collides with points in the point-cloud
         pthread_mutex_lock(&mutexes_.octomap);
@@ -264,7 +211,7 @@ void MapperClass::CollisionCheckTask() {
             // uint lastCollisionIdx = sorted_collisions.back().header.seq;
             // if (collision_time > 0) {
                 // ROS_WARN("Imminent collision within %.3f seconds!", collision_time);
-                // ROS_WARN("Imminent collision within %.3f meters!", collision_distance);
+                ROS_WARN("Imminent collision within %.3f meters!", collision_distance);
                 sentinel_pub_.publish(sorted_collisions[0]);
                 // pthread_mutex_lock(&mutexes_.sampled_traj);
                 //     globals_.sampled_traj.ClearObject();
@@ -339,11 +286,11 @@ void MapperClass::OctomappingTask() {
 
             // Save into octomap
             pthread_mutex_lock(&mutexes_.octomap);
-            if (is_lidar) {
-                globals_.octomap.PclToRayOctomap(pcl_world, tf_cam2world);
-            } else {
-                globals_.octomap.PclToRayOctomap(pcl_world, tf_cam2world, world_frustum);
-            }
+                if (is_lidar) {
+                    globals_.octomap.PclToRayOctomap(pcl_world, tf_cam2world);
+                } else {
+                    globals_.octomap.PclToRayOctomap(pcl_world, tf_cam2world, world_frustum);
+                }
                 globals_.octomap.tree_.prune();   // prune the tree before visualizing
             pthread_mutex_unlock(&mutexes_.octomap);
         }
@@ -393,10 +340,10 @@ void MapperClass::OctomappingTask() {
         } else if ((is_lidar) && (cam_frustum_pub_.getNumSubscribers() > 0)) {
             visualization_msgs::Marker lidar_range_marker;
             Eigen::Vector3d lidar_origin = transform.translation();
+            if(!globals_.map_3d) {
+                lidar_origin[2] = 0.0;
+            }
             pthread_mutex_lock(&mutexes_.octomap);
-                if(!globals_.map_3d) {
-                    lidar_origin[2] = 0.0;
-                }
                 globals_.octomap.lidar_range_.VisualizeRange(
                     globals_.octomap.GetInertialFrameId(), lidar_origin,
                     &lidar_range_marker);

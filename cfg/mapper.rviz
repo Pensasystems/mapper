@@ -27,7 +27,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: ""
 Toolbars:
   toolButtonStyle: 2
 Visualization Manager:
@@ -50,14 +50,6 @@ Visualization Manager:
       Plane: XY
       Plane Cell Count: 100
       Reference Frame: <Fixed Frame>
-      Value: true
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /Gazebo/mapper_node/frustum_markers
-      Name: Marker
-      Namespaces:
-        {}
-      Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
@@ -118,35 +110,27 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        base_link:
-          Value: true
-        imu_link:
-          Value: true
-        laser_frame:
-          Value: true
-        odom_frame:
-          Value: true
-        vislam_odom:
-          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: false
       Tree:
-        vislam_odom:
-          odom_frame:
-            base_link:
-              imu_link:
-                {}
-              laser_frame:
-                {}
+        {}
       Update Interval: 0
       Value: true
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /cinderella/mapper_node/frustum_markers
-      Name: Marker
+      Name: Frustum
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /cinderella/mapper_node/discrete_trajectory_markers
+      Name: DiscretizedTrajectory
       Namespaces:
         {}
       Queue Size: 100
@@ -156,15 +140,15 @@ Visualization Manager:
       Color: 204; 41; 204
       Enabled: true
       History Length: 1
-      Name: PointStamped
+      Name: NearestCollision
       Radius: 0.200000003
       Topic: /cinderella/mapper_node/collisions
       Unreliable: false
       Value: true
-    - Class: rviz/MarkerArray
+    - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /cinderella/mapper_node/discrete_trajectory_markers
-      Name: MarkerArray
+      Marker Topic: /motion_planner/spatial_trajectory
+      Name: PlannerTrajectory
       Namespaces:
         {}
       Queue Size: 100
@@ -194,25 +178,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 9.63058758
+      Distance: 7.20554113
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.464438617
-        Y: -0.173387662
-        Z: 0.420792639
+        X: -0.2066551
+        Y: -0.637327015
+        Z: -0.0285778288
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 1.51979637
+      Pitch: 0.939796567
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.79361105
+      Yaw: 4.49861145
     Saved: ~
 Window Geometry:
   Displays:

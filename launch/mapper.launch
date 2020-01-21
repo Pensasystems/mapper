@@ -5,6 +5,7 @@
     <arg name="process_pcl_at_startup" default="true" />
     <arg name="map_3d" default="true" />
     <arg name="inertial_frame_id" default="/map" />
+    <arg name="robot_frame_id" default="/robot" />
     <arg name="depth_cam_prefix" default="/" />
     <arg name="depth_cam_suffix" default="/camera/depth/compressed_points" />
     <arg name="lidar_prefix" default="/" />
@@ -35,6 +36,9 @@
             <!-- tf frame ID for the lidars above -->
             <rosparam param="lidar_frame_id"> ["/laser_frame"] </rosparam>
 
+            <!-- Robot Center tf Frame ID -->
+            <param name="robot_frame_id" value="$(arg robot_frame_id)"/>
+
             <!-- Inertial frame name (used for getting tf tree information) -->
             <param name="inertial_frame_id" value="$(arg inertial_frame_id)"/>
 
@@ -50,7 +54,7 @@
             <param name="fading_memory_update_rate" value="1"/><!-- Hz -->
 
             <!-- Map inflation parameters -->
-            <param name="inflate_radius_xy" value="0.40"/>       <!-- meters -->
+            <param name="inflate_radius_xy" value="0.30"/>       <!-- meters -->
             <param name="inflate_radius_z" value="0.30"/>       <!-- meters -->
 
             <!-- Camera FOV (radians): map is only updated within this FOV -->
