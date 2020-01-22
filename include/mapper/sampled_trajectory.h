@@ -90,7 +90,7 @@ class SampledTrajectory3D{
     void DeleteSample(const int &index);
     void CompressSamples();
     bool NearestPointInCompressedTraj(const Eigen::Vector3d &point,
-                                      Eigen::Vector3d *nearest_point);
+                                      geometry_msgs::Point *nearest_point);
     void Bresenham(const Eigen::Vector3d &p0,
                    const Eigen::Vector3d &pf,
                    std::vector<octomap::point3d> *points);  // Bresenham line algorithm por printing a line

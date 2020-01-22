@@ -166,7 +166,7 @@ void MapperClass::CollisionCheckTask() {
             msg_conversions::tf_vector3_to_eigen_vector(tf_body2world.getOrigin());
 
         // Find point in compressed trajectory that the robot is closest to
-        Eigen::Vector3d robot_projected_on_traj;
+        geometry_msgs::Point robot_projected_on_traj;
         pthread_mutex_lock(&mutexes_.sampled_traj);
         bool success = globals_.sampled_traj.NearestPointInCompressedTraj(robot_position, &robot_projected_on_traj);
         pthread_mutex_unlock(&mutexes_.sampled_traj);
@@ -208,8 +208,7 @@ void MapperClass::CollisionCheckTask() {
 
         // Get visualization marker for current set point and robot position projected on the trajectory
         globals_.sampled_traj.ReferenceVisMarker(traj_status.current_position, &traj_markers);
-        globals_.sampled_traj.RobotPosVisMarker(
-                 msg_conversions::eigen_to_ros_point(robot_projected_on_traj), &traj_markers);
+        globals_.sampled_traj.RobotPosVisMarker(robot_projected_on_traj, &traj_markers);
 
         // Check if trajectory collides with points in the point-cloud
         pthread_mutex_lock(&mutexes_.octomap);
@@ -222,11 +221,11 @@ void MapperClass::CollisionCheckTask() {
             // Sort collision time (use kdtree for nearest neighbor)
             std::vector<geometry_msgs::PointStamped> sorted_collisions;
             pthread_mutex_lock(&mutexes_.sampled_traj);
-                globals_.sampled_traj.SortCollisionsByDistance(colliding_nodes, traj_status.current_position, &sorted_collisions);
+                globals_.sampled_traj.SortCollisionsByDistance(colliding_nodes, robot_projected_on_traj, &sorted_collisions);
             pthread_mutex_unlock(&mutexes_.sampled_traj);
 
-            double collision_time = (sorted_collisions[0].header.stamp - ros::Time::now()).toSec();
-            Eigen::Vector3d p0 = msg_conversions::ros_point_to_eigen_vector(traj_status.current_position);
+            // double collision_time = (sorted_collisions[0].header.stamp - ros::Time::now()).toSec();
+            Eigen::Vector3d p0 = msg_conversions::ros_point_to_eigen_vector(robot_projected_on_traj);
             Eigen::Vector3d p1 = msg_conversions::ros_point_to_eigen_vector(sorted_collisions[0].point);
             double collision_distance = (p1-p0).norm();
             // uint lastCollisionIdx = sorted_collisions.back().header.seq;

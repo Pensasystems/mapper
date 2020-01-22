@@ -191,7 +191,7 @@ void SampledTrajectory3D::CompressSamples() {
 }
 
 bool SampledTrajectory3D::NearestPointInCompressedTraj(const Eigen::Vector3d &point,
-                                                       Eigen::Vector3d *nearest_point) {
+                                                       geometry_msgs::Point *nearest_point) {
     // If there are not enough points in the compressed trajectory, return
     if (compressed_pos_.size() < 2) {
         return false;
@@ -204,7 +204,7 @@ bool SampledTrajectory3D::NearestPointInCompressedTraj(const Eigen::Vector3d &po
         algebra_3d::LineSegment3d segment(compressed_pos_[i], compressed_pos_[i+1]);
         segment.NearestPointInLine(point, &best_guess, &dist);
         if (dist < min_dist) {
-            *nearest_point = best_guess;
+            *nearest_point = msg_conversions::eigen_to_ros_point(best_guess);
             min_dist = dist;
         }
     }
