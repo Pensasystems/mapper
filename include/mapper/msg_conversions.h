@@ -19,8 +19,6 @@
 #ifndef MSG_CONVERSIONS_MSG_CONVERSIONS_H_
 #define MSG_CONVERSIONS_MSG_CONVERSIONS_H_
 
-// #include <config_reader/config_reader.h>
-
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
@@ -29,6 +27,7 @@
 #include <geometry_msgs/Quaternion.h>
 #include <geometry_msgs/Transform.h>
 #include <geometry_msgs/Vector3.h>
+#include <tf/tf.h>
 
 namespace msg_conversions {
 
@@ -43,6 +42,8 @@ namespace msg_conversions {
   void                   eigen_to_ros_point(const Eigen::Vector3d &eigen_pt, geometry_msgs::Point *ros_pt);
   void                   ros_to_array_point(const geometry_msgs::Point & p, float* array);
   geometry_msgs::Point   array_to_ros_point(float* array);
+
+  Eigen::Vector3d        tf_vector3_to_eigen_vector(const tf::Vector3 & v);
 
   Eigen::Quaterniond        ros_to_eigen_quat(const geometry_msgs::Quaternion & q);
   geometry_msgs::Quaternion eigen_to_ros_quat(const Eigen::Quaterniond & q);

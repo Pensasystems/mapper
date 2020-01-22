@@ -35,7 +35,7 @@ class Line3d{
 
     // Constructor: returns line that goes through two points p1, p2
     Line3d(const Eigen::Vector3d &p1,
-            const Eigen::Vector3d &p2) {
+           const Eigen::Vector3d &p2) {
         p0_ = p1;
         vec_ = p1 - p2;
     }
@@ -62,6 +62,54 @@ class Line3d{
         const Eigen::Vector3d p_opt = x1 + t_opt*vec_;
 
         *dist = (point - p_opt).norm();
+    }
+};
+
+// Line segment parameterized as l = p0 + t.(p1-p0))
+// t belongs to (0,1)
+class LineSegment3d{
+ public:
+    Eigen::Vector3d p0_;
+    Eigen::Vector3d vec_;
+
+    // Constructor
+    LineSegment3d(const Eigen::Vector3d &p1,
+                  const Eigen::Vector3d &p2) {
+        p0_ = p1;
+        vec_ = p2 - p1;
+    }
+
+    // Methods
+    // Calculate the distance between one point and the line,
+    // returning the nearest point
+    void NearestPointInLine(const Eigen::Vector3d &point,
+                            Eigen::Vector3d *nearest_point,
+                            double *dist) {
+        // Two points on the line
+        const Eigen::Vector3d x1 = p0_;
+        const Eigen::Vector3d x2 = p0_ + vec_;
+
+        // Optimal t is the t at which the point is closest to the line
+        // t_opt = (x1-x2)'*(x1-p)/norm(x1-x2)^2;
+        static double t_opt;
+        if (x1 == x2) {
+            t_opt = 0;
+        } else {
+            const double gain = 1.0/(pow((x1-x2).norm(), 2.0));
+            t_opt = gain*(x1-x2).transpose()*(x1-point);
+        }
+
+        // nearest_point is the closest point between 
+        // the point and the segment
+        if (t_opt < 0) {
+            *nearest_point = x1;
+        } else if (t_opt > 1) {
+            *nearest_point = x2;
+        } else {
+            *nearest_point = x1 + t_opt*vec_;
+        }
+
+        *dist = (point - *nearest_point).norm();
     }
 };
 

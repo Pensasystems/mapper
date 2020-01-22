@@ -89,6 +89,8 @@ class SampledTrajectory3D{
     void SetInertialFrame(const std::string &inertial_frame_id);
     void DeleteSample(const int &index);
     void CompressSamples();
+    bool NearestPointInCompressedTraj(const Eigen::Vector3d &point,
+                                      Eigen::Vector3d *nearest_point);
     void Bresenham(const Eigen::Vector3d &p0,
                    const Eigen::Vector3d &pf,
                    std::vector<octomap::point3d> *points);  // Bresenham line algorithm por printing a line
@@ -104,8 +106,10 @@ class SampledTrajectory3D{
     void TrajVisMarkers(visualization_msgs::MarkerArray* marker_array);
     void SamplesVisMarkers(visualization_msgs::MarkerArray* marker_array);
     void CompressedVisMarkers(visualization_msgs::MarkerArray* marker_array);
-    void ReferenceVisMarker(const geometry_msgs::Point pos, 
+    void ReferenceVisMarker(const geometry_msgs::Point &pos,
                             visualization_msgs::MarkerArray* marker_array);
+    void RobotPosVisMarker(const geometry_msgs::Point &pos,
+                           visualization_msgs::MarkerArray* marker_array);
     void ClearObject();  // Clear all the data within this object
 };
 

@@ -190,6 +190,27 @@ void SampledTrajectory3D::CompressSamples() {
     // ROS_INFO("Compressed points: %d", n_compressed_points_);
 }
 
+bool SampledTrajectory3D::NearestPointInCompressedTraj(const Eigen::Vector3d &point,
+                                                       Eigen::Vector3d *nearest_point) {
+    // If there are not enough points in the compressed trajectory, return
+    if (compressed_pos_.size() < 2) {
+        return false;
+    }
+
+    double min_dist = std::numeric_limits<double>::infinity();
+    Eigen::Vector3d best_guess;
+    double dist;
+    for (uint i = 0; i < compressed_pos_.size()-1; i++) {
+        algebra_3d::LineSegment3d segment(compressed_pos_[i], compressed_pos_[i+1]);
+        segment.NearestPointInLine(point, &best_guess, &dist);
+        if (dist < min_dist) {
+            *nearest_point = best_guess;
+            min_dist = dist;
+        }
+    }
+    return true;
+}
+
 
 // It is highly likely that the original Author was Bob Pendelton
 // I translated this algorithm from Matlab into C++ based on:
@@ -607,7 +628,7 @@ void SampledTrajectory3D::CompressedVisMarkers(visualization_msgs::MarkerArray* 
     marker_array->markers.push_back(marker);
 }
 
-void SampledTrajectory3D::ReferenceVisMarker(const geometry_msgs::Point pos, 
+void SampledTrajectory3D::ReferenceVisMarker(const geometry_msgs::Point &pos, 
                                              visualization_msgs::MarkerArray* marker_array) {
     // marker_array->markers.resize(1);
     const ros::Time rostime = ros::Time::now();
@@ -626,6 +647,41 @@ void SampledTrajectory3D::ReferenceVisMarker(const geometry_msgs::Point pos,
     marker.header.frame_id = inertial_frame_id_;
     marker.header.stamp = rostime;
     marker.ns = "ReferencePos";
+    marker.id = 0;
+    marker.type = visualization_msgs::Marker::SPHERE_LIST;
+    marker.scale.x = 0.15;
+    marker.scale.y = 0.15;
+    marker.scale.z = 0.15;
+    marker.pose.orientation.w = 1.0;
+    marker.lifetime = ros::Duration(1.0);
+
+    if (marker.points.size() > 0) {
+        marker.action = visualization_msgs::Marker::ADD;
+    } else {
+        marker.action = visualization_msgs::Marker::DELETE;
+    }
+
+    marker_array->markers.push_back(marker);
+}
+
+void SampledTrajectory3D::RobotPosVisMarker(const geometry_msgs::Point &pos,
+                                            visualization_msgs::MarkerArray* marker_array) {
+    const ros::Time rostime = ros::Time::now();
+    visualization_msgs::Marker marker;
+
+    // Set color parameters
+    std_msgs::ColorRGBA color;
+    color = visualization_functions::Color::Blue();
+    color.a = 0.9;
+
+    // Set position
+    marker.points.push_back(pos);
+    marker.colors.push_back(color);
+
+    // Set marker properties
+    marker.header.frame_id = inertial_frame_id_;
+    marker.header.stamp = rostime;
+    marker.ns = "RobotPos";
     marker.id = 0;
     marker.type = visualization_msgs::Marker::SPHERE_LIST;
     marker.scale.x = 0.15;

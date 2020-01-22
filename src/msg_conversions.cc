@@ -90,6 +90,10 @@ geometry_msgs::Point array_to_ros_point(float* array) {
   return v;
 }
 
+Eigen::Vector3d tf_vector3_to_eigen_vector(const tf::Vector3 & v) {
+  return Eigen::Vector3d(v.getX(), v.getY(), v.getZ());
+}
+
 geometry_msgs::Quaternion array_to_ros_quat(float* array) {
   geometry_msgs::Quaternion q;
   q.x = array[0];

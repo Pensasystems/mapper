@@ -124,6 +124,9 @@ void MapperClass::CollisionCheckTask() {
     visualization_msgs::MarkerArray traj_markers, samples_markers;
     visualization_msgs::MarkerArray compressed_samples_markers, collision_markers;
 
+    // robot's transform variable
+    tf::StampedTransform tf_body2world;
+
     // pcl variables
     int cloudsize;
 
@@ -154,6 +157,22 @@ void MapperClass::CollisionCheckTask() {
             path_marker_pub_.publish(samples_markers);
             path_marker_pub_.publish(compressed_samples_markers);
         pthread_mutex_unlock(&mutexes_.sampled_traj);
+
+        // Get robot's current position
+        pthread_mutex_lock(&mutexes_.body_tf);
+            tf_body2world = globals_.tf_body2world;
+        pthread_mutex_unlock(&mutexes_.body_tf);
+        Eigen::Vector3d robot_position = 
+            msg_conversions::tf_vector3_to_eigen_vector(tf_body2world.getOrigin());
+
+        // Find point in compressed trajectory that the robot is closest to
+        Eigen::Vector3d robot_projected_on_traj;
+        pthread_mutex_lock(&mutexes_.sampled_traj);
+        bool success = globals_.sampled_traj.NearestPointInCompressedTraj(robot_position, &robot_projected_on_traj);
+        pthread_mutex_unlock(&mutexes_.sampled_traj);
+        if(!success) {  // this fails if there are not at least two points in the compressed trajectory
+            continue;
+        }
 
         // Get trajectory status
         pensa_msgs::trapezoidal_p2pFeedback traj_status;
@@ -187,8 +206,10 @@ void MapperClass::CollisionCheckTask() {
         //     continue;
         // }
 
-        // Get visualization marker for current set point
+        // Get visualization marker for current set point and robot position projected on the trajectory
         globals_.sampled_traj.ReferenceVisMarker(traj_status.current_position, &traj_markers);
+        globals_.sampled_traj.RobotPosVisMarker(
+                 msg_conversions::eigen_to_ros_point(robot_projected_on_traj), &traj_markers);
 
         // Check if trajectory collides with points in the point-cloud
         pthread_mutex_lock(&mutexes_.octomap);
