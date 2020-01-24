@@ -174,6 +174,47 @@ void MapperClass::SampledTrajectoryCallback(const pensa_msgs::VecPVA_4d::ConstPt
     sem_post(&semaphores_.collision_check);
 }
 
+void MapperClass::WaypointsCallback(const mapper::WaypointSetConstPtr &msg) {
+    ROS_INFO("New waypoints!");
+    ros::Time t0 = ros::Time::now();
+    while (t0.toSec() == 0) {
+        t0 = ros::Time::now();
+    }
+
+    if (msg->waypoints.size() == 0) {  // Empty trajectory
+        return;
+    }
+
+    // Transform WaypointSet into SampledTrajectory3D
+    sampled_traj::SampledTrajectory3D sampled_traj(msg->waypoints, globals_.map_3d);
+    ROS_INFO("Number of waypoints: %zu", sampled_traj.pos_.size());
+
+    pthread_mutex_lock(&mutexes_.sampled_traj);
+        globals_.sampled_traj.pos_ = sampled_traj.pos_;
+        globals_.sampled_traj.time_ = sampled_traj.time_;
+        globals_.sampled_traj.compressed_pos_ = sampled_traj.compressed_pos_;
+        globals_.sampled_traj.compressed_time_ = sampled_traj.compressed_time_;
+        globals_.sampled_traj.n_points_ = sampled_traj.n_points_;
+
+        //  Transform compressed trajectory into a set of pixels in octomap
+        //  Octomap insertion avoids repeated points
+        globals_.sampled_traj.thick_traj_.clear();
+        for (int i = 0; i < globals_.sampled_traj.n_compressed_points_-1; i++) {
+            globals_.sampled_traj.ThickBresenham(globals_.sampled_traj.compressed_pos_[i],
+                                                 globals_.sampled_traj.compressed_pos_[i+1]);
+        }
+
+        // populate trajectory node centers in a point cloud
+        globals_.sampled_traj.ThickTrajToPcl();
+
+        // populate kdtree for finding nearest neighbor w.r.t. collisions
+        globals_.sampled_traj.CreateKdTree();
+    pthread_mutex_unlock(&mutexes_.sampled_traj);
+
+    // Notify the collision checker to check for collision
+    sem_post(&semaphores_.collision_check);
+}
+
 void MapperClass::TrajectoryStatusCallback(const pensa_msgs::trapezoidal_p2pActionFeedbackConstPtr &msg) {
     pthread_mutex_lock(&mutexes_.traj_status);
         globals_.traj_status = msg->feedback;

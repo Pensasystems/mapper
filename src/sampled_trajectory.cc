@@ -76,6 +76,33 @@ SampledTrajectory3D::SampledTrajectory3D(const pensa_msgs::VecPVA_4d &pva_vec,
     // traj_initial_time_ = ros::Time::now();
 }
 
+// This one is a special case... we get non-stamped waypoints and assume
+// a straight trajectory from point to point. These waypoints are already
+// compressed
+SampledTrajectory3D::SampledTrajectory3D(const std::vector<geometry_msgs::Point> &waypoints,
+                                         const bool &map_3d) {
+    n_points_ = waypoints.size();
+    pcl::PointXYZ pos;
+    time_.resize(n_points_);
+    pos_.resize(n_points_);
+    compressed_time_.resize(n_points_);
+    compressed_pos_.resize(n_points_);
+    for (int i = 0; i < n_points_; i++) {
+        time_[i] = double(i);
+        pos.x = waypoints[i].x;
+        pos.y = waypoints[i].y;
+        if (map_3d) {
+            pos.z = waypoints[i].z;
+        } else {
+            pos.z = 0.0;
+        }
+        pos_[i] = pos;
+
+        compressed_pos_[i] << pos.x, pos.y, pos.z;
+        compressed_time_[i] = double(i);
+    }
+}
+
 SampledTrajectory3D::SampledTrajectory3D() {
     n_points_ = 0;
     // traj_initial_time_ = ros::Time(0.0);

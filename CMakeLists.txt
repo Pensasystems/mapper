@@ -37,6 +37,7 @@ add_message_files(
   FILES
   ControlState.msg
   Segment.msg
+  WaypointSet.msg
 )
 
 add_service_files(

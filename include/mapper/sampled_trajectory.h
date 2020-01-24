@@ -80,6 +80,8 @@ class SampledTrajectory3D{
                         const pcl::PointCloud<pcl::PointXYZ> &pos_vec);
     SampledTrajectory3D(const pensa_msgs::VecPVA_4d &pva_vec,
                         const bool &map_3d);
+    SampledTrajectory3D(const std::vector<geometry_msgs::Point> &waypoints,
+                        const bool &map_3d);
     SampledTrajectory3D();
 
     // Methods
