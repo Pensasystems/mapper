@@ -1,0 +1,26 @@
+<launch>
+  <param name="use_sim_time" value="true"/>  
+
+  <!-- <param name="robot_description"
+    textfile="$(find mapper)/urdf/cinderella_new.urdf" /> -->
+
+  <!-- <node name="robot_state_publisher" pkg="robot_state_publisher"
+    type="robot_state_publisher" /> -->
+
+  <include file="$(find mapper)/launch/mapper.launch">
+    <arg name="namespace"              value="cinderella" />
+    <arg name="launch_rviz"            value="true" />
+    <arg name="process_pcl_at_startup" value="true" />
+    <arg name="map_3d"                 value="false" />
+    <arg name="inertial_frame_id"      value="/store" />
+    <arg name="lidar_frame_id"         value="['/laser_hector_frame']" />
+    <arg name="robot_frame_id"         value="/c0001_bl" />
+  </include>
+
+    <!-- <node pkg="motion_planner" type="motion_planner_node" name="motion_planner" output="screen" required = "true">  </node> -->
+
+  <!-- <node name="rviz" pkg="rviz" type="rviz" required="true"
+      args="-d $(find mapper)/cfg/mapper.rviz" /> -->
+
+
+</launch>

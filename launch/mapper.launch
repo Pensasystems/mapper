@@ -9,6 +9,7 @@
     <arg name="depth_cam_prefix" default="/" />
     <arg name="depth_cam_suffix" default="/camera/depth/compressed_points" />
     <arg name="lidar_prefix" default="/" />
+    <arg name="lidar_frame_id" default="['/laser_frame']" />
     <arg name="lidar_suffix" default="" />
 
     <group ns="$(arg namespace)">
@@ -34,7 +35,7 @@
             <param name="lidar_suffix" value="$(arg lidar_suffix)"/>
 
             <!-- tf frame ID for the lidars above -->
-            <rosparam param="lidar_frame_id"> ["/laser_frame"] </rosparam>
+            <rosparam param="lidar_frame_id" subst_value="True"> $(arg lidar_frame_id) </rosparam>
 
             <!-- Robot Center tf Frame ID -->
             <param name="robot_frame_id" value="$(arg robot_frame_id)"/>

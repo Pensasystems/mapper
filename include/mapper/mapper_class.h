@@ -54,10 +54,10 @@
 // Mapper message types
 #include "mapper/Segment.h"
 #include "mapper/ControlState.h"
-#include "mapper/WaypointSet.h"
 
 // Pensa-ros msg types
 #include "pensa_msgs/VecPVA_4d.h"
+#include "pensa_msgs/WaypointSet.h"
 #include <pensa_msgs/trapezoidal_p2pAction.h>
 
 // Classes
@@ -99,7 +99,7 @@ class MapperClass {
   void SampledTrajectoryCallback(const pensa_msgs::VecPVA_4d::ConstPtr &msg);
 
   // Callback for handling incoming waypoints
-  void WaypointsCallback(const mapper::WaypointSetConstPtr &msg);
+  void WaypointsCallback(const pensa_msgs::WaypointSetConstPtr &msg);
 
   // // Callback to know the current status of trajectory tracking
   void TrajectoryStatusCallback(const pensa_msgs::trapezoidal_p2pActionFeedbackConstPtr &msg);

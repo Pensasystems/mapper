@@ -174,7 +174,7 @@ void MapperClass::SampledTrajectoryCallback(const pensa_msgs::VecPVA_4d::ConstPt
     sem_post(&semaphores_.collision_check);
 }
 
-void MapperClass::WaypointsCallback(const mapper::WaypointSetConstPtr &msg) {
+void MapperClass::WaypointsCallback(const pensa_msgs::WaypointSetConstPtr &msg) {
     ROS_INFO("New waypoints!");
     ros::Time t0 = ros::Time::now();
     while (t0.toSec() == 0) {
