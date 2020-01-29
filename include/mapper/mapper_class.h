@@ -183,7 +183,7 @@ class MapperClass {
   ros::ServiceServer save_map_srv_, load_map_srv_, process_pcl_srv_;
 
   // Thread rates (hz)
-  double tf_update_rate_, fading_memory_update_rate_;
+  double tf_update_rate_, fading_memory_update_rate_, collision_check_rate_;
 
   // Path planning services
   ros::ServiceServer rrg_srv_;

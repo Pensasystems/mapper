@@ -74,7 +74,7 @@
             <!-- Collision Checking parameters -->
             <param name="traj_compression_max_dev" value="0.01"/>     <!-- meters -->
             <param name="traj_compression_resolution" value="0.02"/>  <!-- meters -->
-            <param name="collision_check_rate" value="0.01"/>         <!-- Hz -->
+            <param name="collision_check_rate" value="10"/>         <!-- Hz -->
 
             <!-- Frequency at which tf listeners update tf -->
             <param name="tf_update_rate" value="50"/>            <!-- Hz -->

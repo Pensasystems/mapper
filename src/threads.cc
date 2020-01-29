@@ -118,7 +118,7 @@ void MapperClass::CollisionCheckTask() {
     ROS_DEBUG("collisionCheck Thread started!");
 
     // Rate at which the collision checker will run
-    // ros::Rate loop_rate(collision_check_rate_);
+    ros::Rate loop_rate(collision_check_rate_);
 
     // visualization markers
     visualization_msgs::MarkerArray traj_markers, samples_markers;
@@ -131,8 +131,8 @@ void MapperClass::CollisionCheckTask() {
     int cloudsize;
 
     while (ros::ok()) {
-        // Wait until there is a new trajectory or a new update on the map
-        sem_wait(&semaphores_.collision_check);
+        // Wait until there is a trajectory to execute this thread
+        // sem_wait(&semaphores_.collision_check);
 
         // Get time for when this task started
         ros::Time time_now = ros::Time::now();
@@ -157,6 +157,15 @@ void MapperClass::CollisionCheckTask() {
             path_marker_pub_.publish(samples_markers);
             path_marker_pub_.publish(compressed_samples_markers);
         pthread_mutex_unlock(&mutexes_.sampled_traj);
+
+        // Stop execution if there are no points in the trajectory structure
+        cloudsize = point_cloud_traj.size();
+        if (cloudsize <= 0) {
+            visualization_functions::DrawCollidingNodes(colliding_nodes, inertial_frame_id_, 0.015, &collision_markers);
+            path_marker_pub_.publish(traj_markers);
+            path_marker_pub_.publish(collision_markers);
+            continue;
+        }
 
         // Get robot's current position
         pthread_mutex_lock(&mutexes_.body_tf);
@@ -183,15 +192,6 @@ void MapperClass::CollisionCheckTask() {
         // Set current trajectory to z=0 if working with 2D maps only
         if(!globals_.map_3d) {
             traj_status.current_position.z = 0.0;
-        }
-
-        // Stop execution if there are no points in the trajectory structure
-        cloudsize = point_cloud_traj.size();
-        if (cloudsize <= 0) {
-            visualization_functions::DrawCollidingNodes(colliding_nodes, inertial_frame_id_, 0.015, &collision_markers);
-            path_marker_pub_.publish(traj_markers);
-            path_marker_pub_.publish(collision_markers);
-            continue;
         }
 
         // Stop execution if the current time is beyond the final time of the trajectory
@@ -247,7 +247,7 @@ void MapperClass::CollisionCheckTask() {
         // ros::Duration solver_time = ros::Time::now() - time_now;
         // ROS_INFO("Collision check time: %f", solver_time.toSec());
 
-        // loop_rate.sleep();
+        loop_rate.sleep();
     }
 
     ROS_DEBUG("Exiting collisionCheck Thread...");
@@ -371,8 +371,8 @@ void MapperClass::OctomappingTask() {
             cam_frustum_pub_.publish(lidar_range_marker);
         }
 
-        // Notify the collision checker to check for collision due to map update
-        sem_post(&semaphores_.collision_check);
+        // // Notify the collision checker to check for collision due to map update
+        // sem_post(&semaphores_.collision_check);
 
         // ros::Duration map_time = ros::Time::now() - t0;
         // ROS_INFO("Mapping time: %f", map_time.toSec());
