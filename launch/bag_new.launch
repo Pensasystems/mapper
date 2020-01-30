@@ -41,6 +41,8 @@
     <arg name="process_pcl_at_startup" value="true" />
     <arg name="map_3d"                 value="false" />
     <arg name="inertial_frame_id"      value="/store" />
+    <arg name="lidar_frame_id"         value="['/laser_hector_frame']" />
+    <arg name="lidar_names"            value="['/laser/cloud']" />
     <arg name="robot_frame_id"         value="/base_link" />
   </include>
 

@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /PointCloud21
         - /TF1/Frames1
       Splitter Ratio: 0.5
     Tree Height: 775
@@ -27,7 +28,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: PointCloud2
 Toolbars:
   toolButtonStyle: 2
 Visualization Manager:
@@ -90,9 +91,9 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 0
+      Max Intensity: -999999
       Min Color: 0; 0; 0
-      Min Intensity: 0
+      Min Intensity: 999999
       Name: PointCloud2
       Position Transformer: XYZ
       Queue Size: 1
@@ -100,7 +101,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.0399999991
       Style: Flat Squares
-      Topic: /laser/scan/cloud
+      Topic: /laser/cloud
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -157,30 +158,31 @@ Visualization Manager:
       Show Names: false
       Tree:
         mavros_local:
-          store:
-            c0001_odom:
-              c0001_bl:
-                laser_hector_frame:
-                  {}
-            lp0:
-              lp0_cam1:
+          {}
+        store:
+          c0001_odom:
+            c0001_bl:
+              laser_hector_frame:
                 {}
-              lp0_cam2:
-                {}
-              lp0_uwb_anchor:
-                {}
-            lp1:
-              lp1_cam1:
-                {}
-              lp1_cam2:
-                {}
-              lp1_uwb_anchor:
-                {}
-            map:
-              map_ned:
-                {}
-            octomap:
+          lp0:
+            lp0_cam1:
               {}
+            lp0_cam2:
+              {}
+            lp0_uwb_anchor:
+              {}
+          lp1:
+            lp1_cam1:
+              {}
+            lp1_cam2:
+              {}
+            lp1_uwb_anchor:
+              {}
+          map:
+            map_ned:
+              {}
+          octomap:
+            {}
       Update Interval: 0
       Value: true
     - Class: rviz/Marker
@@ -188,7 +190,7 @@ Visualization Manager:
       Marker Topic: /cinderella/mapper_node/frustum_markers
       Name: Frustum
       Namespaces:
-        {}
+        lidar//store: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -196,7 +198,11 @@ Visualization Manager:
       Marker Topic: /cinderella/mapper_node/discrete_trajectory_markers
       Name: DiscretizedTrajectory
       Namespaces:
-        {}
+        ReferencePos: true
+        RobotPos: true
+        SampledTraj: true
+        compressedTraj: true
+        thick_traj: true
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -242,7 +248,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 7.29103994
+      Distance: 10.2433863
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
@@ -257,10 +263,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.679796696
+      Pitch: 0.599796653
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.10860014
+      Yaw: 3.03359914
     Saved: ~
 Window Geometry:
   Displays:

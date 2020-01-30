@@ -17,7 +17,7 @@
     </visual>
   </link>
 
-  <link name="laser_frame">
+  <link name="laser_hector_frame">
     <visual>
       <origin xyz="0.0 0.0 0.0" />
       <geometry>
@@ -39,7 +39,7 @@
 
   <joint name="lidar_link_joint" type="fixed">
     <parent link="base_link" />
-    <child link="laser_frame" />
+    <child link="laser_hector_frame" />
     <origin xyz="0. 0. 0." rpy="0. 3.141593 0.076" />
   </joint>
 
