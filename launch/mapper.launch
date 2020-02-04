@@ -12,6 +12,9 @@
     <arg name="lidar_prefix" default="/" />
     <arg name="lidar_frame_id" default="['/laser_hector_frame']" />
     <arg name="lidar_suffix" default="" />
+    <arg name="map_resolution" default="0.1" />
+    <arg name="max_range" default="6.0" />
+    <arg name="min_range" default="0.25" />
 
     <group ns="$(arg namespace)">
         <node pkg="mapper"
@@ -46,8 +49,8 @@
 
             <!-- Set parameters for the mapper -->
             <param name="map_resolution" value="0.10"/>          <!-- meters -->
-            <param name="max_range" value="6"/>                 <!-- meters -->
-            <param name="min_range" value="0.25"/>              <!-- meters -->
+            <param name="max_range" value="$(arg max_range)"/>                 <!-- meters -->
+            <param name="min_range" value="$(arg min_range)"/>              <!-- meters -->
 
             <!-- Time to forget information (set as negative if infinity) -->
             <param name="memory_time" value="-10.0"/>           <!-- seconds -->

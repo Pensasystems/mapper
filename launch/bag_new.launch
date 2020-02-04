@@ -44,6 +44,8 @@
     <arg name="lidar_frame_id"         value="['/laser_hector_frame']" />
     <arg name="lidar_names"            value="['/laser/cloud']" />
     <arg name="robot_frame_id"         value="/base_link" />
+    <arg name="max_range"              value="6.0" />
+    <arg name="min_range"              value="0.25" />
   </include>
 
     <!-- <node pkg="motion_planner" type="motion_planner_node" name="motion_planner" output="screen" required = "true">  </node> -->
