@@ -195,6 +195,7 @@ void MapperClass::WaypointsCallback(const pensa_msgs::WaypointSetConstPtr &msg) 
         globals_.sampled_traj.compressed_pos_ = sampled_traj.compressed_pos_;
         globals_.sampled_traj.compressed_time_ = sampled_traj.compressed_time_;
         globals_.sampled_traj.n_points_ = sampled_traj.n_points_;
+        globals_.sampled_traj.n_compressed_points_ = sampled_traj.n_points_;
 
         //  Transform compressed trajectory into a set of pixels in octomap
         //  Octomap insertion avoids repeated points

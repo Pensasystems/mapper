@@ -178,11 +178,6 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     cameras_sub_.resize(depth_cam_names.size());
     lidar_sub_.resize(lidar_names.size());
 
-    // Subscriber for trajectories
-    trajectory_sub_ = nh->subscribe<pensa_msgs::VecPVA_4d>("/motion_planner/current_trajectory", 1, &MapperClass::SampledTrajectoryCallback, this);
-    trajectory_status_sub_ = nh->subscribe<pensa_msgs::trapezoidal_p2pActionFeedback>
-        ("/trapezoidal_p2p_action/feedback", 1, &MapperClass::TrajectoryStatusCallback, this);
-
     // Create services ------------------------------------------
     resolution_srv_ = nh->advertiseService(
         resolution_srv_name, &MapperClass::UpdateResolution, this);
@@ -225,6 +220,12 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     h_collision_check_thread_ = std::thread(&MapperClass::CollisionCheckTask, this);
     h_body_tf_thread_ = std::thread(&MapperClass::BodyTfTask, this, inertial_frame_id_, robot_frame_id_);
     // h_keyboard_thread_ = std::thread(&MapperClass::KeyboardTask, this);
+
+    // Subscriber for trajectories
+    waypoints_sub_ = nh->subscribe<pensa_msgs::WaypointSet>("/drone_arbiter/check_collision", 1, &MapperClass::WaypointsCallback, this);
+    // trajectory_sub_ = nh->subscribe<pensa_msgs::VecPVA_4d>("/motion_planner/current_trajectory", 1, &MapperClass::SampledTrajectoryCallback, this);
+    trajectory_status_sub_ = nh->subscribe<pensa_msgs::trapezoidal_p2pActionFeedback>
+        ("/trapezoidal_p2p_action/feedback", 1, &MapperClass::TrajectoryStatusCallback, this);
 
     // Camera subscribers and tf threads ----------------------------------------------
     for (uint i = 0; i < depth_cam_names.size(); i++) {

@@ -311,7 +311,9 @@ void MapperClass::OctomappingTask() {
                 } else {
                     globals_.octomap.PclToRayOctomap(pcl_world, tf_cam2world, world_frustum);
                 }
-                globals_.octomap.tree_.prune();   // prune the tree before visualizing
+                if (globals_.map_3d) {
+                    globals_.octomap.tree_.prune();   // prune the tree before visualizing
+                }
             pthread_mutex_unlock(&mutexes_.octomap);
         }
 

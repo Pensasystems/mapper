@@ -174,6 +174,7 @@ class MapperClass {
 
   // Subscriber variables
   ros::Subscriber trajectory_sub_, trajectory_status_sub_;
+  ros::Subscriber waypoints_sub_;
   std::vector<ros::Subscriber> cameras_sub_;
   std::vector<ros::Subscriber> lidar_sub_;
 
