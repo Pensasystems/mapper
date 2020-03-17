@@ -40,14 +40,14 @@ void SetMarkerProperties(const std_msgs::Header &header,
 
 void DeleteMarkersTemplate(const std::string &frame_id,
                            visualization_msgs::MarkerArray *marker_array) {
-  visualization_msgs::Marker deleteMarker;
-  deleteMarker.action = deleteMarker.DELETEALL;
-  deleteMarker.scale.x = 0.1;
-  deleteMarker.scale.y = 0.1;
-  deleteMarker.scale.z = 0.1;
-  deleteMarker.header.frame_id = frame_id;
-  deleteMarker.ns = "";
-  marker_array->markers.push_back(deleteMarker);
+  visualization_msgs::Marker delete_marker;
+  delete_marker.action = visualization_msgs::Marker::DELETEALL;
+  delete_marker.scale.x = 0.1;
+  delete_marker.scale.y = 0.1;
+  delete_marker.scale.z = 0.1;
+  delete_marker.header.frame_id = frame_id;
+  delete_marker.ns = "";
+  marker_array->markers.push_back(delete_marker);
 }
 
 void SetMarkersForDeletion(visualization_msgs::MarkerArray* marker_array) {
@@ -74,6 +74,7 @@ void DrawCollidingNodes(const std::vector<Eigen::Vector3d> &points,
                         const std::string &frame_id,
                         const double &resolution,
                         visualization_msgs::MarkerArray* marker_array) {
+  marker_array->markers.clear();
   DrawNodes(points, frame_id, "collision", resolution, Color::Red(), 0.9, marker_array);
 }
 
@@ -81,6 +82,7 @@ void DrawCollidingNodes(const std::vector<octomap::point3d> &points,
                         const std::string &frame_id,
                         const double &resolution,
                         visualization_msgs::MarkerArray *marker_array) {
+  marker_array->markers.clear();
   DrawNodes(points, frame_id, "collision", resolution, Color::Red(), 0.9, marker_array);
 }
 
@@ -117,21 +119,18 @@ void DrawNodes(const std::vector<Eigen::Vector3d> &points,
   }
 
   for (size_t i = 0; i < n_w; ++i) {
-    geometry_msgs::Point NewPoint;
-    NewPoint.x = points[i](0);
-    NewPoint.y = points[i](1);
-    NewPoint.z = points[i](2);
-    marker.points.push_back(NewPoint);
-    // marker.pose.position = NewPoint;
-    // marker_array->markers.push_back(marker);
-    // i = i + 1;
+    geometry_msgs::Point new_point;
+    new_point.x = points[i](0);
+    new_point.y = points[i](1);
+    new_point.z = points[i](2);
+    marker.points.push_back(new_point);
   }
   marker_array->markers.push_back(marker);
 
   std_msgs::Header header;
   header.frame_id = frame_id;
   header.stamp = ros::Time::now();
-  SetMarkerProperties(header, 0.0, marker_array);
+  SetMarkerProperties(header, 1.0, marker_array);
 }
 
 void DrawNodes(const std::vector<octomap::point3d> &points,
@@ -167,21 +166,18 @@ void DrawNodes(const std::vector<octomap::point3d> &points,
   }
 
   for (size_t i = 0; i < n_w; ++i) {
-    geometry_msgs::Point NewPoint;
-    NewPoint.x = points[i].x();
-    NewPoint.y = points[i].y();
-    NewPoint.z = points[i].z();
-    marker.points.push_back(NewPoint);
-    // marker.pose.position = NewPoint;
-    // marker_array->markers.push_back(marker);
-    // i = i + 1;
+    geometry_msgs::Point new_point;
+    new_point.x = points[i].x();
+    new_point.y = points[i].y();
+    new_point.z = points[i].z();
+    marker.points.push_back(new_point);
   }
   marker_array->markers.push_back(marker);
 
   std_msgs::Header header;
   header.frame_id = frame_id;
   header.stamp = ros::Time::now();
-  SetMarkerProperties(header, 0.0, marker_array);
+  SetMarkerProperties(header, 1.0, marker_array);
 }
 
 void MarkerNode(const Eigen::Vector3d &point,

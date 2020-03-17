@@ -663,6 +663,17 @@ void SampledTrajectory3D::CompressedVisMarkers(visualization_msgs::MarkerArray* 
     marker_array->markers.push_back(marker);
 }
 
+void SampledTrajectory3D::GetVisMarkers(visualization_msgs::MarkerArray *traj_markers,
+                                        visualization_msgs::MarkerArray *samples_markers,
+                                        visualization_msgs::MarkerArray *compressed_samples_markers) {
+    traj_markers->markers.clear();
+    samples_markers->markers.clear();
+    compressed_samples_markers->markers.clear();
+    this->TrajVisMarkers(traj_markers);
+    this->SamplesVisMarkers(samples_markers);
+    this->CompressedVisMarkers(compressed_samples_markers);
+}
+
 // Clear all the data within this object
 void SampledTrajectory3D::ClearObject() {
     SampledTrajectory3D newObj();

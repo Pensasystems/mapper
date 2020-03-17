@@ -141,19 +141,13 @@ void MapperClass::CollisionCheckTask() {
         // Copy trajectory into local point cloud
         pcl::PointCloud<pcl::PointXYZ> point_cloud_traj;
         std::vector<octomap::point3d> colliding_nodes;
-        traj_markers.markers.clear();
-        collision_markers.markers.clear();
-        samples_markers.markers.clear();
-        compressed_samples_markers.markers.clear();
         pthread_mutex_lock(&mutexes_.sampled_traj);
             point_cloud_traj = globals_.sampled_traj.point_cloud_traj_;
             std::vector<double> time = globals_.sampled_traj.time_;
             const double traj_size = globals_.sampled_traj.GetResolution();
 
             // Send visualization markers
-            globals_.sampled_traj.TrajVisMarkers(&traj_markers);
-            globals_.sampled_traj.SamplesVisMarkers(&samples_markers);
-            globals_.sampled_traj.CompressedVisMarkers(&compressed_samples_markers);
+            globals_.sampled_traj.GetVisMarkers(&traj_markers, &samples_markers, &compressed_samples_markers);
         pthread_mutex_unlock(&mutexes_.sampled_traj);
 
         // Stop execution if there are no points in the trajectory structure

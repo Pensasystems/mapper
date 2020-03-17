@@ -116,6 +116,9 @@ class SampledTrajectory3D{
     void TrajVisMarkers(visualization_msgs::MarkerArray* marker_array);
     void SamplesVisMarkers(visualization_msgs::MarkerArray* marker_array);
     void CompressedVisMarkers(visualization_msgs::MarkerArray* marker_array);
+    void GetVisMarkers(visualization_msgs::MarkerArray *traj_markers,
+                       visualization_msgs::MarkerArray *samples_markers,
+                       visualization_msgs::MarkerArray *compressed_samples_markers);
     void ClearObject();  // Clear all the data within this object
 };
 
