@@ -293,72 +293,80 @@ void DrawArrowPoints(const Eigen::Vector3d& p1,
   marker->pose.orientation.w = 1.0;
 }
 
+void SphereVisMarker(const geometry_msgs::Point &pos,
+                     const std::string &frame_id,
+                     const std::string &name_space,
+                     const double &diameter,
+                     const std_msgs::ColorRGBA &color,
+                     visualization_msgs::Marker *marker) {
+    // Set position
+    marker->points.push_back(pos);
+    marker->colors.push_back(color);
+
+    // Set marker properties
+    marker->header.frame_id = frame_id;
+    marker->header.stamp = ros::Time::now();
+    marker->ns = name_space;
+    marker->id = 0;
+    marker->type = visualization_msgs::Marker::SPHERE_LIST;
+    marker->scale = msg_conversions::set_ros_vector(diameter, diameter, diameter);
+    marker->pose.orientation.w = 1.0;
+    marker->lifetime = ros::Duration(1.0);
+    marker->action = visualization_msgs::Marker::ADD;
+}
+
 void ReferenceVisMarker(const geometry_msgs::Point &pos,
                         const std::string& frame_id,
                         visualization_msgs::MarkerArray* marker_array) {
-    const ros::Time rostime = ros::Time::now();
     visualization_msgs::Marker marker;
 
     // Set color parameters
-    std_msgs::ColorRGBA color;
-    color = visualization_functions::Color::Red();
+    std_msgs::ColorRGBA color = Color::Red();
     color.a = 0.9;
+    const std::string ns = "ReferencePos";
+    const double diameter = 0.15;
 
-    // Set position
-    marker.points.push_back(pos);
-    marker.colors.push_back(color);
-
-    // Set marker properties
-    marker.header.frame_id = frame_id;
-    marker.header.stamp = rostime;
-    marker.ns = "ReferencePos";
-    marker.id = 0;
-    marker.type = visualization_msgs::Marker::SPHERE_LIST;
-    marker.scale.x = 0.15;
-    marker.scale.y = 0.15;
-    marker.scale.z = 0.15;
-    marker.pose.orientation.w = 1.0;
-    marker.lifetime = ros::Duration(1.0);
-    marker.action = visualization_msgs::Marker::ADD;
+    SphereVisMarker(pos, frame_id, ns, diameter, color, &marker);
 
     marker_array->markers.push_back(marker);
 }
 
 void RobotPosVisMarker(const geometry_msgs::Point &pos,
-                       const std::string& frame_id,
+                       const std::string &frame_id,
                        visualization_msgs::MarkerArray* marker_array) {
-    const ros::Time rostime = ros::Time::now();
     visualization_msgs::Marker marker;
 
     // Set color parameters
-    std_msgs::ColorRGBA color;
-    color = visualization_functions::Color::Blue();
+    std_msgs::ColorRGBA color = Color::Green();
     color.a = 0.9;
+    const std::string ns = "RobotPos";
+    const double diameter = 0.15;
 
-    // Set position
-    marker.points.push_back(pos);
-    marker.colors.push_back(color);
+    SphereVisMarker(pos, frame_id, ns, diameter, color, &marker);
 
-    // Set marker properties
-    marker.header.frame_id = frame_id;
-    marker.header.stamp = rostime;
-    marker.ns = "RobotPos";
-    marker.id = 0;
-    marker.type = visualization_msgs::Marker::SPHERE_LIST;
-    marker.scale.x = 0.15;
-    marker.scale.y = 0.15;
-    marker.scale.z = 0.15;
-    marker.pose.orientation.w = 1.0;
-    marker.lifetime = ros::Duration(1.0);
-    marker.action = visualization_msgs::Marker::ADD;
+    marker_array->markers.push_back(marker);
+}
+
+void ProjectedPosVisMarker(const geometry_msgs::Point &pos,
+                           const std::string &frame_id,
+                           visualization_msgs::MarkerArray* marker_array) {
+    visualization_msgs::Marker marker;
+
+    // Set color parameters
+    std_msgs::ColorRGBA color = Color::Blue();
+    color.a = 0.9;
+    const std::string ns = "ProjectedRobotPos";
+    const double diameter = 0.15;
+
+    SphereVisMarker(pos, frame_id, ns, diameter, color, &marker);
 
     marker_array->markers.push_back(marker);
 }
 
 // Markers for trajectory
-void TrajVisMarkers(const pcl::PointCloud<pcl::PointXYZ>& pcl_traj,
-                    const std::string& frame_id,
-                    const double& size,
+void TrajVisMarkers(const pcl::PointCloud<pcl::PointXYZ> &pcl_traj,
+                    const std::string &frame_id,
+                    const double &size,
                     visualization_msgs::MarkerArray* marker_array) {
     // Markers: each marker array stores a set of nodes with similar size
     // visualization_msgs::MarkerArray occupiedNodesVis;

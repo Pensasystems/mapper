@@ -38,6 +38,7 @@ namespace msg_conversions {
   void                   eigen_to_array_vector(const Eigen::Vector3d & v, float* array);
   void                   ros_to_array_vector(const geometry_msgs::Vector3 & v, float* array);
   geometry_msgs::Vector3 array_to_ros_vector(float* array);
+  geometry_msgs::Vector3 set_ros_vector(const double & x, const double & y, const double & z);
 
   geometry_msgs::Point   eigen_to_ros_point(const Eigen::Vector3d & v);
   void                   eigen_to_ros_point(const Eigen::Vector3d &eigen_pt, geometry_msgs::Point *ros_pt);

@@ -249,6 +249,16 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     ROS_DEBUG("Initialization complete");
 }
 
+bool MapperClass::PublishMarkers(const visualization_msgs::MarkerArray &collision_markers,
+                                 const visualization_msgs::MarkerArray &traj_markers,
+                                 const visualization_msgs::MarkerArray &samples_markers,
+                                 const visualization_msgs::MarkerArray &compressed_samples_markers) {
+    path_marker_pub_.publish(collision_markers);
+    path_marker_pub_.publish(traj_markers);
+    path_marker_pub_.publish(samples_markers);
+    path_marker_pub_.publish(compressed_samples_markers);
+}
+
 
 // PLUGINLIB_EXPORT_CLASS(mapper::MapperClass, nodelet::Nodelet);
 

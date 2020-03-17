@@ -83,6 +83,13 @@ class MapperClass {
 
 
  protected:
+  // Functions within mapper_class.cc -------------------------------
+    bool PublishMarkers(const visualization_msgs::MarkerArray &collision_markers,
+                        const visualization_msgs::MarkerArray &traj_markers,
+                        const visualization_msgs::MarkerArray &samples_markers,
+                        const visualization_msgs::MarkerArray &compressed_samples_markers);
+
+
   // Callbacks (see callbacks.cc for implementation) ----------------
   // Callback for handling incoming camera point cloud messages
   void CameraPclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg,

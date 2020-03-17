@@ -94,6 +94,12 @@ geometry_msgs::Point array_to_ros_point(float* array) {
   return v;
 }
 
+geometry_msgs::Vector3 set_ros_vector(const double & x, const double & y, const double & z) {
+  geometry_msgs::Vector3 v;
+  v.x = x; v.y = y; v.z = z;
+  return v;
+}
+
 geometry_msgs::Point set_ros_point(const double & x, const double & y, const double & z) {
   geometry_msgs::Point v;
   v.x = x; v.y = y; v.z = z;

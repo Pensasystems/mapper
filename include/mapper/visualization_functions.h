@@ -133,17 +133,29 @@ void DrawArrowPoints(const Eigen::Vector3d &p1,
                      const double &diameter,
                      visualization_msgs::Marker* marker);
 
+void SphereVisMarker(const geometry_msgs::Point &pos,
+                     const std::string &frame_id,
+                     const std::string &name_space,
+                     const double &diameter,
+                     const std_msgs::ColorRGBA &color,
+                     visualization_msgs::Marker *marker);
+
 void ReferenceVisMarker(const geometry_msgs::Point &pos,
-                        const std::string& frame_id,
+                        const std::string &frame_id,
                         visualization_msgs::MarkerArray* marker_array);
+
 void RobotPosVisMarker(const geometry_msgs::Point &pos,
-                       const std::string& frame_id,
+                       const std::string &frame_id,
                        visualization_msgs::MarkerArray* marker_array);
 
+void ProjectedPosVisMarker(const geometry_msgs::Point &pos,
+                           const std::string &frame_id,
+                           visualization_msgs::MarkerArray* marker_array);
+
 // Markers for trajectory
-void TrajVisMarkers(const pcl::PointCloud<pcl::PointXYZ>& pcl_traj,
-                    const std::string& frame_id,
-                    const double& size,
+void TrajVisMarkers(const pcl::PointCloud<pcl::PointXYZ> &pcl_traj,
+                    const std::string &frame_id,
+                    const double &size,
                     visualization_msgs::MarkerArray* marker_array);
 
 }  // namespace visualization_functions
