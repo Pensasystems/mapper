@@ -27,6 +27,7 @@
 #include <geometry_msgs/Quaternion.h>
 #include <geometry_msgs/Transform.h>
 #include <geometry_msgs/Vector3.h>
+#include <pcl/point_types.h>
 #include <tf/tf.h>
 
 namespace msg_conversions {
@@ -40,10 +41,13 @@ namespace msg_conversions {
 
   geometry_msgs::Point   eigen_to_ros_point(const Eigen::Vector3d & v);
   void                   eigen_to_ros_point(const Eigen::Vector3d &eigen_pt, geometry_msgs::Point *ros_pt);
+  pcl::PointXYZ          eigen_to_pcl_point(const Eigen::Vector3d &pt);
   void                   ros_to_array_point(const geometry_msgs::Point & p, float* array);
   geometry_msgs::Point   array_to_ros_point(float* array);
+  geometry_msgs::Point   set_ros_point(const double & x, const double & y, const double & z);
 
   Eigen::Vector3d        tf_vector3_to_eigen_vector(const tf::Vector3 & v);
+  geometry_msgs::Point   tf_vector3_to_ros_point(const tf::Vector3 & v);
 
   Eigen::Quaterniond        ros_to_eigen_quat(const geometry_msgs::Quaternion & q);
   geometry_msgs::Quaternion eigen_to_ros_quat(const Eigen::Quaterniond & q);

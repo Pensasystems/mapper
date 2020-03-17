@@ -1,0 +1,47 @@
+
+#pragma once
+
+#include "mapper/msg_conversions.h"
+
+#include <geometry_msgs/Vector3.h>
+#include <geometry_msgs/Point.h>
+#include <pcl/point_cloud.h>
+
+namespace helper {
+
+// p2 - p1
+void SubtractRosPoints(const geometry_msgs::Point& p1,
+                       const geometry_msgs::Point& p2,
+                       geometry_msgs::Vector3* v) {
+    v->x = p2.x - p1.x;
+    v->y = p2.y - p1.y;
+    v->z = p2.z - p1.z;
+}
+
+// p2 - p1
+void SubtractRosPoints(const geometry_msgs::Point& p1,
+                       const geometry_msgs::Point& p2,
+                       Eigen::Vector3d* v) {
+    *v = Eigen::Vector3d(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
+}
+
+// Shift a point in pcl
+void ShiftPclPoint(const pcl::PointXYZ& pt, const pcl::PointXYZ& shift,
+                   pcl::PointXYZ* pt_out) {
+    pt_out->x = pt.x + shift.x;
+    pt_out->y = pt.y + shift.y;
+    pt_out->z = pt.z + shift.z;
+}
+
+// Shift a whole pcl in a direction given by shift_vec
+void ShiftPcl(const pcl::PointCloud< pcl::PointXYZ >& pcl_in,
+              const Eigen::Vector3d& shift_vec,
+              pcl::PointCloud< pcl::PointXYZ >* pcl_out) {
+    pcl_out->resize(pcl_in.size());
+    pcl::PointXYZ shift = msg_conversions::eigen_to_pcl_point(shift_vec);
+    for (uint i = 0; i < pcl_in.size(); i++) {
+        ShiftPclPoint(pcl_in.points[i], shift, &pcl_out->points[i]);
+    }
+}
+
+}  // namespace helper

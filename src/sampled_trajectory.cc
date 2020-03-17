@@ -238,6 +238,11 @@ bool SampledTrajectory3D::NearestPointInCompressedTraj(const Eigen::Vector3d &po
     return true;
 }
 
+bool SampledTrajectory3D::NearestPointInCompressedTraj(const geometry_msgs::Point &point,
+                                                       geometry_msgs::Point *nearest_point) {
+    this->NearestPointInCompressedTraj(msg_conversions::ros_point_to_eigen_vector(point), nearest_point);
+}
+
 
 // It is highly likely that the original Author was Bob Pendelton
 // I translated this algorithm from Matlab into C++ based on:

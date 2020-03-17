@@ -17,6 +17,7 @@
  */
 
 #include <mapper/mapper_class.h>
+#include <mapper/helper.h>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -171,17 +172,21 @@ void MapperClass::CollisionCheckTask() {
         pthread_mutex_lock(&mutexes_.body_tf);
             tf_body2world = globals_.tf_body2world;
         pthread_mutex_unlock(&mutexes_.body_tf);
-        Eigen::Vector3d robot_position = 
-            msg_conversions::tf_vector3_to_eigen_vector(tf_body2world.getOrigin());
+        geometry_msgs::Point robot_position = 
+            msg_conversions::tf_vector3_to_ros_point(tf_body2world.getOrigin());
 
         // Find point in compressed trajectory that the robot is closest to
         geometry_msgs::Point robot_projected_on_traj;
         pthread_mutex_lock(&mutexes_.sampled_traj);
-        bool success = globals_.sampled_traj.NearestPointInCompressedTraj(robot_position, &robot_projected_on_traj);
+            bool success = globals_.sampled_traj.NearestPointInCompressedTraj(robot_position, &robot_projected_on_traj);
         pthread_mutex_unlock(&mutexes_.sampled_traj);
         if(!success) {  // this fails if there are not at least two points in the compressed trajectory
             continue;
         }
+
+        // Find vector from trajectory to drone position
+        Eigen::Vector3d vec_traj_to_drone;
+        helper::SubtractRosPoints(robot_projected_on_traj, robot_position, &vec_traj_to_drone);
 
         // Get trajectory status
         pensa_msgs::trapezoidal_p2pFeedback traj_status;
@@ -192,19 +197,11 @@ void MapperClass::CollisionCheckTask() {
         // Set current trajectory to z=0 if working with 2D maps only
         if(!globals_.map_3d) {
             traj_status.current_position.z = 0.0;
+            vec_traj_to_drone[2] = 0.0;
         }
 
-        // Stop execution if the current time is beyond the final time of the trajectory
-        // if (traj_status.current_time >= traj_status.final_time) {
-        //     pthread_mutex_lock(&mutexes_.sampled_traj);
-        //         globals_.sampled_traj.ClearObject();
-        //         globals_.sampled_traj.TrajVisMarkers(&traj_markers);
-        //     pthread_mutex_unlock(&mutexes_.sampled_traj);
-        //     visualization_functions::DrawCollidingNodes(colliding_nodes, inertial_frame_id_, 0.015, &collision_markers);
-        //     path_marker_pub_.publish(traj_markers);
-        //     path_marker_pub_.publish(collision_markers);
-        //     continue;
-        // }
+        pcl::PointCloud< pcl::PointXYZ > point_cloud_traj_through_drone;
+        helper::ShiftPcl(point_cloud_traj, vec_traj_to_drone, &point_cloud_traj_through_drone);
 
         // Get visualization marker for current set point and robot position projected on the trajectory
         globals_.sampled_traj.ReferenceVisMarker(traj_status.current_position, &traj_markers);
@@ -233,10 +230,6 @@ void MapperClass::CollisionCheckTask() {
                 // ROS_WARN("Imminent collision within %.3f seconds!", collision_time);
                 ROS_WARN("Imminent collision within %.3f meters!", collision_distance);
                 sentinel_pub_.publish(sorted_collisions[0]);
-                // pthread_mutex_lock(&mutexes_.sampled_traj);
-                //     globals_.sampled_traj.ClearObject();
-                // pthread_mutex_unlock(&mutexes_.sampled_traj);
-            // }
         }
 
         // Draw colliding markers (delete if none)

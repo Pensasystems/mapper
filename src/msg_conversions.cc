@@ -52,6 +52,10 @@ void eigen_to_ros_point(const Eigen::Vector3d &eigen_pt,
   ros_pt->z = eigen_pt[2];
 }
 
+pcl::PointXYZ eigen_to_pcl_point(const Eigen::Vector3d &pt) {
+  return pcl::PointXYZ(pt[0], pt[1], pt[2]);
+}
+
 Eigen::Quaterniond ros_to_eigen_quat(const geometry_msgs::Quaternion & q) {
   return Eigen::Quaterniond(q.w, q.x, q.y, q.z);
 }
@@ -90,8 +94,18 @@ geometry_msgs::Point array_to_ros_point(float* array) {
   return v;
 }
 
+geometry_msgs::Point set_ros_point(const double & x, const double & y, const double & z) {
+  geometry_msgs::Point v;
+  v.x = x; v.y = y; v.z = z;
+  return v;
+}
+
 Eigen::Vector3d tf_vector3_to_eigen_vector(const tf::Vector3 & v) {
   return Eigen::Vector3d(v.getX(), v.getY(), v.getZ());
+}
+
+geometry_msgs::Point tf_vector3_to_ros_point(const tf::Vector3 & v) {
+  return set_ros_point(v.getX(), v.getY(), v.getZ());
 }
 
 geometry_msgs::Quaternion array_to_ros_quat(float* array) {
