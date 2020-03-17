@@ -139,7 +139,7 @@ void MapperClass::CollisionCheckTask() {
         ros::Time time_now = ros::Time::now();
 
         // Copy trajectory into local point cloud
-        pcl::PointCloud< pcl::PointXYZ > point_cloud_traj;
+        pcl::PointCloud<pcl::PointXYZ> point_cloud_traj;
         std::vector<octomap::point3d> colliding_nodes;
         traj_markers.markers.clear();
         collision_markers.markers.clear();
@@ -148,13 +148,12 @@ void MapperClass::CollisionCheckTask() {
         pthread_mutex_lock(&mutexes_.sampled_traj);
             point_cloud_traj = globals_.sampled_traj.point_cloud_traj_;
             std::vector<double> time = globals_.sampled_traj.time_;
-            // pcl::PointCloud<pcl::PointXYZ> pos = globals_.sampled_traj.pos_;
+            const double traj_size = globals_.sampled_traj.GetResolution();
 
             // Send visualization markers
             globals_.sampled_traj.TrajVisMarkers(&traj_markers);
             globals_.sampled_traj.SamplesVisMarkers(&samples_markers);
             globals_.sampled_traj.CompressedVisMarkers(&compressed_samples_markers);
-            path_marker_pub_.publish(traj_markers);
             path_marker_pub_.publish(samples_markers);
             path_marker_pub_.publish(compressed_samples_markers);
         pthread_mutex_unlock(&mutexes_.sampled_traj);
@@ -163,8 +162,8 @@ void MapperClass::CollisionCheckTask() {
         cloudsize = point_cloud_traj.size();
         if (cloudsize <= 0) {
             visualization_functions::DrawCollidingNodes(colliding_nodes, inertial_frame_id_, 0.015, &collision_markers);
-            path_marker_pub_.publish(traj_markers);
             path_marker_pub_.publish(collision_markers);
+            path_marker_pub_.publish(traj_markers);
             continue;
         }
 
@@ -200,12 +199,17 @@ void MapperClass::CollisionCheckTask() {
             vec_traj_to_drone[2] = 0.0;
         }
 
-        pcl::PointCloud< pcl::PointXYZ > point_cloud_traj_through_drone;
+        // Shift PCL so it passes along drone position
+        pcl::PointCloud<pcl::PointXYZ> point_cloud_traj_through_drone;
         helper::ShiftPcl(point_cloud_traj, vec_traj_to_drone, &point_cloud_traj_through_drone);
 
+        // Visualize shifted trajectory
+        visualization_functions::TrajVisMarkers(point_cloud_traj_through_drone,
+            inertial_frame_id_, traj_size, &traj_markers);
+
         // Get visualization marker for current set point and robot position projected on the trajectory
-        globals_.sampled_traj.ReferenceVisMarker(traj_status.current_position, &traj_markers);
-        globals_.sampled_traj.RobotPosVisMarker(robot_projected_on_traj, &traj_markers);
+        visualization_functions::ReferenceVisMarker(traj_status.current_position, inertial_frame_id_, &traj_markers);
+        visualization_functions::RobotPosVisMarker(robot_projected_on_traj, inertial_frame_id_, &traj_markers);
 
         // Check if trajectory collides with points in the point-cloud
         pthread_mutex_lock(&mutexes_.octomap);

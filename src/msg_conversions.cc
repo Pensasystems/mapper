@@ -100,6 +100,10 @@ geometry_msgs::Point set_ros_point(const double & x, const double & y, const dou
   return v;
 }
 
+geometry_msgs::Point pcl_to_ros_vector(const pcl::PointXYZ& pt) {
+  return set_ros_point(pt.x, pt.y, pt.z);
+}
+
 Eigen::Vector3d tf_vector3_to_eigen_vector(const tf::Vector3 & v) {
   return Eigen::Vector3d(v.getX(), v.getY(), v.getZ());
 }

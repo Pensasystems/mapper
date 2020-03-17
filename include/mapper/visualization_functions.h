@@ -19,15 +19,17 @@
 #ifndef MAPPER_VISUALIZATION_FUNCTIONS_H_
 #define MAPPER_VISUALIZATION_FUNCTIONS_H_
 
+#include "mapper/msg_conversions.h"
+
 #include <octomap/octomap.h>
 #include <octomap/OcTree.h>
+#include <pcl/point_cloud.h>
 
 #include <visualization_msgs/MarkerArray.h>
 #include <Eigen/Core>
 #include <string>
 #include <vector>
 #include <set>
-#include "mapper/msg_conversions.h"
 
 namespace visualization_functions {
 
@@ -43,18 +45,18 @@ class Color : public std_msgs::ColorRGBA {
     a = alpha;
   }
 
-  static const Color White() { return Color(1.0, 1.0, 1.0); }
-  static const Color Black() { return Color(0.0, 0.0, 0.0); }
-  static const Color Gray() { return Color(0.5, 0.5, 0.5); }
-  static const Color Red() { return Color(1.0, 0.0, 0.0); }
-  static const Color Green() { return Color(0.0, 1.0, 0.0); }
-  static const Color Blue() { return Color(0.0, 0.0, 1.0); }
-  static const Color Yellow() { return Color(1.0, 1.0, 0.0); }
-  static const Color Orange() { return Color(1.0, 0.5, 0.0); }
-  static const Color Purple() { return Color(0.5, 0.0, 1.0); }
+  static const Color White()      { return Color(1.0, 1.0, 1.0); }
+  static const Color Black()      { return Color(0.0, 0.0, 0.0); }
+  static const Color Gray()       { return Color(0.5, 0.5, 0.5); }
+  static const Color Red()        { return Color(1.0, 0.0, 0.0); }
+  static const Color Green()      { return Color(0.0, 1.0, 0.0); }
+  static const Color Blue()       { return Color(0.0, 0.0, 1.0); }
+  static const Color Yellow()     { return Color(1.0, 1.0, 0.0); }
+  static const Color Orange()     { return Color(1.0, 0.5, 0.0); }
+  static const Color Purple()     { return Color(0.5, 0.0, 1.0); }
   static const Color Chartreuse() { return Color(0.5, 1.0, 0.0); }
-  static const Color Teal() { return Color(0.0, 1.0, 1.0); }
-  static const Color Pink() { return Color(1.0, 0.0, 0.5); }
+  static const Color Teal()       { return Color(0.0, 1.0, 1.0); }
+  static const Color Pink()       { return Color(1.0, 0.0, 0.5); }
 };
 
 // Overwrites the given properties of the marker array.
@@ -130,6 +132,19 @@ void DrawArrowPoints(const Eigen::Vector3d &p1,
                      const std_msgs::ColorRGBA &color,
                      const double &diameter,
                      visualization_msgs::Marker* marker);
+
+void ReferenceVisMarker(const geometry_msgs::Point &pos,
+                        const std::string& frame_id,
+                        visualization_msgs::MarkerArray* marker_array);
+void RobotPosVisMarker(const geometry_msgs::Point &pos,
+                       const std::string& frame_id,
+                       visualization_msgs::MarkerArray* marker_array);
+
+// Markers for trajectory
+void TrajVisMarkers(const pcl::PointCloud<pcl::PointXYZ>& pcl_traj,
+                    const std::string& frame_id,
+                    const double& size,
+                    visualization_msgs::MarkerArray* marker_array);
 
 }  // namespace visualization_functions
 

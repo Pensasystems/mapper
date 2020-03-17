@@ -130,6 +130,10 @@ void SampledTrajectory3D::SetResolution(const double &resolution) {
     ROS_DEBUG("Trajectory resolution is set to: %f", resolution_);
 }
 
+double SampledTrajectory3D::GetResolution() {
+    return resolution_;
+}
+
 void SampledTrajectory3D::SetInertialFrame(const std::string &inertial_frame_id) {
     inertial_frame_id_ = inertial_frame_id;
 }
@@ -470,33 +474,33 @@ void SampledTrajectory3D::ThickTrajToPcl() {
 }
 
 void SampledTrajectory3D::CreateKdTree() {
-    *cloud_ptr_ = pos_;
-    kdtree_pos_.setInputCloud(cloud_ptr_);
+    *cloud_ptr_ = point_cloud_traj_;
+    kdtree_point_cloud_traj_.setInputCloud(cloud_ptr_);
 }
 
-void SampledTrajectory3D::SortCollisionsByTime(const std::vector<octomap::point3d> &colliding_nodes,
-                                         std::vector<geometry_msgs::PointStamped> *samples) {
-    pcl::PointXYZ search_point;
-    int K = 1;  // Search for 1 nearest neighbor
-    std::vector<int> point_idx(K);
-    std::vector<float> point_sqr_dist(K);
-    geometry_msgs::PointStamped sample;
-    samples->resize(colliding_nodes.size());
+// void SampledTrajectory3D::SortCollisionsByTime(const std::vector<octomap::point3d> &colliding_nodes,
+//                                                std::vector<geometry_msgs::PointStamped> *samples) {
+//     pcl::PointXYZ search_point;
+//     int K = 1;  // Search for 1 nearest neighbor
+//     std::vector<int> point_idx(K);
+//     std::vector<float> point_sqr_dist(K);
+//     geometry_msgs::PointStamped sample;
+//     samples->resize(colliding_nodes.size());
 
-    for (uint i = 0; i < colliding_nodes.size(); i++) {
-        search_point.x = colliding_nodes[i].x();
-        search_point.y = colliding_nodes[i].y();
-        search_point.z = colliding_nodes[i].z();
-        kdtree_pos_.nearestKSearch(search_point, K, point_idx, point_sqr_dist);
-        sample.point.x = cloud_ptr_->points[point_idx[0]].x;
-        sample.point.y = cloud_ptr_->points[point_idx[0]].y;
-        sample.point.z = cloud_ptr_->points[point_idx[0]].z;
-        sample.header.stamp = ros::Time(time_[point_idx[0]]);
-        sample.header.seq = point_idx[0];
-        (*samples)[i] = sample;
-    }
-    std::sort(samples->begin(), samples->end(), ComparePointStamped);
-}
+//     for (uint i = 0; i < colliding_nodes.size(); i++) {
+//         search_point.x = colliding_nodes[i].x();
+//         search_point.y = colliding_nodes[i].y();
+//         search_point.z = colliding_nodes[i].z();
+//         kdtree_point_cloud_traj_.nearestKSearch(search_point, K, point_idx, point_sqr_dist);
+//         sample.point.x = cloud_ptr_->points[point_idx[0]].x;
+//         sample.point.y = cloud_ptr_->points[point_idx[0]].y;
+//         sample.point.z = cloud_ptr_->points[point_idx[0]].z;
+//         sample.header.stamp = ros::Time(time_[point_idx[0]]);
+//         sample.header.seq = point_idx[0];
+//         (*samples)[i] = sample;
+//     }
+//     std::sort(samples->begin(), samples->end(), ComparePointStamped);
+// }
 
 void SampledTrajectory3D::SortCollisionsByDistance(const std::vector<octomap::point3d> &colliding_nodes,
                                                    const geometry_msgs::Point &origin,
@@ -512,7 +516,7 @@ void SampledTrajectory3D::SortCollisionsByDistance(const std::vector<octomap::po
         search_point.x = colliding_nodes[i].x();
         search_point.y = colliding_nodes[i].y();
         search_point.z = colliding_nodes[i].z();
-        kdtree_pos_.nearestKSearch(search_point, K, point_idx, point_sqr_dist);
+        kdtree_point_cloud_traj_.nearestKSearch(search_point, K, point_idx, point_sqr_dist);
         sample.point.x = cloud_ptr_->points[point_idx[0]].x;
         sample.point.y = cloud_ptr_->points[point_idx[0]].y;
         sample.point.z = cloud_ptr_->points[point_idx[0]].z;
@@ -551,7 +555,6 @@ void SampledTrajectory3D::TrajVisMarkers(visualization_msgs::MarkerArray* marker
             marker_array->markers[idx].points.push_back(point_center);
 
             // Get color based on height
-            // double h = (1.0 - std::min(std::max((PointCenter.z-minZ)/ (maxZ - minZ), 0.0), 1.0))*colorFactor;
             marker_array->markers[idx].colors.push_back(color);
         }
     }
@@ -660,77 +663,6 @@ void SampledTrajectory3D::CompressedVisMarkers(visualization_msgs::MarkerArray* 
     marker_array->markers.push_back(marker);
 }
 
-void SampledTrajectory3D::ReferenceVisMarker(const geometry_msgs::Point &pos, 
-                                             visualization_msgs::MarkerArray* marker_array) {
-    // marker_array->markers.resize(1);
-    const ros::Time rostime = ros::Time::now();
-    visualization_msgs::Marker marker;
-
-    // Set color parameters
-    std_msgs::ColorRGBA color;
-    color = visualization_functions::Color::Red();
-    color.a = 0.9;
-
-    // Set position
-    marker.points.push_back(pos);
-    marker.colors.push_back(color);
-
-    // Set marker properties
-    marker.header.frame_id = inertial_frame_id_;
-    marker.header.stamp = rostime;
-    marker.ns = "ReferencePos";
-    marker.id = 0;
-    marker.type = visualization_msgs::Marker::SPHERE_LIST;
-    marker.scale.x = 0.15;
-    marker.scale.y = 0.15;
-    marker.scale.z = 0.15;
-    marker.pose.orientation.w = 1.0;
-    marker.lifetime = ros::Duration(1.0);
-
-    if (marker.points.size() > 0) {
-        marker.action = visualization_msgs::Marker::ADD;
-    } else {
-        marker.action = visualization_msgs::Marker::DELETE;
-    }
-
-    marker_array->markers.push_back(marker);
-}
-
-void SampledTrajectory3D::RobotPosVisMarker(const geometry_msgs::Point &pos,
-                                            visualization_msgs::MarkerArray* marker_array) {
-    const ros::Time rostime = ros::Time::now();
-    visualization_msgs::Marker marker;
-
-    // Set color parameters
-    std_msgs::ColorRGBA color;
-    color = visualization_functions::Color::Blue();
-    color.a = 0.9;
-
-    // Set position
-    marker.points.push_back(pos);
-    marker.colors.push_back(color);
-
-    // Set marker properties
-    marker.header.frame_id = inertial_frame_id_;
-    marker.header.stamp = rostime;
-    marker.ns = "RobotPos";
-    marker.id = 0;
-    marker.type = visualization_msgs::Marker::SPHERE_LIST;
-    marker.scale.x = 0.15;
-    marker.scale.y = 0.15;
-    marker.scale.z = 0.15;
-    marker.pose.orientation.w = 1.0;
-    marker.lifetime = ros::Duration(1.0);
-
-    if (marker.points.size() > 0) {
-        marker.action = visualization_msgs::Marker::ADD;
-    } else {
-        marker.action = visualization_msgs::Marker::DELETE;
-    }
-
-    marker_array->markers.push_back(marker);
-}
-
 // Clear all the data within this object
 void SampledTrajectory3D::ClearObject() {
     SampledTrajectory3D newObj();
@@ -744,11 +676,11 @@ void SampledTrajectory3D::ClearObject() {
     this->point_cloud_traj_.clear();
 }
 
-// Return the sample with lowest time
-bool ComparePointStamped(const geometry_msgs::PointStamped &sample1,
-                         const geometry_msgs::PointStamped &sample2) {
-    return sample1.header.stamp.toSec() < sample2.header.stamp.toSec();
-}
+// // Return the sample with lowest time
+// bool ComparePointStamped(const geometry_msgs::PointStamped &sample1,
+//                          const geometry_msgs::PointStamped &sample2) {
+//     return sample1.header.stamp.toSec() < sample2.header.stamp.toSec();
+// }
 
 // Return the sample with lowest distance to the origin
 bool ComparePointDistance(const geometry_msgs::PointStamped &sample1,

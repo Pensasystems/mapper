@@ -53,7 +53,6 @@ class SampledTrajectory3D{
     pcl::PointCloud<pcl::PointXYZ> pos_;
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr_ =
             pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>);
-    pcl::KdTreeFLANN<pcl::PointXYZ> kdtree_pos_;
     std::vector<double> time_;
     int n_points_;
 
@@ -64,10 +63,16 @@ class SampledTrajectory3D{
     double max_dev_;          // Max deviation for compression
 
     // Thick trajectory variables
+    // The reason to use octomap here is to avoid adding 
+    // the same node multiple times as we thicken the 
+    // trajectory
     octomap::OcTree thick_traj_ = octomap::OcTree(0.1);  // Create empty tree with resolution 0.1
-    pcl::PointCloud< pcl::PointXYZ > point_cloud_traj_;
+    pcl::PointCloud<pcl::PointXYZ> point_cloud_traj_;
     double resolution_;
     double thickness_;
+
+    // Kdtree to find nearest obstacles
+    pcl::KdTreeFLANN<pcl::PointXYZ> kdtree_point_cloud_traj_;
 
     // World frame id
     std::string inertial_frame_id_;
@@ -88,6 +93,7 @@ class SampledTrajectory3D{
     void PrintSamples();
     void SetMaxDev(const double &max_dev);
     void SetResolution(const double &resolution);
+    double GetResolution();
     void SetInertialFrame(const std::string &inertial_frame_id);
     void DeleteSample(const int &index);
     void CompressSamples();
@@ -102,24 +108,20 @@ class SampledTrajectory3D{
                         const Eigen::Vector3d &pf);          // Thick bresenham line algorithm por printing a line
     void ThickTrajToPcl();
     void CreateKdTree();
-    void SortCollisionsByTime(const std::vector<octomap::point3d> &colliding_nodes,
-                              std::vector<geometry_msgs::PointStamped> *samples);
+    // void SortCollisionsByTime(const std::vector<octomap::point3d> &colliding_nodes,
+    //                           std::vector<geometry_msgs::PointStamped> *samples);
     void SortCollisionsByDistance(const std::vector<octomap::point3d> &colliding_nodes,
                                   const geometry_msgs::Point &origin,
                                   std::vector<geometry_msgs::PointStamped> *samples);
     void TrajVisMarkers(visualization_msgs::MarkerArray* marker_array);
     void SamplesVisMarkers(visualization_msgs::MarkerArray* marker_array);
     void CompressedVisMarkers(visualization_msgs::MarkerArray* marker_array);
-    void ReferenceVisMarker(const geometry_msgs::Point &pos,
-                            visualization_msgs::MarkerArray* marker_array);
-    void RobotPosVisMarker(const geometry_msgs::Point &pos,
-                           visualization_msgs::MarkerArray* marker_array);
     void ClearObject();  // Clear all the data within this object
 };
 
 // Comparison funcion used in sort algorithm
-bool ComparePointStamped(const geometry_msgs::PointStamped &sample1,
-                         const geometry_msgs::PointStamped &sample2);
+// bool ComparePointStamped(const geometry_msgs::PointStamped &sample1,
+//                          const geometry_msgs::PointStamped &sample2);
 
 // Comparison function used in sort algorithm
 bool ComparePointDistance(const geometry_msgs::PointStamped &sample1,
