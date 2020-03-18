@@ -128,9 +128,6 @@ void MapperClass::CollisionCheckTask() {
     // robot's transform variable
     tf::StampedTransform tf_body2world;
 
-    // pcl variables
-    int cloudsize;
-
     while (ros::ok()) {
         // Wait until there is a trajectory to execute this thread
         // sem_wait(&semaphores_.collision_check);
@@ -151,8 +148,7 @@ void MapperClass::CollisionCheckTask() {
         pthread_mutex_unlock(&mutexes_.sampled_traj);
 
         // Stop execution if there are no points in the trajectory structure
-        cloudsize = point_cloud_traj.size();
-        if (cloudsize <= 0) {
+        if (point_cloud_traj.size() <= 0) {
             visualization_functions::DrawCollidingNodes(colliding_nodes, inertial_frame_id_, 0.015, &collision_markers);
             this->PublishMarkers(collision_markers, traj_markers, samples_markers, compressed_samples_markers);
             continue;
@@ -195,15 +191,6 @@ void MapperClass::CollisionCheckTask() {
         pcl::PointCloud<pcl::PointXYZ> point_cloud_traj_through_drone;
         helper::ShiftPcl(point_cloud_traj, vec_traj_to_drone, &point_cloud_traj_through_drone);
 
-        // Visualize shifted trajectory
-        visualization_functions::TrajVisMarkers(point_cloud_traj_through_drone,
-            inertial_frame_id_, traj_size, &traj_markers);
-
-        // Get visualization marker for current set point and robot position (projected and not projected)
-        visualization_functions::ReferenceVisMarker(traj_status.current_position, inertial_frame_id_, &traj_markers);
-        visualization_functions::RobotPosVisMarker(robot_position, inertial_frame_id_, &traj_markers);
-        visualization_functions::ProjectedPosVisMarker(robot_projected_on_traj, inertial_frame_id_, &traj_markers);
-
         // Check if trajectory collides with points in the point-cloud
         pthread_mutex_lock(&mutexes_.octomap);
             double res = globals_.octomap.tree_inflated_.getResolution();
@@ -225,9 +212,19 @@ void MapperClass::CollisionCheckTask() {
             // uint lastCollisionIdx = sorted_collisions.back().header.seq;
             // if (collision_time > 0) {
                 // ROS_WARN("Imminent collision within %.3f seconds!", collision_time);
-                ROS_WARN("Imminent collision within %.3f meters!", collision_distance);
+                ROS_WARN("[mapper]: Imminent collision within %.3f meters!", collision_distance);
                 sentinel_pub_.publish(sorted_collisions[0]);
         }
+
+        // Visualization markers -------------------------------------------------------------------------------------
+        // Visualization markers for shifted trajectory
+        visualization_functions::TrajVisMarkers(point_cloud_traj_through_drone,
+            inertial_frame_id_, traj_size, &traj_markers);
+
+        // Get visualization marker for current set point and robot position (projected and not projected)
+        visualization_functions::ReferenceVisMarker(traj_status.current_position, inertial_frame_id_, &traj_markers);
+        visualization_functions::RobotPosVisMarker(robot_position, inertial_frame_id_, &traj_markers);
+        visualization_functions::ProjectedPosVisMarker(robot_projected_on_traj, inertial_frame_id_, &traj_markers);
 
         // Draw colliding markers (delete if none)
         visualization_functions::DrawCollidingNodes(colliding_nodes, inertial_frame_id_, 1.01*res, &collision_markers);
@@ -239,7 +236,7 @@ void MapperClass::CollisionCheckTask() {
         loop_rate.sleep();
     }
 
-    ROS_DEBUG("Exiting collisionCheck Thread...");
+    ROS_DEBUG("[mapper]: Exiting collisionCheck Thread...");
 }
 
 void MapperClass::OctomappingTask() {
