@@ -197,7 +197,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
         rrg_srv_name, &MapperClass::RRGService, this);
     
     // Publishers -----------------------------------------------
-    sentinel_pub_ =
+    obstacle_path_pub_ =
         nh->advertise<geometry_msgs::PointStamped>(collision_detection_topic, 10);
     obstacle_marker_pub_ =
         nh->advertise<visualization_msgs::MarkerArray>(obstacle_markers_topic, 10);
@@ -249,7 +249,42 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     ROS_DEBUG("Initialization complete");
 }
 
-bool MapperClass::PublishMarkers(const visualization_msgs::MarkerArray &collision_markers,
+geometry_msgs::Point MapperClass::GetTfBodyToWorld() {
+    pthread_mutex_lock(&mutexes_.body_tf);
+        const tf::StampedTransform tf_body2world = globals_.tf_body2world;
+    pthread_mutex_unlock(&mutexes_.body_tf);
+    return msg_conversions::tf_vector3_to_ros_point(tf_body2world.getOrigin());
+}
+
+geometry_msgs::Point MapperClass::GetCurrentSetPoint() {
+    pthread_mutex_lock(&mutexes_.traj_status);
+        pensa_msgs::trapezoidal_p2pFeedback traj_status = globals_.traj_status;
+    pthread_mutex_unlock(&mutexes_.traj_status);
+    return traj_status.current_position;
+}
+
+bool MapperClass::RobotPosProjectedOnTrajectory(const geometry_msgs::Point& robot_position,
+                                                geometry_msgs::Point *robot_projected_on_traj) {
+    pthread_mutex_lock(&mutexes_.sampled_traj);
+        bool success = globals_.sampled_traj.NearestPointInCompressedTraj(robot_position, robot_projected_on_traj);
+    pthread_mutex_unlock(&mutexes_.sampled_traj);
+    return success;
+}
+
+void MapperClass::GetCollidingNodesPcl(const pcl::PointCloud<pcl::PointXYZ>& pcl,
+                                       std::vector<octomap::point3d> *colliding_nodes) {
+    pthread_mutex_lock(&mutexes_.octomap);
+        globals_.octomap.FindCollidingNodesInflated(pcl, colliding_nodes);
+    pthread_mutex_unlock(&mutexes_.octomap);
+}
+
+void MapperClass::GetOctomapResolution(double *octomap_resolution) {
+    pthread_mutex_lock(&mutexes_.octomap);
+        *octomap_resolution = globals_.octomap.tree_inflated_.getResolution();
+    pthread_mutex_unlock(&mutexes_.octomap);
+}
+
+void MapperClass::PublishMarkers(const visualization_msgs::MarkerArray &collision_markers,
                                  const visualization_msgs::MarkerArray &traj_markers,
                                  const visualization_msgs::MarkerArray &samples_markers,
                                  const visualization_msgs::MarkerArray &compressed_samples_markers) {

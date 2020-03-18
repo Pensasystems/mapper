@@ -25,6 +25,13 @@ void SubtractRosPoints(const geometry_msgs::Point& p1,
     *v = Eigen::Vector3d(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
 }
 
+double NormDistanceRosPoints(const geometry_msgs::Point& p1,
+                             const geometry_msgs::Point& p2) {
+    Eigen::Vector3d dist;
+    SubtractRosPoints(p1, p2, &dist);
+    return dist.norm();
+}
+
 // Shift a point in pcl
 void ShiftPclPoint(const pcl::PointXYZ& pt, const pcl::PointXYZ& shift,
                    pcl::PointXYZ* pt_out) {
@@ -42,6 +49,25 @@ void ShiftPcl(const pcl::PointCloud< pcl::PointXYZ >& pcl_in,
     for (uint i = 0; i < pcl_in.size(); i++) {
         ShiftPclPoint(pcl_in.points[i], shift, &pcl_out->points[i]);
     }
+}
+
+void FindNearestCollision(const std::vector<octomap::point3d> &colliding_nodes,
+                          const geometry_msgs::Point &origin,
+                          geometry_msgs::PointStamped *nearest_node,
+                          double *min_dist) {
+    *min_dist = std::numeric_limits<double>::infinity();
+    for (uint i = 0; i < colliding_nodes.size(); i++) {
+        const geometry_msgs::Point current_node =
+            msg_conversions::set_ros_point(colliding_nodes[i].x(),
+                                           colliding_nodes[i].y(),
+                                           colliding_nodes[i].z());
+        const double cur_distance = NormDistanceRosPoints(origin, current_node);
+        if (cur_distance < *min_dist) {
+            nearest_node->point = current_node;
+            *min_dist = cur_distance;
+        }
+    }
+    nearest_node->header.stamp = ros::Time::now();
 }
 
 }  // namespace helper

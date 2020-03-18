@@ -502,31 +502,31 @@ void SampledTrajectory3D::CreateKdTree() {
 //     std::sort(samples->begin(), samples->end(), ComparePointStamped);
 // }
 
-void SampledTrajectory3D::SortCollisionsByDistance(const std::vector<octomap::point3d> &colliding_nodes,
-                                                   const geometry_msgs::Point &origin,
-                                                   std::vector<geometry_msgs::PointStamped> *samples) {
-    pcl::PointXYZ search_point;
-    int K = 1;  // Search for 1 nearest neighbor
-    std::vector<int> point_idx(K);
-    std::vector<float> point_sqr_dist(K);
-    geometry_msgs::PointStamped sample;
-    samples->resize(colliding_nodes.size());
+// void SampledTrajectory3D::SortCollisionsByDistance(const std::vector<octomap::point3d> &colliding_nodes,
+//                                                    const geometry_msgs::Point &origin,
+//                                                    std::vector<geometry_msgs::PointStamped> *samples) {
+//     pcl::PointXYZ search_point;
+//     int K = 1;  // Search for 1 nearest neighbor
+//     std::vector<int> point_idx(K);
+//     std::vector<float> point_sqr_dist(K);
+//     geometry_msgs::PointStamped sample;
+//     samples->resize(colliding_nodes.size());
 
-    for (uint i = 0; i < colliding_nodes.size(); i++) {
-        search_point.x = colliding_nodes[i].x();
-        search_point.y = colliding_nodes[i].y();
-        search_point.z = colliding_nodes[i].z();
-        kdtree_point_cloud_traj_.nearestKSearch(search_point, K, point_idx, point_sqr_dist);
-        sample.point.x = cloud_ptr_->points[point_idx[0]].x;
-        sample.point.y = cloud_ptr_->points[point_idx[0]].y;
-        sample.point.z = cloud_ptr_->points[point_idx[0]].z;
-        sample.header.stamp = ros::Time(time_[point_idx[0]]);
-        sample.header.seq = point_idx[0];
-        sample.header.frame_id = inertial_frame_id_;
-        (*samples)[i] = sample;
-    }
-    std::sort(samples->begin(), samples->end(), std::bind(ComparePointDistance, std::placeholders::_1, std::placeholders::_2, origin));
-}
+//     for (uint i = 0; i < colliding_nodes.size(); i++) {
+//         search_point.x = colliding_nodes[i].x();
+//         search_point.y = colliding_nodes[i].y();
+//         search_point.z = colliding_nodes[i].z();
+//         kdtree_point_cloud_traj_.nearestKSearch(search_point, K, point_idx, point_sqr_dist);
+//         sample.point.x = cloud_ptr_->points[point_idx[0]].x;
+//         sample.point.y = cloud_ptr_->points[point_idx[0]].y;
+//         sample.point.z = cloud_ptr_->points[point_idx[0]].z;
+//         sample.header.stamp = ros::Time(time_[point_idx[0]]);
+//         sample.header.seq = point_idx[0];
+//         sample.header.frame_id = inertial_frame_id_;
+//         (*samples)[i] = sample;
+//     }
+//     std::sort(samples->begin(), samples->end(), std::bind(ComparePointDistance, std::placeholders::_1, std::placeholders::_2, origin));
+// }
 
 
 void SampledTrajectory3D::TrajVisMarkers(visualization_msgs::MarkerArray* marker_array) {    // Publish occupied nodes
@@ -693,16 +693,16 @@ void SampledTrajectory3D::ClearObject() {
 //     return sample1.header.stamp.toSec() < sample2.header.stamp.toSec();
 // }
 
-// Return the sample with lowest distance to the origin
-bool ComparePointDistance(const geometry_msgs::PointStamped &sample1,
-                          const geometry_msgs::PointStamped &sample2,
-                          const geometry_msgs::Point &origin) {
-    // return sample1.header.stamp.toSec() < sample2.header.stamp.toSec();
-    Eigen::Vector3d p0 = msg_conversions::ros_point_to_eigen_vector(origin);
-    Eigen::Vector3d p1 = msg_conversions::ros_point_to_eigen_vector(sample1.point);
-    Eigen::Vector3d p2 = msg_conversions::ros_point_to_eigen_vector(sample2.point);
-    return ((p1-p0).norm() < (p2-p0).norm());
-}
+// // Return the sample with lowest distance to the origin
+// bool ComparePointDistance(const geometry_msgs::PointStamped &sample1,
+//                           const geometry_msgs::PointStamped &sample2,
+//                           const geometry_msgs::Point &origin) {
+//     // return sample1.header.stamp.toSec() < sample2.header.stamp.toSec();
+//     Eigen::Vector3d p0 = msg_conversions::ros_point_to_eigen_vector(origin);
+//     Eigen::Vector3d p1 = msg_conversions::ros_point_to_eigen_vector(sample1.point);
+//     Eigen::Vector3d p2 = msg_conversions::ros_point_to_eigen_vector(sample2.point);
+//     return ((p1-p0).norm() < (p2-p0).norm());
+// }
 
 }  // namespace sampled_traj
 

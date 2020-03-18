@@ -125,25 +125,28 @@ void MapperClass::CollisionCheckTask() {
     visualization_msgs::MarkerArray traj_markers, samples_markers;
     visualization_msgs::MarkerArray compressed_samples_markers, collision_markers;
 
-    // robot's transform variable
-    tf::StampedTransform tf_body2world;
+    // Drone's position variables
+    geometry_msgs::Point robot_position, robot_projected_on_traj;
+
+    // Variables for nearest collision
+    geometry_msgs::PointStamped nearest_collision;
+    nearest_collision.header.frame_id = inertial_frame_id_;
+    double collision_distance;
+
+    // Size of trajectory markers
+    pthread_mutex_lock(&mutexes_.sampled_traj);
+        const double traj_sample_size = globals_.sampled_traj.GetResolution();
+    pthread_mutex_unlock(&mutexes_.sampled_traj);
+    double octomap_resolution;
 
     while (ros::ok()) {
-        // Wait until there is a trajectory to execute this thread
-        // sem_wait(&semaphores_.collision_check);
-
         // Get time for when this task started
         ros::Time time_now = ros::Time::now();
 
-        // Copy trajectory into local point cloud
-        pcl::PointCloud<pcl::PointXYZ> point_cloud_traj;
+        // Copy trajectory into local point cloud and get visualization markers for path
         std::vector<octomap::point3d> colliding_nodes;
         pthread_mutex_lock(&mutexes_.sampled_traj);
-            point_cloud_traj = globals_.sampled_traj.point_cloud_traj_;
-            std::vector<double> time = globals_.sampled_traj.time_;
-            const double traj_size = globals_.sampled_traj.GetResolution();
-
-            // Send visualization markers
+            const pcl::PointCloud<pcl::PointXYZ> point_cloud_traj = globals_.sampled_traj.point_cloud_traj_;
             globals_.sampled_traj.GetVisMarkers(&traj_markers, &samples_markers, &compressed_samples_markers);
         pthread_mutex_unlock(&mutexes_.sampled_traj);
 
@@ -155,79 +158,55 @@ void MapperClass::CollisionCheckTask() {
         }
 
         // Get robot's current position
-        pthread_mutex_lock(&mutexes_.body_tf);
-            tf_body2world = globals_.tf_body2world;
-        pthread_mutex_unlock(&mutexes_.body_tf);
-        geometry_msgs::Point robot_position = 
-            msg_conversions::tf_vector3_to_ros_point(tf_body2world.getOrigin());
+        robot_position = this->GetTfBodyToWorld();
 
-        // Find point in compressed trajectory that the robot is closest to
-        geometry_msgs::Point robot_projected_on_traj;
-        pthread_mutex_lock(&mutexes_.sampled_traj);
-            bool success = globals_.sampled_traj.NearestPointInCompressedTraj(robot_position, &robot_projected_on_traj);
-        pthread_mutex_unlock(&mutexes_.sampled_traj);
-        if(!success) {  // this fails if there are not at least two points in the compressed trajectory
+        // Find point in trajectory that the robot is closest to
+        if (!this->RobotPosProjectedOnTrajectory(robot_position, &robot_projected_on_traj)) {
             continue;
         }
 
-        // Find vector from trajectory to drone position
-        Eigen::Vector3d vec_traj_to_drone;
-        helper::SubtractRosPoints(robot_projected_on_traj, robot_position, &vec_traj_to_drone);
-
-        // Get trajectory status
-        pensa_msgs::trapezoidal_p2pFeedback traj_status;
-        pthread_mutex_lock(&mutexes_.traj_status);
-            traj_status = globals_.traj_status;
-        pthread_mutex_unlock(&mutexes_.traj_status);
+        // Get drone's current set point
+        geometry_msgs::Point current_set_point = this->GetCurrentSetPoint();
 
         // Set current trajectory to z=0 if working with 2D maps only
-        if(!globals_.map_3d) {
+        if (!globals_.map_3d) {
             robot_position.z = 0.0;
-            traj_status.current_position.z = 0.0;
-            vec_traj_to_drone[2] = 0.0;
+            current_set_point.z = 0.0;
         }
 
-        // Shift PCL so it passes along drone position
+        // Shift trajectory PCL so it passes along drone position
+        Eigen::Vector3d vec_traj_to_drone;
         pcl::PointCloud<pcl::PointXYZ> point_cloud_traj_through_drone;
+        helper::SubtractRosPoints(robot_projected_on_traj, robot_position, &vec_traj_to_drone);
         helper::ShiftPcl(point_cloud_traj, vec_traj_to_drone, &point_cloud_traj_through_drone);
 
-        // Check if trajectory collides with points in the point-cloud
-        pthread_mutex_lock(&mutexes_.octomap);
-            double res = globals_.octomap.tree_inflated_.getResolution();
-            globals_.octomap.FindCollidingNodesInflated(point_cloud_traj, &colliding_nodes);
-        pthread_mutex_unlock(&mutexes_.octomap);
+        // Check if trajectory collides with points in the map
+        this->GetCollidingNodesPcl(point_cloud_traj_through_drone, &colliding_nodes);
         // ROS_INFO("Colliding nodes: %d", int(colliding_nodes.size()) );
 
+        // If there are collisions, find the nearest one
         if (colliding_nodes.size() > 0) {
-            // Sort collision time (use kdtree for nearest neighbor)
-            std::vector<geometry_msgs::PointStamped> sorted_collisions;
-            pthread_mutex_lock(&mutexes_.sampled_traj);
-                globals_.sampled_traj.SortCollisionsByDistance(colliding_nodes, robot_projected_on_traj, &sorted_collisions);
-            pthread_mutex_unlock(&mutexes_.sampled_traj);
-
-            // double collision_time = (sorted_collisions[0].header.stamp - ros::Time::now()).toSec();
-            Eigen::Vector3d p0 = msg_conversions::ros_point_to_eigen_vector(robot_projected_on_traj);
-            Eigen::Vector3d p1 = msg_conversions::ros_point_to_eigen_vector(sorted_collisions[0].point);
-            double collision_distance = (p1-p0).norm();
-            // uint lastCollisionIdx = sorted_collisions.back().header.seq;
-            // if (collision_time > 0) {
-                // ROS_WARN("Imminent collision within %.3f seconds!", collision_time);
-                ROS_WARN("[mapper]: Imminent collision within %.3f meters!", collision_distance);
-                sentinel_pub_.publish(sorted_collisions[0]);
+            helper::FindNearestCollision(colliding_nodes, robot_position, &nearest_collision, &collision_distance);
+            obstacle_path_pub_.publish(nearest_collision);
+            ROS_WARN("[mapper]: Nearest collision in %.3f meters!", collision_distance);
         }
 
         // Visualization markers -------------------------------------------------------------------------------------
         // Visualization markers for shifted trajectory
         visualization_functions::TrajVisMarkers(point_cloud_traj_through_drone,
-            inertial_frame_id_, traj_size, &traj_markers);
+            inertial_frame_id_, traj_sample_size, &traj_markers);
 
         // Get visualization marker for current set point and robot position (projected and not projected)
-        visualization_functions::ReferenceVisMarker(traj_status.current_position, inertial_frame_id_, &traj_markers);
+        visualization_functions::ReferenceVisMarker(current_set_point, inertial_frame_id_, &traj_markers);
         visualization_functions::RobotPosVisMarker(robot_position, inertial_frame_id_, &traj_markers);
         visualization_functions::ProjectedPosVisMarker(robot_projected_on_traj, inertial_frame_id_, &traj_markers);
 
         // Draw colliding markers (delete if none)
-        visualization_functions::DrawCollidingNodes(colliding_nodes, inertial_frame_id_, 1.01*res, &collision_markers);
+        this->GetOctomapResolution(&octomap_resolution);
+        visualization_functions::DrawCollidingNodes(colliding_nodes, inertial_frame_id_,
+                                                    1.01*octomap_resolution, &collision_markers);
+        
+        // Publish all markers
         this->PublishMarkers(collision_markers, traj_markers, samples_markers, compressed_samples_markers);
 
         // ros::Duration solver_time = ros::Time::now() - time_now;

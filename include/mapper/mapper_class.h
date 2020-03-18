@@ -84,10 +84,22 @@ class MapperClass {
 
  protected:
   // Functions within mapper_class.cc -------------------------------
-    bool PublishMarkers(const visualization_msgs::MarkerArray &collision_markers,
-                        const visualization_msgs::MarkerArray &traj_markers,
-                        const visualization_msgs::MarkerArray &samples_markers,
-                        const visualization_msgs::MarkerArray &compressed_samples_markers);
+  geometry_msgs::Point GetTfBodyToWorld();
+
+  geometry_msgs::Point GetCurrentSetPoint(); 
+
+  bool RobotPosProjectedOnTrajectory(const geometry_msgs::Point& robot_position,
+                                     geometry_msgs::Point *robot_projected_on_traj);
+
+  void GetCollidingNodesPcl(const pcl::PointCloud<pcl::PointXYZ>& pcl,
+                            std::vector<octomap::point3d> *colliding_nodes);
+
+  void GetOctomapResolution(double *octomap_resolution);
+
+  void PublishMarkers(const visualization_msgs::MarkerArray &collision_markers,
+                      const visualization_msgs::MarkerArray &traj_markers,
+                      const visualization_msgs::MarkerArray &samples_markers,
+                      const visualization_msgs::MarkerArray &compressed_samples_markers);
 
 
   // Callbacks (see callbacks.cc for implementation) ----------------
@@ -205,8 +217,8 @@ class MapperClass {
   // Inertial and robot frame ids
   std::string inertial_frame_id_, robot_frame_id_;
 
-  // Marker publishers
-  ros::Publisher sentinel_pub_;
+  // Publishers
+  ros::Publisher obstacle_path_pub_;
   ros::Publisher obstacle_marker_pub_;
   ros::Publisher free_space_marker_pub_;
   ros::Publisher inflated_obstacle_marker_pub_;
