@@ -16,8 +16,7 @@
  * under the License.
  */
 
-#ifndef MAPPER_GRAPHS_H_
-#define MAPPER_GRAPHS_H_
+#pragma once
 
 #include <ros/ros.h>
 #include <octomap/octomap.h>
@@ -140,6 +139,4 @@ class Tree {
     void TreeVisualization(visualization_msgs::Marker *line_list);
 };
 
-}  // octoclass
-
-#endif  // MAPPER_GRAPHS_H_
+}  // namespace octoclass

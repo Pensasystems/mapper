@@ -19,6 +19,7 @@
 #include <limits>
 #include <algorithm>
 #include <vector>
+#include <string>
 #include "mapper/sampled_trajectory.h"
 
 namespace sampled_traj {
@@ -88,7 +89,7 @@ SampledTrajectory3D::SampledTrajectory3D(const std::vector<geometry_msgs::Point>
     compressed_time_.resize(n_points_);
     compressed_pos_.resize(n_points_);
     for (int i = 0; i < n_points_; i++) {
-        time_[i] = double(i);
+        time_[i] = static_cast<double>(i);
         pos.x = waypoints[i].x;
         pos.y = waypoints[i].y;
         if (map_3d) {
@@ -99,7 +100,7 @@ SampledTrajectory3D::SampledTrajectory3D(const std::vector<geometry_msgs::Point>
         pos_[i] = pos;
 
         compressed_pos_[i] << pos.x, pos.y, pos.z;
-        compressed_time_[i] = double(i);
+        compressed_time_[i] = static_cast<double>(i);
     }
 }
 
@@ -525,7 +526,8 @@ void SampledTrajectory3D::CreateKdTree() {
 //         sample.header.frame_id = inertial_frame_id_;
 //         (*samples)[i] = sample;
 //     }
-//     std::sort(samples->begin(), samples->end(), std::bind(ComparePointDistance, std::placeholders::_1, std::placeholders::_2, origin));
+//     std::sort(samples->begin(), samples->end(), std::bind(ComparePointDistance,
+//               std::placeholders::_1, std::placeholders::_2, origin));
 // }
 
 
@@ -573,7 +575,7 @@ void SampledTrajectory3D::TrajVisMarkers(visualization_msgs::MarkerArray* marker
         marker_array->markers[i].scale.z = size;
         marker_array->markers[i].pose.orientation.w = 1.0;
 
-        if (marker_array->markers[i].points.size() > 0){
+        if (marker_array->markers[i].points.size() > 0) {
             marker_array->markers[i].action = visualization_msgs::Marker::ADD;
         } else {
             marker_array->markers[i].action = visualization_msgs::Marker::DELETE;

@@ -74,7 +74,7 @@ void MapperClass::BodyTfTask(const std::string& parent_frame,
 void MapperClass::CameraTfTask(const std::string& parent_frame,
                                const std::string& child_frame,
                                const uint& index) {
-    ROS_DEBUG("tf Thread from frame `%s` to `%s` started with rate %f: ", 
+    ROS_DEBUG("tf Thread from frame `%s` to `%s` started with rate %f: ",
               child_frame.c_str(), parent_frame.c_str(), tf_update_rate_);
     tf_listener::TfClass obj_tf;
     ros::Rate loop_rate(tf_update_rate_);
@@ -96,7 +96,7 @@ void MapperClass::CameraTfTask(const std::string& parent_frame,
 void MapperClass::LidarTfTask(const std::string& parent_frame,
                               const std::string& child_frame,
                               const uint& index) {
-    ROS_DEBUG("tf Thread from frame `%s` to `%s` started with rate %f: ", 
+    ROS_DEBUG("tf Thread from frame `%s` to `%s` started with rate %f: ",
               child_frame.c_str(), parent_frame.c_str(), tf_update_rate_);
     tf_listener::TfClass obj_tf;
     ros::Rate loop_rate(tf_update_rate_);
@@ -205,7 +205,7 @@ void MapperClass::CollisionCheckTask() {
         this->GetOctomapResolution(&octomap_resolution);
         visualization_functions::DrawCollidingNodes(colliding_nodes, inertial_frame_id_,
                                                     1.01*octomap_resolution, &collision_markers);
-        
+
         // Publish all markers
         this->PublishMarkers(collision_markers, traj_markers, samples_markers, compressed_samples_markers);
 
@@ -327,7 +327,7 @@ void MapperClass::OctomappingTask() {
         } else if ((is_lidar) && (cam_frustum_pub_.getNumSubscribers() > 0)) {
             visualization_msgs::Marker lidar_range_marker;
             Eigen::Vector3d lidar_origin = transform.translation();
-            if(!globals_.map_3d) {
+            if (!globals_.map_3d) {
                 lidar_origin[2] = 0.0;
             }
             pthread_mutex_lock(&mutexes_.octomap);
@@ -363,9 +363,9 @@ void MapperClass::KeyboardTask() {
                 globals_.octomap.tree_.write(filename1);
                 globals_.octomap.tree_inflated_.write(filename2);
             pthread_mutex_unlock(&mutexes_.octomap);
-            
+
             ROS_INFO("Maps saved in:\n%s \n%s\n", filename1.c_str(), filename2.c_str());
-        } else if (input_string == "load_map"){
+        } else if (input_string == "load_map") {
             octomap::OcTree* tree = dynamic_cast<octomap::OcTree*>(octomap::OcTree::read(filename1));
             octomap::OcTree* tree_inflated = dynamic_cast<octomap::OcTree*>(octomap::OcTree::read(filename2));
             if (tree && tree_inflated) {

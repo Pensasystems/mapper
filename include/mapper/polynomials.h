@@ -16,8 +16,7 @@
  * under the License.
  */
 
-#ifndef MAPPER_POLYNOMIALS_H_
-#define MAPPER_POLYNOMIALS_H_
+#pragma once
 
 #include <Eigen/Dense>
 #include <pcl/point_cloud.h>
@@ -112,5 +111,3 @@ class Trajectory3D{
 };
 
 }  // namespace polynomials
-
-#endif  // MAPPER_POLYNOMIALS_H_

@@ -1,3 +1,5 @@
+// Copyright (c) 2020 by Pensa Systems, Inc. -- All rights reserved
+// Confidential and Proprietary
 
 #pragma once
 
@@ -6,6 +8,10 @@
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/Point.h>
 #include <pcl/point_cloud.h>
+
+// C++ libraries
+#include <limits>
+#include <vector>
 
 namespace helper {
 

@@ -389,4 +389,4 @@ void Tree::TreeVisualization(visualization_msgs::Marker* line_list) {
     // ROS_INFO("n_edges: %d", int(line_list->points.size()));
 }
 
-}  // octoclass
+}  // namespace octoclass

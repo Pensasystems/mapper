@@ -16,8 +16,7 @@
  * under the License.
  */
 
-#ifndef MAPPER_VISUALIZATION_FUNCTIONS_H_
-#define MAPPER_VISUALIZATION_FUNCTIONS_H_
+#pragma once
 
 #include "mapper/msg_conversions.h"
 
@@ -159,5 +158,3 @@ void TrajVisMarkers(const pcl::PointCloud<pcl::PointXYZ> &pcl_traj,
                     visualization_msgs::MarkerArray* marker_array);
 
 }  // namespace visualization_functions
-
-#endif  // MAPPER_VISUALIZATION_FUNCTIONS_H_

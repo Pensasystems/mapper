@@ -269,4 +269,4 @@ double OctoRRT::DistanceToNode(const uint index,
     return (rrtree_.tree_[index].pos_ - pos).norm();
 }
 
-} // octoclass
+}  // namespace octoclass

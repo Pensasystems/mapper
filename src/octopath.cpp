@@ -1,5 +1,10 @@
+// Copyright (c) 2020 by Pensa Systems, Inc. -- All rights reserved
+// Confidential and Proprietary
 
 #include "mapper/octoclass.h"
+
+#include <algorithm>
+#include <vector>
 
 namespace octoclass {
 
@@ -88,18 +93,18 @@ void OctoClass::PathPruning(const std::vector<Eigen::Vector3d> &path,
 }
 
 bool OctoClass::OctoRRG(const Eigen::Vector3d &p0,
-			            const Eigen::Vector3d &pf,
-			            const Eigen::Vector3d &box_min,
-			            const Eigen::Vector3d &box_max,
-			            const double &max_time,
-			            const int &max_nodes,
-			            const double &steer_param,
-			            const bool &free_space_only,
-			            const bool &prune_result,
-			            const bool &publish_rviz,
-			            float *plan_time,
-			            int *n_rrg_nodes,
-			            std::vector<Eigen::Vector3d> *path,
+                        const Eigen::Vector3d &pf,
+                        const Eigen::Vector3d &box_min,
+                        const Eigen::Vector3d &box_max,
+                        const double &max_time,
+                        const int &max_nodes,
+                        const double &steer_param,
+                        const bool &free_space_only,
+                        const bool &prune_result,
+                        const bool &publish_rviz,
+                        float *plan_time,
+                        int *n_rrg_nodes,
+                        std::vector<Eigen::Vector3d> *path,
                         visualization_msgs::Marker *graph_markers) {
     // Check whether initial and final points are within box
     if ((p0[0] < box_min[0]) || (p0[1] < box_min[1]) || (p0[2] < box_min[2]) ||
@@ -280,10 +285,10 @@ bool OctoClass::OctoRRG(const Eigen::Vector3d &p0,
     }
 
     // Prune results if requested
-    if(prune_result) {
-    	this->PathPruning(sol_path, free_space_only, path);
+    if (prune_result) {
+        this->PathPruning(sol_path, free_space_only, path);
     } else {
-    	*path = sol_path;
+        *path = sol_path;
     }
 
     // Populate time and nodes
@@ -296,4 +301,4 @@ bool OctoClass::OctoRRG(const Eigen::Vector3d &p0,
     return true;
 }
 
-}  // octoclass
+}  // namespace octoclass

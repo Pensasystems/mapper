@@ -16,8 +16,7 @@
  * under the License.
  */
 
-#ifndef MAPPER_RRG_H_
-#define MAPPER_RRG_H_
+#pragma once
 
 #include <vector>
 #include "mapper/graphs.h"
@@ -74,6 +73,4 @@ class RRG {
                           const Eigen::Vector3d pos);  // Distance to a node
 };
 
-}  // octoclass
-
-#endif  // MAPPER_RRG_H_
+}  // namespace octoclass

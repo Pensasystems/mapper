@@ -16,8 +16,7 @@
  * under the License.
  */
 
-#ifndef MAPPER_OCTOCLASS_H_
-#define MAPPER_OCTOCLASS_H_
+#pragma once
 
 #include <octomap/octomap.h>
 #include <octomap/OcTree.h>
@@ -33,6 +32,8 @@
 #include "mapper/graphs.h"
 #include "mapper/rrg.h"
 
+#include <string>
+
 namespace octoclass {
 
 // 3D occupancy grid
@@ -45,8 +46,8 @@ class OctoClass{
     algebra_3d::PlanarLidar lidar_range_;
 
     // Constructor
-    explicit OctoClass(const double &resolution, 
-                       const std::string &inertial_frame_id, // Resolution in meters
+    explicit OctoClass(const double &resolution,
+                       const std::string &inertial_frame_id,  // Resolution in meters
                        const bool &map_3d);
     OctoClass();
 
@@ -54,12 +55,13 @@ class OctoClass{
     void SetMemory(const double memory);  // Fading memory time
     void SetMaxRange(const double max_range);  // Max range for mapping
     void SetMinRange(const double min_range);  // Min range for mapping
-    void SetInertialFrame(const std::string &inertial_frame_id); //Inertial frame id
+    void SetInertialFrame(const std::string &inertial_frame_id);  // Inertial frame id
     void SetResolution(const double resolution_in);  // Resolution of the octomap
     void ResetMap();  // Reset the octomap structure
     void CopyMap(octomap::OcTree &tree, octomap::OcTree &tree_inflated);
     void SetMapInflation(const double &inflate_radius);  // Set the inflation radius (same for xyz)
-    void SetMapInflation(const double &inflate_radius_xy, const double &inflate_radius_z);  // Set inflation radius (xy and z different)
+    void SetMapInflation(const double &inflate_radius_xy,
+                         const double &inflate_radius_z);  // Set inflation radius (xy and z different)
     void SetCamFrustum(const double fov,
                        const double aspect_ratio);
     void SetLidarRange(const double &min_range,
@@ -70,14 +72,15 @@ class OctoClass{
     void SetClampingThresholds(const double clamping_threshold_min,
                                const double clamping_threshold_max);
     void SetMap3d(const bool &map_3d);
-    std::string GetInertialFrameId() {return inertial_frame_id_;};
+    std::string GetInertialFrameId() {return inertial_frame_id_;}
     void PointsOctomapToPointCloud2(const octomap::point3d_list& points,
                                     sensor_msgs::PointCloud2& cloud);  // Convert from octomap to pointcloud2
     void PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
                           const tf::StampedTransform &tf_cam2world,
                           const algebra_3d::FrustumPlanes &frustum);    // Map obstacles and free area
+    // Same as above, but without frustum filtering (for lidar)
     void PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
-                          const tf::StampedTransform &tf_cam2world);    // Same as above, but without frustum filtering (for lidar)
+                          const tf::StampedTransform &tf_cam2world);
     void ComputeUpdate(const octomap::KeySet &occ_inflated,  // Inflated endpoints
                        const octomap::KeySet &occ_slim,      // Non-inflated endpoints
                        const octomap::point3d& origin,
@@ -186,5 +189,3 @@ class OctoClass{
 };
 
 }  // namespace octoclass
-
-#endif  // MAPPER_OCTOCLASS_H_

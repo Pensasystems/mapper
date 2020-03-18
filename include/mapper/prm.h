@@ -16,8 +16,7 @@
  * under the License.
  */
 
-#ifndef MAPPER_PRM_H_
-#define MAPPER_PRM_H_
+#pragma once
 
 #include "mapper/graphs.h"
 
@@ -48,6 +47,4 @@ class PRM {
     void SetKdtree();
 };
 
-#endif  // MAPPER_PRM_H_
-
-}  // octoclass
+}  // namespace octoclass

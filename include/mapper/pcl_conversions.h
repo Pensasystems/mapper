@@ -34,8 +34,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MAPPER_PCL_CONVERSIONS_H_
-#define MAPPER_PCL_CONVERSIONS_H_
+#pragma once
 
 #include <pcl/point_cloud.h>
 #include <vector>
@@ -102,5 +101,3 @@ void FromROSMsg(const sensor_msgs::PointCloud2 &cloud, pcl::PointCloud<T> *pcl_c
 }
 
 }  // namespace pcl_conversions
-
-#endif  // MAPPER_PCL_CONVERSIONS_H_

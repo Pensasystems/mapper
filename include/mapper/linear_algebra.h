@@ -16,8 +16,7 @@
  * under the License.
  */
 
-#ifndef MAPPER_LINEAR_ALGEBRA_H_
-#define MAPPER_LINEAR_ALGEBRA_H_
+#pragma once
 
 #include <vector>
 #include <string>
@@ -99,7 +98,7 @@ class LineSegment3d{
             t_opt = gain*(x1-x2).transpose()*(x1-point);
         }
 
-        // nearest_point is the closest point between 
+        // nearest_point is the closest point between
         // the point and the segment
         if (t_opt < 0) {
             *nearest_point = x1;
@@ -307,9 +306,6 @@ class PlanarLidar{
         range_marker->color.a = 0.1;
         range_marker->lifetime = ros::Duration(1);  // Disappears in 1 second
     }
-
 };
 
 }  // namespace algebra_3d
-
-#endif  // MAPPER_LINEAR_ALGEBRA_H_

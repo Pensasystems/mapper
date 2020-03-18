@@ -16,8 +16,7 @@
  * under the License.
  */
 
-#ifndef MAPPER_TF_CLASS_H_
-#define MAPPER_TF_CLASS_H_
+#pragma once
 
 #include <tf/transform_listener.h>
 #include <string>
@@ -89,5 +88,3 @@ class TfClass{
 };
 
 }  // namespace tf_listener
-
-#endif  // MAPPER_TF_CLASS_H_

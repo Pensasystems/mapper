@@ -16,8 +16,7 @@
  * under the License.
  */
 
-#ifndef MAPPER_PRIORITY_QUEUE_H_
-#define MAPPER_PRIORITY_QUEUE_H_
+#pragma once
 
 #include <queue>
 #include <utility>  // For pair<>
@@ -59,6 +58,4 @@ struct PriorityQueue {
   }
 };
 
-}  // octoclass
-
-#endif  // MAPPER_PRIORITY_QUEUE_H_
+}  // namespace octoclass

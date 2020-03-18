@@ -19,6 +19,7 @@
 #include <mapper/mapper_class.h>
 #include <limits>
 #include <vector>
+#include <string>
 
 namespace mapper {
 
@@ -73,7 +74,7 @@ bool MapperClass::SaveMap(std_srvs::Trigger::Request &req,
         globals_.octomap.tree_.write(filename1);
         globals_.octomap.tree_inflated_.write(filename2);
     pthread_mutex_unlock(&mutexes_.octomap);
-    
+
     ROS_INFO("Maps saved in:\n%s \n%s\n", filename1.c_str(), filename2.c_str());
 }
 
@@ -113,7 +114,7 @@ bool MapperClass::RRGService(mapper::RRT_RRG_PRM::Request &req,
         msg_conversions::ros_point_to_eigen_vector(req.box_min),
         msg_conversions::ros_point_to_eigen_vector(req.box_max),
         req.max_time, req.max_nodes, req.steer_param, req.free_space_only,
-        req.prune_result, req.publish_rviz, &res.planning_time, &res.n_nodes, 
+        req.prune_result, req.publish_rviz, &res.planning_time, &res.n_nodes,
         &e_path, &graph_markers);
     pthread_mutex_unlock(&mutexes_.octomap);
     for (uint i = 0 ; i < e_path.size(); i++) {

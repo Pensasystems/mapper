@@ -16,8 +16,7 @@
  * under the License.
  */
 
-#ifndef MAPPER_STRUCTS_H_
-#define MAPPER_STRUCTS_H_
+#pragma once
 
 // PCL specific includes
 #include <sensor_msgs/PointCloud2.h>
@@ -29,6 +28,7 @@
 #include <semaphore.h>
 #include <queue>
 #include <string>
+#include <vector>
 
 // Locally defined libraries
 #include "mapper/octoclass.h"
@@ -115,5 +115,3 @@ class semaphoreStruct {
 };
 
 }  // namespace mapper
-
-#endif  // MAPPER_STRUCTS_H_

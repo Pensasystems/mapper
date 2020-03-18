@@ -19,14 +19,12 @@
 // Standard includes
 #include <mapper/mapper_class.h>
 
-/**
- * \ingroup mobility
- */
+#include <string>
+#include <vector>
+
 namespace mapper {
 
-MapperClass::MapperClass() {
-
-}
+MapperClass::MapperClass() { }
 
 MapperClass::~MapperClass() {
     // Join all threads
@@ -35,10 +33,10 @@ MapperClass::~MapperClass() {
     h_fade_thread_.join();
     h_collision_check_thread_.join();
 
-    for(uint i = 0; i < h_cameras_tf_thread_.size(); i++) {
+    for (uint i = 0; i < h_cameras_tf_thread_.size(); i++) {
       h_cameras_tf_thread_[i].join();
     }
-    for(uint i = 0; i < h_lidar_tf_thread_.size(); i++) {
+    for (uint i = 0; i < h_lidar_tf_thread_.size(); i++) {
       h_lidar_tf_thread_[i].join();
     }
 
@@ -48,7 +46,6 @@ MapperClass::~MapperClass() {
 }
 
 void MapperClass::Initialize(ros::NodeHandle *nh) {
-
     // Load parameters
     double map_resolution, memory_time, max_range, min_range;
     double inflate_radius_xy, inflate_radius_z;
@@ -195,7 +192,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
         process_pcl_srv_name, &MapperClass::OctomapProcessPCL, this);
     rrg_srv_ = nh->advertiseService(
         rrg_srv_name, &MapperClass::RRGService, this);
-    
+
     // Publishers -----------------------------------------------
     obstacle_path_pub_ =
         nh->advertise<geometry_msgs::PointStamped>(collision_detection_topic, 10);
@@ -211,7 +208,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
         nh->advertise<visualization_msgs::MarkerArray>(discrete_trajectory_markers_topic, 10);
     cam_frustum_pub_ =
         nh->advertise<visualization_msgs::Marker>(frustum_markers_topic, 10);
-    graph_tree_marker_pub_ = 
+    graph_tree_marker_pub_ =
         nh->advertise<visualization_msgs::Marker>(graph_tree_marker_topic, 10);
 
     // threads --------------------------------------------------
@@ -222,8 +219,8 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     // h_keyboard_thread_ = std::thread(&MapperClass::KeyboardTask, this);
 
     // Subscriber for trajectories
-    waypoints_sub_ = nh->subscribe<pensa_msgs::WaypointSet>("/drone_arbiter/check_collision", 1, &MapperClass::WaypointsCallback, this);
-    // trajectory_sub_ = nh->subscribe<pensa_msgs::VecPVA_4d>("/motion_planner/current_trajectory", 1, &MapperClass::SampledTrajectoryCallback, this);
+    waypoints_sub_ = nh->subscribe<pensa_msgs::WaypointSet>
+        ("/drone_arbiter/check_collision", 1, &MapperClass::WaypointsCallback, this);
     trajectory_status_sub_ = nh->subscribe<pensa_msgs::trapezoidal_p2pActionFeedback>
         ("/trapezoidal_p2p_action/feedback", 1, &MapperClass::TrajectoryStatusCallback, this);
 

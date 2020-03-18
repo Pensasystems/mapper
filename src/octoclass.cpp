@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <vector>
 #include <limits>
+#include <string>
 #include "mapper/octoclass.h"
 
 namespace octoclass {
@@ -138,13 +139,13 @@ void OctoClass::CopyMap(octomap::OcTree &tree, octomap::OcTree &tree_inflated) {
     this->ResetMap();
 
     for (octomap::OcTree::leaf_iterator it = tree.begin_leafs(),
-                                       end= tree.end_leafs();
-                                       it!= end; ++it) {
+                                       end = tree.end_leafs();
+                                       it != end; ++it) {
         tree_.updateNode(it.getKey(), it->getValue());
     }
     for (octomap::OcTree::leaf_iterator it = tree_inflated.begin_leafs(),
-                                        end= tree_inflated.end_leafs();
-                                        it!= end; ++it) {
+                                        end = tree_inflated.end_leafs();
+                                        it != end; ++it) {
         tree_inflated_.updateNode(it.getKey(), it->getValue());
     }
 }
@@ -480,8 +481,8 @@ void OctoClass::FadeMemory(const double &rate) {  // rate at which this function
     static bool is_occ;
     static octomap::OcTreeKey key;
     for (octomap::OcTree::leaf_iterator it = tree_.begin_leafs(),
-                                       end= tree_.end_leafs();
-                                       it!= end; ++it) {
+                                       end = tree_.end_leafs();
+                                       it != end; ++it) {
         // fade obstacles and free areas
         key = it.getKey();
         octomap::OcTreeNode* n = tree_.search(key);
@@ -526,8 +527,8 @@ void OctoClass::InflateObstacles(const double &thickness) {
     static octomap::point3d central_point, cur_point;
     octomap::OcTreeNode *node, *node_inflated;
     for (octomap::OcTree::leaf_iterator it = tree_.begin_leafs(),
-                                       end= tree_.end_leafs();
-                                       it!= end; ++it) {
+                                       end = tree_.end_leafs();
+                                       it != end; ++it) {
         // check occupancy of the current point
         central_point = it.getCoordinate();
         node = tree_.search(central_point);
@@ -625,8 +626,8 @@ void OctoClass::TreeVisMarkers(visualization_msgs::MarkerArray* obstacles,
     // publish all leafs from the tree
     static geometry_msgs::Point point_center;
     for (octomap::OcTree::leaf_iterator it = tree_.begin_leafs(),
-                                       end= tree_.end_leafs();
-                                       it!= end; ++it) {
+                                       end = tree_.end_leafs();
+                                       it != end; ++it) {
         // set depth in the tree
         const unsigned idx = it.getDepth();
         point_center.x = it.getX();
@@ -693,8 +694,8 @@ void OctoClass::InflatedVisMarkers(visualization_msgs::MarkerArray* obstacles,
     // publish all leafs from the tree_inflated_
     static geometry_msgs::Point point_center;
     for (octomap::OcTree::leaf_iterator it = tree_inflated_.begin_leafs(),
-                                       end= tree_inflated_.end_leafs();
-                                       it!= end; ++it) {
+                                       end = tree_inflated_.end_leafs();
+                                       it != end; ++it) {
         // set depth in the tree_inflated_
         const unsigned idx = it.getDepth();
         point_center.x = it.getX();

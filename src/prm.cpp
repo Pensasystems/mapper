@@ -53,4 +53,4 @@ void PRM::SetKdtree() {
     kdtree_.setInputCloud(cloud_ptr_);
 }
 
-}  // octoclass
+}  // namespace octoclass

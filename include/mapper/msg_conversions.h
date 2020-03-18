@@ -16,8 +16,7 @@
  * under the License.
  */
 
-#ifndef MSG_CONVERSIONS_MSG_CONVERSIONS_H_
-#define MSG_CONVERSIONS_MSG_CONVERSIONS_H_
+#pragma once
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -61,6 +60,4 @@ namespace msg_conversions {
   Eigen::Affine3d           ros_pose_to_eigen_transform(const geometry_msgs::Pose & p);
   Eigen::Affine3d           ros_to_eigen_transform(const geometry_msgs::Transform & p);
 
- }  // namespace msg_conversions
-
-#endif  // MSG_CONVERSIONS_MSG_CONVERSIONS_H_
+}  // namespace msg_conversions

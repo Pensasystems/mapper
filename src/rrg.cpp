@@ -220,4 +220,4 @@ double RRG::DistanceToNode(const uint index,
     return (rrgraph_.nodes_[index].pos_ - pos).norm();
 }
 
-} // octoclass
+}  // namespace octoclass

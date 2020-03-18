@@ -16,8 +16,7 @@
  * under the License.
  */
 
-#ifndef MAPPER_SAMPLED_TRAJECTORY_H_
-#define MAPPER_SAMPLED_TRAJECTORY_H_
+#pragma once
 
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/PointStamped.h>
@@ -28,8 +27,6 @@
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
 #include <ros/ros.h>
 #include <Eigen/Dense>
-#include <iostream>
-#include <vector>
 
 // Pensa-ros msg types
 #include "pensa_msgs/VecPVA_4d.h"
@@ -37,6 +34,11 @@
 #include "mapper/polynomials.h"
 #include "mapper/linear_algebra.h"
 #include "mapper/visualization_functions.h"
+
+// C++ specific libraries
+#include <iostream>
+#include <vector>
+#include <string>
 
 namespace sampled_traj {
 
@@ -63,8 +65,8 @@ class SampledTrajectory3D{
     double max_dev_;          // Max deviation for compression
 
     // Thick trajectory variables
-    // The reason to use octomap here is to avoid adding 
-    // the same node multiple times as we thicken the 
+    // The reason to use octomap here is to avoid adding
+    // the same node multiple times as we thicken the
     // trajectory
     octomap::OcTree thick_traj_ = octomap::OcTree(0.1);  // Create empty tree with resolution 0.1
     pcl::PointCloud<pcl::PointXYZ> point_cloud_traj_;
@@ -132,7 +134,3 @@ bool ComparePointDistance(const geometry_msgs::PointStamped &sample1,
                           const geometry_msgs::Point &origin);
 
 }  // namespace sampled_traj
-
-
-
-#endif  // MAPPER_SAMPLED_TRAJECTORY_H_

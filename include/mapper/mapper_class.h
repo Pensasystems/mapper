@@ -16,8 +16,7 @@
  * under the License.
  */
 
-#ifndef MAPPER_MAPPER_CLASS_H_
-#define MAPPER_MAPPER_CLASS_H_
+#pragma once
 
 // Octomap libraries
 #include <octomap/octomap.h>
@@ -86,7 +85,7 @@ class MapperClass {
   // Functions within mapper_class.cc -------------------------------
   geometry_msgs::Point GetTfBodyToWorld();
 
-  geometry_msgs::Point GetCurrentSetPoint(); 
+  geometry_msgs::Point GetCurrentSetPoint();
 
   bool RobotPosProjectedOnTrajectory(const geometry_msgs::Point& robot_position,
                                      geometry_msgs::Point *robot_projected_on_traj);
@@ -165,10 +164,10 @@ class MapperClass {
                   const std::string& child_frame);
   void CameraTfTask(const std::string& parent_frame,
                     const std::string& child_frame,
-                    const uint& index); // Returns the transform from child to parent frame, expressed in parent frame
+                    const uint& index);  // Returns the transform from child to parent frame, expressed in parent frame
   void LidarTfTask(const std::string& parent_frame,
                    const std::string& child_frame,
-                   const uint& index); // Same as before, but for lidar data
+                   const uint& index);  // Same as before, but for lidar data
 
   // Thread for collision checking
   void CollisionCheckTask();
@@ -231,5 +230,3 @@ class MapperClass {
 };
 
 }  // namespace mapper
-
-#endif  // MAPPER_MAPPER_CLASS_H_

@@ -19,7 +19,8 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   cmake_modules
   std_srvs
-  pensa_msgs)
+  pensa_msgs
+  roslint)
 
 find_package(
   Eigen REQUIRED)
@@ -60,6 +61,8 @@ catkin_package(
     cmake_modules
 )
 
+roslint_cpp()
+
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -97,22 +100,22 @@ set( LIBS_TO_LINK
 ) 
 
 add_executable(mapper
-  src/mapper.cc
-  src/mapper_class.cc
-  src/polynomials.cc
-  src/sampled_trajectory.cc
-  src/octoclass.cc
-  src/msg_conversions.cc
-  src/threads.cc
-  src/visualization_functions.cc
-  src/msg_conversions.cc
-  src/callbacks.cc
-  src/services.cc
-  src/graphs.cc
-  src/rrt.cc
-  src/prm.cc
-  src/rrg.cc
-  src/octopath.cc
+  src/mapper.cpp
+  src/mapper_class.cpp
+  src/polynomials.cpp
+  src/sampled_trajectory.cpp
+  src/octoclass.cpp
+  src/msg_conversions.cpp
+  src/threads.cpp
+  src/visualization_functions.cpp
+  src/msg_conversions.cpp
+  src/callbacks.cpp
+  src/services.cpp
+  src/graphs.cpp
+  src/rrt.cpp
+  src/prm.cpp
+  src/rrg.cpp
+  src/octopath.cpp
 )
 target_link_libraries( mapper
     ${LIBS_TO_LINK}

@@ -16,9 +16,7 @@
  * under the License.
  */
 
-#ifndef MAPPER_RRT_H_
-#define MAPPER_RRT_H_
-
+#pragma once
 
 #include <vector>
 #include "mapper/graphs.h"
@@ -101,6 +99,4 @@ class OctoRRT {
                           const Eigen::Vector3d Pos);  // Distance to a node
 };
 
-}  // octoclass
-
-#endif  // MAPPER_RRT_H_
+}  // namespace octoclass

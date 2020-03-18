@@ -16,8 +16,7 @@
  * under the License.
  */
 
-#ifndef MAPPER_INDEXED_OCTREE_KEY_H_
-#define MAPPER_INDEXED_OCTREE_KEY_H_
+#pragma once
 
 #include <octomap/octomap.h>
 #include <octomap/OcTree.h>
@@ -111,5 +110,3 @@ class IndexedKeySet{
 };
 
 }  // namespace octoclass
-
-#endif  // MAPPER_INDEXED_OCTREE_KEY_H_
