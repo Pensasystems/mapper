@@ -39,9 +39,10 @@
 #include <std_srvs/SetBool.h>
 #include <tf/transform_broadcaster.h>
 
-// Service messages
+// Pensa messages/services
 #include <pensa_msgs/SetFloat.h>
 #include <pensa_msgs/RRT_RRG_PRM.h>
+#include <pensa_msgs/ObstacleInPath.h>
 
 // C++ libraries
 #include <fstream>
@@ -94,6 +95,9 @@ class MapperClass {
                             std::vector<octomap::point3d> *colliding_nodes);
 
   void GetOctomapResolution(double *octomap_resolution);
+
+  void PublishNearestCollision(const geometry_msgs::Point &nearest_collision,
+                               const double &collision_distance);
 
   void PublishMarkers(const visualization_msgs::MarkerArray &collision_markers,
                       const visualization_msgs::MarkerArray &traj_markers,

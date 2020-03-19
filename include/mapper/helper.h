@@ -59,7 +59,7 @@ void ShiftPcl(const pcl::PointCloud< pcl::PointXYZ >& pcl_in,
 
 void FindNearestCollision(const std::vector<octomap::point3d> &colliding_nodes,
                           const geometry_msgs::Point &origin,
-                          geometry_msgs::PointStamped *nearest_node,
+                          geometry_msgs::Point *nearest_node,
                           double *min_dist) {
     *min_dist = std::numeric_limits<double>::infinity();
     for (uint i = 0; i < colliding_nodes.size(); i++) {
@@ -69,11 +69,10 @@ void FindNearestCollision(const std::vector<octomap::point3d> &colliding_nodes,
                                            colliding_nodes[i].z());
         const double cur_distance = NormDistanceRosPoints(origin, current_node);
         if (cur_distance < *min_dist) {
-            nearest_node->point = current_node;
+            *nearest_node = current_node;
             *min_dist = cur_distance;
         }
     }
-    nearest_node->header.stamp = ros::Time::now();
 }
 
 }  // namespace helper

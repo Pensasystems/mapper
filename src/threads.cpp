@@ -129,8 +129,7 @@ void MapperClass::CollisionCheckTask() {
     geometry_msgs::Point robot_position, robot_projected_on_traj;
 
     // Variables for nearest collision
-    geometry_msgs::PointStamped nearest_collision;
-    nearest_collision.header.frame_id = inertial_frame_id_;
+    geometry_msgs::Point nearest_collision;
     double collision_distance;
 
     // Size of trajectory markers
@@ -184,10 +183,10 @@ void MapperClass::CollisionCheckTask() {
         this->GetCollidingNodesPcl(point_cloud_traj_through_drone, &colliding_nodes);
         // ROS_INFO("Colliding nodes: %d", int(colliding_nodes.size()) );
 
-        // If there are collisions, find the nearest one
+        // If there are collisions, find the nearest one and publish it
         if (colliding_nodes.size() > 0) {
             helper::FindNearestCollision(colliding_nodes, robot_position, &nearest_collision, &collision_distance);
-            obstacle_path_pub_.publish(nearest_collision);
+            this->PublishNearestCollision(nearest_collision, collision_distance);
             ROS_WARN("[mapper]: Nearest collision in %.3f meters!", collision_distance);
         }
 

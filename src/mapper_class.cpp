@@ -195,7 +195,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
 
     // Publishers -----------------------------------------------
     obstacle_path_pub_ =
-        nh->advertise<geometry_msgs::PointStamped>(collision_detection_topic, 10);
+        nh->advertise<pensa_msgs::ObstacleInPath>(collision_detection_topic, 10);
     obstacle_marker_pub_ =
         nh->advertise<visualization_msgs::MarkerArray>(obstacle_markers_topic, 10);
     free_space_marker_pub_ =
@@ -279,6 +279,17 @@ void MapperClass::GetOctomapResolution(double *octomap_resolution) {
     pthread_mutex_lock(&mutexes_.octomap);
         *octomap_resolution = globals_.octomap.tree_inflated_.getResolution();
     pthread_mutex_unlock(&mutexes_.octomap);
+}
+
+void MapperClass::PublishNearestCollision(const geometry_msgs::Point &nearest_collision,
+                                          const double &collision_distance) {
+    pensa_msgs::ObstacleInPath msg;
+    msg.header.stamp = ros::Time::now();
+    msg.header.frame_id = inertial_frame_id_;
+    msg.obstacle_position = nearest_collision;
+    msg.obstacle_distance = collision_distance;
+    msg.obstacle_exists = true;
+    obstacle_path_pub_.publish(msg);
 }
 
 void MapperClass::PublishMarkers(const visualization_msgs::MarkerArray &collision_markers,
