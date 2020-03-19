@@ -24,8 +24,8 @@
 namespace mapper {
 
 // Update resolution of the map
-bool MapperClass::UpdateResolution(mapper::SetFloat::Request &req,
-                                   mapper::SetFloat::Response &res) {
+bool MapperClass::UpdateResolution(pensa_msgs::SetFloat::Request &req,
+                                   pensa_msgs::SetFloat::Response &res) {
     pthread_mutex_lock(&mutexes_.octomap);
         globals_.octomap.SetResolution(req.data);
     pthread_mutex_unlock(&mutexes_.octomap);
@@ -35,8 +35,8 @@ bool MapperClass::UpdateResolution(mapper::SetFloat::Request &req,
 }
 
 // Update map memory time
-bool MapperClass::UpdateMemoryTime(mapper::SetFloat::Request &req,
-                                   mapper::SetFloat::Response &res) {
+bool MapperClass::UpdateMemoryTime(pensa_msgs::SetFloat::Request &req,
+                                   pensa_msgs::SetFloat::Response &res) {
     pthread_mutex_lock(&mutexes_.octomap);
         globals_.octomap.SetMemory(req.data);
     pthread_mutex_unlock(&mutexes_.octomap);
@@ -45,8 +45,8 @@ bool MapperClass::UpdateMemoryTime(mapper::SetFloat::Request &req,
     return true;
 }
 
-bool MapperClass::MapInflation(mapper::SetFloat::Request &req,
-                               mapper::SetFloat::Response &res) {
+bool MapperClass::MapInflation(pensa_msgs::SetFloat::Request &req,
+                               pensa_msgs::SetFloat::Response &res) {
     pthread_mutex_lock(&mutexes_.octomap);
         globals_.octomap.SetMapInflation(req.data);
     pthread_mutex_unlock(&mutexes_.octomap);
@@ -103,8 +103,8 @@ bool MapperClass::OctomapProcessPCL(std_srvs::SetBool::Request &req,
     }
 }
 
-bool MapperClass::RRGService(mapper::RRT_RRG_PRM::Request &req,
-                             mapper::RRT_RRG_PRM::Response &res) {
+bool MapperClass::RRGService(pensa_msgs::RRT_RRG_PRM::Request &req,
+                             pensa_msgs::RRT_RRG_PRM::Response &res) {
     std::vector<Eigen::Vector3d> e_path;
     visualization_msgs::Marker graph_markers;
     pthread_mutex_lock(&mutexes_.octomap);

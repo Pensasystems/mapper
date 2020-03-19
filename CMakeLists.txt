@@ -34,19 +34,6 @@ find_package(
 link_directories(
     ${PCL_LIBRARY_DIRS})
 
-add_message_files(
-  FILES
-  ControlState.msg
-  Segment.msg
-  WaypointSet.msg
-)
-
-add_service_files(
-  FILES
-  SetFloat.srv
-  RRT_RRG_PRM.srv
-)
-
 generate_messages(
   DEPENDENCIES
   geometry_msgs

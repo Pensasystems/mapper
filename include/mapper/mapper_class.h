@@ -40,8 +40,8 @@
 #include <tf/transform_broadcaster.h>
 
 // Service messages
-#include <mapper/SetFloat.h>
-#include <mapper/RRT_RRG_PRM.h>
+#include <pensa_msgs/SetFloat.h>
+#include <pensa_msgs/RRT_RRG_PRM.h>
 
 // C++ libraries
 #include <fstream>
@@ -124,16 +124,16 @@ class MapperClass {
 
   // Services (see services.cc for implementation) -----------------
   // Update resolution of the map
-  bool UpdateResolution(mapper::SetFloat::Request &req,
-                        mapper::SetFloat::Response &res);
+  bool UpdateResolution(pensa_msgs::SetFloat::Request &req,
+                        pensa_msgs::SetFloat::Response &res);
 
   // Update map memory time
-  bool UpdateMemoryTime(mapper::SetFloat::Request &req,
-                        mapper::SetFloat::Response &res);
+  bool UpdateMemoryTime(pensa_msgs::SetFloat::Request &req,
+                        pensa_msgs::SetFloat::Response &res);
 
   // Update map inflation
-  bool MapInflation(mapper::SetFloat::Request &req,
-                    mapper::SetFloat::Response &res);
+  bool MapInflation(pensa_msgs::SetFloat::Request &req,
+                    pensa_msgs::SetFloat::Response &res);
 
   // Reset the map
   bool ResetMap(std_srvs::Trigger::Request &req,
@@ -152,8 +152,8 @@ class MapperClass {
                          std_srvs::SetBool::Response &res);
 
   // RRG path planning
-  bool RRGService(mapper::RRT_RRG_PRM::Request &req,
-                  mapper::RRT_RRG_PRM::Response &res);
+  bool RRGService(pensa_msgs::RRT_RRG_PRM::Request &req,
+                  pensa_msgs::RRT_RRG_PRM::Response &res);
 
   // Threads (see threads.cc for implementation) -----------------
   // Thread for fading memory of the octomap
