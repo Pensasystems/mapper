@@ -34,12 +34,6 @@ find_package(
 link_directories(
     ${PCL_LIBRARY_DIRS})
 
-generate_messages(
-  DEPENDENCIES
-  geometry_msgs
-  std_msgs
-)
-
 catkin_package(
   DEPENDS Eigen
   CATKIN_DEPENDS
@@ -109,6 +103,5 @@ target_link_libraries( mapper
 )
 
 #This makes sure that messages and services are compiled before the rest
-add_dependencies(mapper mapper_generate_messages_cpp 
-                        pensa_msgs_generate_messages_cpp
+add_dependencies(mapper pensa_msgs_generate_messages_cpp
                         ${catkin_EXPORTED_TARGETS})
