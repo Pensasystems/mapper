@@ -100,7 +100,7 @@
             <param name="inflated_free_space_markers" value="inflated_free_space_markers"/>
             <param name="frustum_markers" value="frustum_markers"/>
             <param name="discrete_trajectory_markers" value="discrete_trajectory_markers"/>
-            <param name="collision_detection" value="collisions"/>
+            <param name="collision_detection" value="detected_obstacles"/>
             <param name="graph_tree_marker_topic" value="graph_tree_path_planner"/>
 
             <!-- Path of mapper in computer: used for saving/loading maps -->
