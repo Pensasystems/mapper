@@ -54,6 +54,7 @@ void MapperClass::CameraPclCallback(const sensor_msgs::PointCloud2::ConstPtr &ms
 
 void MapperClass::LidarPclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg,
                                    const uint& lidar_index) {
+    ROS_INFO("pcl callback!");
     // Structure to include pcl and its frame
     stampedPcl new_pcl;
     const uint max_queue_size = globals_.max_queue_size;
@@ -125,7 +126,7 @@ void MapperClass::SegmentCallback(const mapper::Segment::ConstPtr &msg) {
     pthread_mutex_unlock(&mutexes_.sampled_traj);
 
     // Notify the collision checker to check for collision
-    sem_post(&semaphores_.collision_check);
+    // sem_post(&semaphores_.collision_check);
 
     // ros::Duration solver_time = ros::Time::now() - t0;
     // ROS_DEBUG("Time to compute octotraj: %f", solver_time.toSec());
@@ -171,7 +172,7 @@ void MapperClass::SampledTrajectoryCallback(const pensa_msgs::VecPVA_4d::ConstPt
     pthread_mutex_unlock(&mutexes_.sampled_traj);
 
     // Notify the collision checker to check for collision
-    sem_post(&semaphores_.collision_check);
+    // sem_post(&semaphores_.collision_check);
 }
 
 void MapperClass::WaypointsCallback(const pensa_msgs::WaypointSetConstPtr &msg) {
@@ -213,7 +214,7 @@ void MapperClass::WaypointsCallback(const pensa_msgs::WaypointSetConstPtr &msg) 
     pthread_mutex_unlock(&mutexes_.sampled_traj);
 
     // Notify the collision checker to check for collision
-    sem_post(&semaphores_.collision_check);
+    // sem_post(&semaphores_.collision_check);
 }
 
 void MapperClass::TrajectoryStatusCallback(const pensa_msgs::trapezoidal_p2pActionFeedbackConstPtr &msg) {

@@ -26,12 +26,12 @@ namespace mapper {
 
 // Thread for fading memory of the octomap
 void MapperClass::FadeTask() {
-    ROS_INFO("Fading Memory Thread started with rate %f: ", fading_memory_update_rate_);
+    ROS_DEBUG("[mapper]: Fading Memory Thread started with rate %f: ", fading_memory_update_rate_);
 
     // Rate at which this thread will run
-    ros::Rate loop_rate(fading_memory_update_rate_);
+    ros::Rate loop_rate(1.1);
 
-    while (ros::ok()) {
+    while (!terminate_node_.GetValue()) {
         // Get time for when this task started
         const ros::Time t0 = ros::Time::now();
 
@@ -42,21 +42,21 @@ void MapperClass::FadeTask() {
         pthread_mutex_unlock(&mutexes_.octomap);
 
         // ros::Duration fade_time = ros::Time::now() - t0;
-        // ROS_DEBUG("Fading memory execution time: %f", fade_time.toSec());
+        // ROS_INFO("Fading memory execution time: %f", fade_time.toSec());
 
         loop_rate.sleep();
     }
-    ROS_DEBUG("Exiting Fading Memory Thread...");
+    ROS_DEBUG("[mapper]: Exiting Fading Memory Thread...");
 }
 
 // Thread for updating the body tfTree values
 void MapperClass::BodyTfTask(const std::string& parent_frame,
                              const std::string& child_frame) {
-    ROS_DEBUG("robot frame tf Thread started with rate %f: ", tf_update_rate_);
+    ROS_DEBUG("[mapper]: robot frame tf Thread started with rate %f: ", tf_update_rate_);
     tf_listener::TfClass obj_body2world;
     ros::Rate loop_rate(tf_update_rate_);
 
-    while (ros::ok()) {
+    while (!terminate_node_.GetValue()) {
         // Get the transform
         obj_body2world.GetTransform(child_frame, parent_frame);
         // obj_body2world.PrintOrigin();
@@ -67,7 +67,7 @@ void MapperClass::BodyTfTask(const std::string& parent_frame,
         loop_rate.sleep();
     }
 
-    ROS_DEBUG("Exiting body tf Thread...");
+    ROS_DEBUG("[mapper]: Exiting body tf Thread...");
 }
 
 // Thread for updating the tfTree values
@@ -79,7 +79,7 @@ void MapperClass::CameraTfTask(const std::string& parent_frame,
     tf_listener::TfClass obj_tf;
     ros::Rate loop_rate(tf_update_rate_);
 
-    while (ros::ok()) {
+    while (!terminate_node_.GetValue()) {
         // Get the transform
         obj_tf.GetTransform(child_frame, parent_frame);
         // obj_tf.PrintOrigin();
@@ -90,7 +90,7 @@ void MapperClass::CameraTfTask(const std::string& parent_frame,
         loop_rate.sleep();
     }
 
-    ROS_DEBUG("Exiting body tf Thread...");
+    ROS_DEBUG("[mapper]: Exiting camera tf Thread...");
 }
 
 void MapperClass::LidarTfTask(const std::string& parent_frame,
@@ -101,7 +101,7 @@ void MapperClass::LidarTfTask(const std::string& parent_frame,
     tf_listener::TfClass obj_tf;
     ros::Rate loop_rate(tf_update_rate_);
 
-    while (ros::ok()) {
+    while (!terminate_node_.GetValue()) {
         // Get the transform
         obj_tf.GetTransform(child_frame, parent_frame);
         // obj_tf.PrintOrigin();
@@ -112,11 +112,11 @@ void MapperClass::LidarTfTask(const std::string& parent_frame,
         loop_rate.sleep();
     }
 
-    ROS_DEBUG("Exiting body tf Thread...");
+    ROS_DEBUG("[mapper]: Exiting lidar tf Thread...");
 }
 
 void MapperClass::CollisionCheckTask() {
-    ROS_DEBUG("collisionCheck Thread started!");
+    ROS_DEBUG("[mapper]: collisionCheck Thread started!");
 
     // Rate at which the collision checker will run
     ros::Rate loop_rate(collision_check_rate_);
@@ -138,7 +138,7 @@ void MapperClass::CollisionCheckTask() {
     pthread_mutex_unlock(&mutexes_.sampled_traj);
     double octomap_resolution;
 
-    while (ros::ok()) {
+    while (!terminate_node_.GetValue()) {
         // Get time for when this task started
         ros::Time time_now = ros::Time::now();
 
@@ -218,13 +218,19 @@ void MapperClass::CollisionCheckTask() {
 }
 
 void MapperClass::OctomappingTask() {
-    ROS_DEBUG("OctomappingTask Thread started!");
+    ROS_DEBUG("[mapper]: OctomappingTask Thread started!");
     tf::StampedTransform tf_cam2world;
     pcl::PointCloud< pcl::PointXYZ > pcl_world;
 
-    while (ros::ok()) {
+    uint semaphore_timeout = 1;  // seconds
+
+    while (!terminate_node_.GetValue()) {
         // Wait until there is new pcl data
-        sem_wait(&semaphores_.pcl);
+        struct timespec ts = helper::TimeFromNow(semaphore_timeout);
+        if (sem_timedwait(&semaphores_.pcl, &ts) == -1) {
+            // the point of this is to go back and check if (terminate_node_.GetValue() == true)
+            continue;
+        }
 
         // Get time for when this task started
         const ros::Time t0 = ros::Time::now();
@@ -344,14 +350,14 @@ void MapperClass::OctomappingTask() {
         // ROS_INFO("Mapping time: %f", map_time.toSec());
     }
 
-    ROS_DEBUG("Exiting OctomappingTask Thread...");
+    ROS_DEBUG("[mapper]: Exiting OctomappingTask Thread...");
 }
 
 void MapperClass::KeyboardTask() {
-    ROS_DEBUG("KeyboardTask Thread started!");
+    ROS_DEBUG("[mapper]: KeyboardTask Thread started!");
 
     std::string input_string;
-    while (ros::ok()) {
+    while (!terminate_node_.GetValue()) {
         std::getline(std::cin, input_string);
         ROS_INFO("Received command: %s", input_string.c_str());
 
@@ -375,7 +381,7 @@ void MapperClass::KeyboardTask() {
         }
     }
 
-    ROS_DEBUG("Exiting KeyboardTask Thread...");
+    ROS_DEBUG("[mapper]: Exiting KeyboardTask Thread...");
 }
 
 }  // namespace mapper

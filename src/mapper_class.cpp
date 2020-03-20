@@ -27,7 +27,13 @@ namespace mapper {
 MapperClass::MapperClass() { }
 
 MapperClass::~MapperClass() {
+}
+
+void MapperClass::TerminateNode() {
+    terminate_node_.SetValue(true);
+
     // Join all threads
+    ROS_DEBUG("[mapper]: Wait for threads to return!");
     h_body_tf_thread_.join();
     h_octo_thread_.join();
     h_fade_thread_.join();
@@ -39,6 +45,7 @@ MapperClass::~MapperClass() {
     for (uint i = 0; i < h_lidar_tf_thread_.size(); i++) {
       h_lidar_tf_thread_[i].join();
     }
+    ROS_DEBUG("[mapper]: All threads have returned!");
 
     // destroy mutexes and semaphores
     mutexes_.destroy();
@@ -148,6 +155,9 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     // Set global variable to map 3d
     globals_.map_3d = map_3d;
 
+    // Shutdown ROS if sigint is detected
+    terminate_node_.SetValue(false);
+
     // update tree parameters
     globals_.octomap.SetResolution(map_resolution);
     globals_.octomap.SetMaxRange(max_range);
@@ -239,7 +249,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
         lidar_sub_[i] = nh->subscribe<sensor_msgs::PointCloud2>
               (lidar_topic, 10, boost::bind(&MapperClass::LidarPclCallback, this, _1, i));
         h_lidar_tf_thread_[i] = std::thread(&MapperClass::LidarTfTask, this, inertial_frame_id_, lidar_frame_id[i], i);
-        ROS_INFO("[mapper] Subscribed to camera topic: %s", lidar_sub_[i].getTopic().c_str());
+        ROS_INFO("[mapper] Subscribed to lidar topic: %s", lidar_sub_[i].getTopic().c_str());
     }
 
     // Notify initialization complete

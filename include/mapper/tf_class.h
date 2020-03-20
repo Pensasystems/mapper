@@ -68,7 +68,7 @@ class TfClass{
         try {
             // First we wait until transform is published, then we look it up
             if (listener_.waitForTransform(target_frame, original_frame,
-                                         ros::Time(0), ros::Duration(5))) {
+                                         ros::Time(0), ros::Duration(1))) {
                 listener_.lookupTransform(target_frame, original_frame,
                                          ros::Time(0), transform_);
                 } else {

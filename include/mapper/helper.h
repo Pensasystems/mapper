@@ -75,4 +75,11 @@ void FindNearestCollision(const std::vector<octomap::point3d> &colliding_nodes,
     }
 }
 
+struct timespec TimeFromNow(const uint& increment_sec) {
+  struct timespec ts;
+  clock_gettime(CLOCK_REALTIME, &ts);
+  ts.tv_sec += increment_sec;
+  return ts;
+}
+
 }  // namespace helper

@@ -65,6 +65,7 @@
 #include "mapper/octoclass.h"
 #include "mapper/polynomials.h"
 #include "mapper/sampled_trajectory.h"
+#include "mapper/mutex_protected_variable.h"
 
 // Data structures
 #include "mapper/structs.h"
@@ -80,7 +81,7 @@ class MapperClass {
   ~MapperClass();
 
   virtual void Initialize(ros::NodeHandle *nh);
-
+  void TerminateNode();  // Signals for thread termination
 
  protected:
   // Functions within mapper_class.cc -------------------------------
@@ -231,6 +232,9 @@ class MapperClass {
 
   // Path planning publishers
   ros::Publisher graph_tree_marker_pub_;
+
+  // Boolean to terminate all threads
+  MutexProtectedVariable<bool> terminate_node_;
 };
 
 }  // namespace mapper

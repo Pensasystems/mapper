@@ -101,16 +101,16 @@ class mutexStruct {
 class semaphoreStruct {
  public:
     sem_t pcl;
-    sem_t collision_check;
+    // sem_t collision_check;
 
     // Methods
     semaphoreStruct() {
         sem_init(&pcl, 0, 0);
-        sem_init(&collision_check, 0, 0);
+        // sem_init(&collision_check, 0, 0);
     }
     void destroy() {
         sem_destroy(&pcl);
-        sem_destroy(&collision_check);
+        // sem_destroy(&collision_check);
     }
 };
 
