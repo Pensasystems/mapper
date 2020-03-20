@@ -30,25 +30,15 @@ MapperClass::~MapperClass() {
 }
 
 void MapperClass::TerminateNode() {
-    terminate_node_.SetValue(true);
+    terminate_node_ = true;
+
+    // Destroy all subscribers
+    this->DestroyAllCallbacks();
 
     // Join all threads
-    ROS_DEBUG("[mapper]: Wait for threads to return!");
-    h_body_tf_thread_.join();
-    h_octo_thread_.join();
-    h_fade_thread_.join();
-    h_collision_check_thread_.join();
+    this->WaitForThreadsToEnd();
 
-    for (uint i = 0; i < h_cameras_tf_thread_.size(); i++) {
-      h_cameras_tf_thread_[i].join();
-    }
-    for (uint i = 0; i < h_lidar_tf_thread_.size(); i++) {
-      h_lidar_tf_thread_[i].join();
-    }
-    ROS_DEBUG("[mapper]: All threads have returned!");
-
-    // destroy mutexes and semaphores
-    mutexes_.destroy();
+    // destroy semaphores
     semaphores_.destroy();
 }
 
@@ -156,7 +146,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     globals_.map_3d = map_3d;
 
     // Shutdown ROS if sigint is detected
-    terminate_node_.SetValue(false);
+    terminate_node_ = false;
 
     // update tree parameters
     globals_.octomap.SetResolution(map_resolution);
@@ -257,38 +247,38 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
 }
 
 geometry_msgs::Point MapperClass::GetTfBodyToWorld() {
-    pthread_mutex_lock(&mutexes_.body_tf);
+    mutexes_.body_tf.lock();
         const tf::StampedTransform tf_body2world = globals_.tf_body2world;
-    pthread_mutex_unlock(&mutexes_.body_tf);
+    mutexes_.body_tf.unlock();
     return msg_conversions::tf_vector3_to_ros_point(tf_body2world.getOrigin());
 }
 
 geometry_msgs::Point MapperClass::GetCurrentSetPoint() {
-    pthread_mutex_lock(&mutexes_.traj_status);
+    mutexes_.traj_status.lock();
         pensa_msgs::trapezoidal_p2pFeedback traj_status = globals_.traj_status;
-    pthread_mutex_unlock(&mutexes_.traj_status);
+    mutexes_.traj_status.unlock();
     return traj_status.current_position;
 }
 
 bool MapperClass::RobotPosProjectedOnTrajectory(const geometry_msgs::Point& robot_position,
                                                 geometry_msgs::Point *robot_projected_on_traj) {
-    pthread_mutex_lock(&mutexes_.sampled_traj);
+    mutexes_.sampled_traj.lock();
         bool success = globals_.sampled_traj.NearestPointInCompressedTraj(robot_position, robot_projected_on_traj);
-    pthread_mutex_unlock(&mutexes_.sampled_traj);
+    mutexes_.sampled_traj.unlock();
     return success;
 }
 
 void MapperClass::GetCollidingNodesPcl(const pcl::PointCloud<pcl::PointXYZ>& pcl,
                                        std::vector<octomap::point3d> *colliding_nodes) {
-    pthread_mutex_lock(&mutexes_.octomap);
+    mutexes_.octomap.lock();
         globals_.octomap.FindCollidingNodesInflated(pcl, colliding_nodes);
-    pthread_mutex_unlock(&mutexes_.octomap);
+    mutexes_.octomap.unlock();
 }
 
 void MapperClass::GetOctomapResolution(double *octomap_resolution) {
-    pthread_mutex_lock(&mutexes_.octomap);
+    mutexes_.octomap.lock();
         *octomap_resolution = globals_.octomap.tree_inflated_.getResolution();
-    pthread_mutex_unlock(&mutexes_.octomap);
+    mutexes_.octomap.unlock();
 }
 
 void MapperClass::PublishNearestCollision(const geometry_msgs::Point &nearest_collision,

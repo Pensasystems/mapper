@@ -35,13 +35,13 @@ void MapperClass::CameraPclCallback(const sensor_msgs::PointCloud2::ConstPtr &ms
     new_pcl.cloud = cloud;
 
     // Get transform from camera to world
-    pthread_mutex_lock(&mutexes_.cam_tf);
+    mutexes_.cam_tf.lock();
         new_pcl.tf_cam2world = globals_.tf_cameras2world[cam_index];
-    pthread_mutex_unlock(&mutexes_.cam_tf);
+    mutexes_.cam_tf.unlock();
     new_pcl.is_lidar = false;
 
     // save into global variables
-    pthread_mutex_lock(&mutexes_.point_cloud);
+    mutexes_.point_cloud.lock();
         globals_.pcl_queue.push(new_pcl);
         if (globals_.pcl_queue.size() > max_queue_size) {
             globals_.pcl_queue.pop();
@@ -49,12 +49,11 @@ void MapperClass::CameraPclCallback(const sensor_msgs::PointCloud2::ConstPtr &ms
             // signal octomap thread to process new pcl data
             sem_post(&semaphores_.pcl);
         }
-    pthread_mutex_unlock(&mutexes_.point_cloud);
+    mutexes_.point_cloud.unlock();
 }
 
 void MapperClass::LidarPclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg,
                                    const uint& lidar_index) {
-    ROS_INFO("pcl callback!");
     // Structure to include pcl and its frame
     stampedPcl new_pcl;
     const uint max_queue_size = globals_.max_queue_size;
@@ -69,7 +68,7 @@ void MapperClass::LidarPclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg
     new_pcl.is_lidar = true;
 
     // save into global variables
-    pthread_mutex_lock(&mutexes_.point_cloud);
+    mutexes_.point_cloud.lock();
         globals_.pcl_queue.push(new_pcl);
         if (globals_.pcl_queue.size() > max_queue_size) {
             globals_.pcl_queue.pop();
@@ -77,7 +76,7 @@ void MapperClass::LidarPclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg
             // signal octomap thread to process new pcl data
             sem_post(&semaphores_.pcl);
         }
-    pthread_mutex_unlock(&mutexes_.point_cloud);
+    mutexes_.point_cloud.unlock();
 }
 
 
@@ -102,7 +101,7 @@ void MapperClass::SegmentCallback(const mapper::Segment::ConstPtr &msg) {
     sampled_traj::SampledTrajectory3D sampled_traj(ts, poly_trajectories);
     // SampledTrajectory3D sampledTraj(Time, Positions); // fake trajectory
 
-    pthread_mutex_lock(&mutexes_.sampled_traj);
+    mutexes_.sampled_traj.lock();
         globals_.sampled_traj.pos_ = sampled_traj.pos_;
         globals_.sampled_traj.time_ = sampled_traj.time_;
         globals_.sampled_traj.n_points_ = sampled_traj.n_points_;
@@ -123,7 +122,7 @@ void MapperClass::SegmentCallback(const mapper::Segment::ConstPtr &msg) {
 
         // populate kdtree for finding nearest neighbor w.r.t. collisions
         globals_.sampled_traj.CreateKdTree();
-    pthread_mutex_unlock(&mutexes_.sampled_traj);
+    mutexes_.sampled_traj.unlock();
 
     // Notify the collision checker to check for collision
     // sem_post(&semaphores_.collision_check);
@@ -147,7 +146,7 @@ void MapperClass::SampledTrajectoryCallback(const pensa_msgs::VecPVA_4d::ConstPt
     sampled_traj::SampledTrajectory3D sampled_traj(*msg, globals_.map_3d);
     ROS_INFO("Number of samples in trajectory: %zu", sampled_traj.pos_.size());
 
-    pthread_mutex_lock(&mutexes_.sampled_traj);
+    mutexes_.sampled_traj.lock();
         globals_.sampled_traj.pos_ = sampled_traj.pos_;
         globals_.sampled_traj.time_ = sampled_traj.time_;
         globals_.sampled_traj.n_points_ = sampled_traj.n_points_;
@@ -169,7 +168,7 @@ void MapperClass::SampledTrajectoryCallback(const pensa_msgs::VecPVA_4d::ConstPt
 
         // populate kdtree for finding nearest neighbor w.r.t. collisions
         globals_.sampled_traj.CreateKdTree();
-    pthread_mutex_unlock(&mutexes_.sampled_traj);
+    mutexes_.sampled_traj.unlock();
 
     // Notify the collision checker to check for collision
     // sem_post(&semaphores_.collision_check);
@@ -190,7 +189,7 @@ void MapperClass::WaypointsCallback(const pensa_msgs::WaypointSetConstPtr &msg) 
     sampled_traj::SampledTrajectory3D sampled_traj(msg->waypoints, globals_.map_3d);
     ROS_INFO("Number of waypoints: %zu", sampled_traj.pos_.size());
 
-    pthread_mutex_lock(&mutexes_.sampled_traj);
+    mutexes_.sampled_traj.lock();
         globals_.sampled_traj.pos_ = sampled_traj.pos_;
         globals_.sampled_traj.time_ = sampled_traj.time_;
         globals_.sampled_traj.compressed_pos_ = sampled_traj.compressed_pos_;
@@ -211,17 +210,29 @@ void MapperClass::WaypointsCallback(const pensa_msgs::WaypointSetConstPtr &msg) 
 
         // populate kdtree for finding nearest neighbor w.r.t. collisions
         globals_.sampled_traj.CreateKdTree();
-    pthread_mutex_unlock(&mutexes_.sampled_traj);
+    mutexes_.sampled_traj.unlock();
 
     // Notify the collision checker to check for collision
     // sem_post(&semaphores_.collision_check);
 }
 
 void MapperClass::TrajectoryStatusCallback(const pensa_msgs::trapezoidal_p2pActionFeedbackConstPtr &msg) {
-    pthread_mutex_lock(&mutexes_.traj_status);
+    mutexes_.traj_status.lock();
         globals_.traj_status = msg->feedback;
-    pthread_mutex_unlock(&mutexes_.traj_status);
+    mutexes_.traj_status.unlock();
 }
 
+void MapperClass::DestroyAllCallbacks() {
+    trajectory_sub_.shutdown();
+    trajectory_status_sub_.shutdown();
+    waypoints_sub_.shutdown();
+    for (uint i = 0; i < cameras_sub_.size(); i++) {
+        cameras_sub_[i].shutdown();
+    }
+    for (uint i = 0; i < lidar_sub_.size(); i++) {
+        lidar_sub_[i].shutdown();
+    }
+    ROS_DEBUG("[mapper]: All subscribers have been destroyed!");
+}
 
 }  // namespace mapper

@@ -9,7 +9,7 @@
 mapper::MapperClass octomapper;
 
 void SigInt(int sig) {  // Detect that ctrl+c has been pressed
-	ROS_INFO("[mapper]: SIGINT detected! Terminating nodes!");
+    ROS_INFO("[mapper]: SIGINT detected! Terminating nodes!");
     octomapper.TerminateNode();
     ros::shutdown();
 }

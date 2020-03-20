@@ -49,7 +49,8 @@
 #include <vector>
 #include <string>
 #include <exception>
-#include <thread>         // std::thread
+#include <thread>
+#include <atomic>
 
 // Mapper message types
 #include "mapper/Segment.h"
@@ -65,7 +66,6 @@
 #include "mapper/octoclass.h"
 #include "mapper/polynomials.h"
 #include "mapper/sampled_trajectory.h"
-#include "mapper/mutex_protected_variable.h"
 
 // Data structures
 #include "mapper/structs.h"
@@ -124,8 +124,11 @@ class MapperClass {
   // Callback for handling incoming waypoints
   void WaypointsCallback(const pensa_msgs::WaypointSetConstPtr &msg);
 
-  // // Callback to know the current status of trajectory tracking
+  // Callback to know the current status of trajectory tracking
   void TrajectoryStatusCallback(const pensa_msgs::trapezoidal_p2pActionFeedbackConstPtr &msg);
+
+  // Destroy all callbacks (used when killing the node)
+  void DestroyAllCallbacks();
 
   // Services (see services.cc for implementation) -----------------
   // Update resolution of the map
@@ -183,6 +186,9 @@ class MapperClass {
   // Thread for getting keyboard messages
   void KeyboardTask();
 
+  // Join all threads
+  void WaitForThreadsToEnd();
+
  private:
   // Declare global variables (structures defined in structs.h)
   globalVariables globals_;  // These variables are all mutex-protected
@@ -234,7 +240,7 @@ class MapperClass {
   ros::Publisher graph_tree_marker_pub_;
 
   // Boolean to terminate all threads
-  MutexProtectedVariable<bool> terminate_node_;
+  std::atomic<bool> terminate_node_;
 };
 
 }  // namespace mapper

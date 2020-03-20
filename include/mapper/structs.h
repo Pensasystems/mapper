@@ -24,11 +24,11 @@
 #include <pcl/point_types.h>
 
 // c++ libraries
-#include <pthread.h>
 #include <semaphore.h>
 #include <queue>
 #include <string>
 #include <vector>
+#include <mutex>
 
 // Locally defined libraries
 #include "mapper/octoclass.h"
@@ -66,36 +66,14 @@ struct globalVariables {
 
 class mutexStruct {
  public:
-    pthread_mutex_t sampled_traj;
-    pthread_mutex_t traj_status;
-    pthread_mutex_t body_tf;
-    pthread_mutex_t cam_tf;
-    pthread_mutex_t lidar_tf;
-    pthread_mutex_t octomap;
-    pthread_mutex_t point_cloud;
-    pthread_mutex_t update_map;
-
-    // Methods
-    mutexStruct() {
-        pthread_mutex_init(&sampled_traj, NULL);
-        pthread_mutex_init(&traj_status, NULL);
-        pthread_mutex_init(&body_tf, NULL);
-        pthread_mutex_init(&cam_tf, NULL);
-        pthread_mutex_init(&lidar_tf, NULL);
-        pthread_mutex_init(&octomap, NULL);
-        pthread_mutex_init(&point_cloud, NULL);
-        pthread_mutex_init(&update_map, NULL);
-    }
-    void destroy() {
-        pthread_mutex_destroy(&sampled_traj);
-        pthread_mutex_destroy(&traj_status);
-        pthread_mutex_destroy(&body_tf);
-        pthread_mutex_destroy(&cam_tf);
-        pthread_mutex_destroy(&lidar_tf);
-        pthread_mutex_destroy(&octomap);
-        pthread_mutex_destroy(&point_cloud);
-        pthread_mutex_destroy(&update_map);
-    }
+    std::mutex sampled_traj;
+    std::mutex traj_status;
+    std::mutex body_tf;
+    std::mutex cam_tf;
+    std::mutex lidar_tf;
+    std::mutex octomap;
+    std::mutex point_cloud;
+    std::mutex update_map;
 };
 
 class semaphoreStruct {

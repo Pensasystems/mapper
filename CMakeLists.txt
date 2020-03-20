@@ -28,9 +28,6 @@ find_package(
 find_package(
   octomap REQUIRED)
 
-find_package(
-  Boost COMPONENTS thread)
-
 link_directories(
     ${PCL_LIBRARY_DIRS})
 
