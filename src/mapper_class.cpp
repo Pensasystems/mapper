@@ -121,11 +121,13 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     std::string inflated_obstacle_markers_topic, inflated_free_space_markers_topic;
     std::string frustum_markers_topic, discrete_trajectory_markers_topic;
     std::string collision_detection_topic, graph_tree_marker_topic;
+    std::string obstacle_radius_markers_topic;
     nh->getParam("obstacle_markers", obstacle_markers_topic);
     nh->getParam("free_space_markers", free_space_markers_topic);
     nh->getParam("inflated_obstacle_markers", inflated_obstacle_markers_topic);
     nh->getParam("inflated_free_space_markers", inflated_free_space_markers_topic);
     nh->getParam("frustum_markers", frustum_markers_topic);
+    nh->getParam("obstacle_radius_markers", obstacle_radius_markers_topic);
     nh->getParam("discrete_trajectory_markers", discrete_trajectory_markers_topic);
     nh->getParam("collision_detection", collision_detection_topic);
     nh->getParam("graph_tree_marker_topic", graph_tree_marker_topic);
@@ -208,13 +210,16 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
         nh->advertise<visualization_msgs::MarkerArray>(discrete_trajectory_markers_topic, 10);
     cam_frustum_pub_ =
         nh->advertise<visualization_msgs::Marker>(frustum_markers_topic, 10);
+    obstacle_radius_pub_ =
+        nh->advertise<visualization_msgs::Marker>(obstacle_radius_markers_topic, 10);
     graph_tree_marker_pub_ =
         nh->advertise<visualization_msgs::Marker>(graph_tree_marker_topic, 10);
 
     // threads --------------------------------------------------
     h_octo_thread_ = std::thread(&MapperClass::OctomappingTask, this);
     h_fade_thread_ = std::thread(&MapperClass::FadeTask, this);
-    h_collision_check_thread_ = std::thread(&MapperClass::CollisionCheckTask, this);
+    h_collision_check_thread_ = std::thread(&MapperClass::PathCollisionCheckTask, this);
+    h_radius_collision_thread_ = std::thread(&MapperClass::RadiusCollisionCheck, this);
     h_body_tf_thread_ = std::thread(&MapperClass::BodyTfTask, this, inertial_frame_id_, robot_frame_id_);
     // h_keyboard_thread_ = std::thread(&MapperClass::KeyboardTask, this);
 
@@ -292,16 +297,25 @@ void MapperClass::PublishNearestCollision(const geometry_msgs::Point &nearest_co
     obstacle_path_pub_.publish(msg);
 }
 
-void MapperClass::PublishMarkers(const visualization_msgs::MarkerArray &collision_markers,
-                                 const visualization_msgs::MarkerArray &traj_markers,
-                                 const visualization_msgs::MarkerArray &samples_markers,
-                                 const visualization_msgs::MarkerArray &compressed_samples_markers) {
+void MapperClass::PublishPathMarkers(const visualization_msgs::MarkerArray &collision_markers,
+                                     const visualization_msgs::MarkerArray &traj_markers,
+                                     const visualization_msgs::MarkerArray &samples_markers,
+                                     const visualization_msgs::MarkerArray &compressed_samples_markers) {
     path_marker_pub_.publish(collision_markers);
     path_marker_pub_.publish(traj_markers);
     path_marker_pub_.publish(samples_markers);
     path_marker_pub_.publish(compressed_samples_markers);
 }
 
+void MapperClass::PublishRadiusMarkers(const Eigen::Vector3d &center,
+                                       const double &radius) {
+    visualization_msgs::Marker obstacle_radius_marker;
+    std::string ns = "radius_obstacles";
+    std_msgs::ColorRGBA color = visualization_functions::Color::Red();
+    visualization_functions::VisualizeRange(center, radius,
+        inertial_frame_id_, ns, color, &obstacle_radius_marker);
+    obstacle_radius_pub_.publish(obstacle_radius_marker);
+}
 
 // PLUGINLIB_EXPORT_CLASS(mapper::MapperClass, nodelet::Nodelet);
 

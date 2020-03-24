@@ -78,6 +78,7 @@ set( LIBS_TO_LINK
 ) 
 
 add_executable(mapper
+  src/helper.cpp
   src/mapper.cpp
   src/mapper_class.cpp
   src/polynomials.cpp

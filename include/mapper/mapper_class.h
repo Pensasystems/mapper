@@ -100,11 +100,13 @@ class MapperClass {
   void PublishNearestCollision(const geometry_msgs::Point &nearest_collision,
                                const double &collision_distance);
 
-  void PublishMarkers(const visualization_msgs::MarkerArray &collision_markers,
-                      const visualization_msgs::MarkerArray &traj_markers,
-                      const visualization_msgs::MarkerArray &samples_markers,
-                      const visualization_msgs::MarkerArray &compressed_samples_markers);
+  void PublishPathMarkers(const visualization_msgs::MarkerArray &collision_markers,
+                          const visualization_msgs::MarkerArray &traj_markers,
+                          const visualization_msgs::MarkerArray &samples_markers,
+                          const visualization_msgs::MarkerArray &compressed_samples_markers);
 
+  void PublishRadiusMarkers(const Eigen::Vector3d &center,
+                            const double &radius);
 
   // Callbacks (see callbacks.cc for implementation) ----------------
   // Callback for handling incoming camera point cloud messages
@@ -177,8 +179,11 @@ class MapperClass {
                    const std::string& child_frame,
                    const uint& index);  // Same as before, but for lidar data
 
-  // Thread for collision checking
-  void CollisionCheckTask();
+  // Thread for collision checking along the robot's path
+  void PathCollisionCheckTask();
+
+  // Thread for collision checking around the robot
+  void RadiusCollisionCheck();
 
   // Thread for getting pcl data and populating the octomap
   void OctomappingTask();
@@ -197,7 +202,7 @@ class MapperClass {
 
   // Thread variables
   std::thread h_octo_thread_, h_fade_thread_, h_collision_check_thread_;
-  std::thread h_body_tf_thread_;
+  std::thread h_body_tf_thread_, h_radius_collision_thread_;
   std::vector<std::thread> h_cameras_tf_thread_;
   std::vector<std::thread> h_lidar_tf_thread_;
 
@@ -235,6 +240,7 @@ class MapperClass {
   ros::Publisher inflated_free_space_marker_pub_;
   ros::Publisher path_marker_pub_;
   ros::Publisher cam_frustum_pub_;
+  ros::Publisher obstacle_radius_pub_;
 
   // Path planning publishers
   ros::Publisher graph_tree_marker_pub_;

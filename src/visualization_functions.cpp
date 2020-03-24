@@ -402,4 +402,27 @@ void TrajVisMarkers(const pcl::PointCloud<pcl::PointXYZ> &pcl_traj,
     marker_array->markers.push_back(markers);
 }
 
+void VisualizeRange(const Eigen::Vector3d &pos,
+                    const double &radius,
+                    const std::string &frame_id,
+                    const std::string &ns,
+                    const std_msgs::ColorRGBA &color,
+                    visualization_msgs::Marker *range_marker) {
+    // Initialize array
+    range_marker->header.frame_id = frame_id;
+    range_marker->header.stamp = ros::Time::now();
+    range_marker->ns = ns;
+    range_marker->action = visualization_msgs::Marker::ADD;
+    range_marker->pose.position = msg_conversions::eigen_to_ros_point(pos);
+    range_marker->pose.orientation = msg_conversions::identity_quaternion();
+    range_marker->type = visualization_msgs::Marker::CYLINDER;
+    range_marker->id = 0;
+    range_marker->scale.x = 2*radius;
+    range_marker->scale.y = 2*radius;
+    range_marker->scale.z = 0.01;
+    range_marker->color = color;
+    range_marker->color.a = 0.1;
+    range_marker->lifetime = ros::Duration(1);  // Disappears in 1 second
+}
+
 }  // namespace visualization_functions

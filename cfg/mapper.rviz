@@ -8,6 +8,7 @@ Panels:
         - /Status1
         - /PointCloud21
         - /TF1/Frames1
+        - /DiscretizedTrajectory1
       Splitter Ratio: 0.5
     Tree Height: 775
   - Class: rviz/Selection
@@ -197,11 +198,7 @@ Visualization Manager:
       Marker Topic: /cinderella/mapper_node/discrete_trajectory_markers
       Name: DiscretizedTrajectory
       Namespaces:
-        ReferencePos: true
-        RobotPos: true
-        SampledTraj: true
-        compressedTraj: true
-        thick_traj: true
+        {}
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -218,6 +215,14 @@ Visualization Manager:
       Enabled: true
       Marker Topic: /motion_planner/spatial_trajectory
       Name: PlannerTrajectory
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /cinderella/mapper_node/obstacle_radius_markers
+      Name: ObstacleRadius
       Namespaces:
         {}
       Queue Size: 100

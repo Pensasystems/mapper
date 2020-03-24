@@ -40,17 +40,17 @@ OctoClass::OctoClass() {
 // Do nothing
 }
 
-void OctoClass::SetMemory(const double memory) {
+void OctoClass::SetMemory(const double &memory) {
     memory_time_ = memory;
     ROS_DEBUG("Fading memory time: %f seconds", memory_time_);
 }
 
-void OctoClass::SetMaxRange(const double max_range) {
+void OctoClass::SetMaxRange(const double &max_range) {
     max_range_ = max_range;
     ROS_DEBUG("Maximum range: %f meters", max_range_);
 }
 
-void OctoClass::SetMinRange(const double min_range) {
+void OctoClass::SetMinRange(const double &min_range) {
     min_range_ = min_range;
     ROS_DEBUG("Minimum range: %f meters", min_range_);
 }
@@ -60,7 +60,7 @@ void OctoClass::SetInertialFrame(const std::string &inertial_frame_id) {
     ROS_DEBUG("Inertial frame id: %s", inertial_frame_id.c_str());
 }
 
-void OctoClass::SetResolution(const double resolution_in) {
+void OctoClass::SetResolution(const double &resolution_in) {
     resolution_ = resolution_in;
     tree_.setResolution(resolution_);
     tree_inflated_.setResolution(resolution_);
@@ -117,8 +117,8 @@ void OctoClass::SetMapInflation(const double &inflate_radius) {
     this->SetMapInflation(inflate_radius, inflate_radius);
 }
 
-void OctoClass::SetCamFrustum(const double fov,
-                              const double aspect_ratio) {
+void OctoClass::SetCamFrustum(const double &fov,
+                              const double &aspect_ratio) {
     cam_frustum_ = algebra_3d::FrustumPlanes(fov, aspect_ratio);
     ROS_DEBUG("Cam frustum was set!");
 }
@@ -150,14 +150,14 @@ void OctoClass::CopyMap(octomap::OcTree &tree, octomap::OcTree &tree_inflated) {
     }
 }
 
-void OctoClass::SetOccupancyThreshold(const double occupancy_threshold) {
+void OctoClass::SetOccupancyThreshold(const double &occupancy_threshold) {
     tree_.setOccupancyThres(occupancy_threshold);
     tree_inflated_.setOccupancyThres(occupancy_threshold);
     ROS_DEBUG("Occupancy probability threshold: %f", occupancy_threshold);
 }
 
-void OctoClass::SetHitMissProbabilities(const double probability_hit,
-                             const double probability_miss) {
+void OctoClass::SetHitMissProbabilities(const double &probability_hit,
+                                        const double &probability_miss) {
     tree_.setProbHit(probability_hit);
     tree_.setProbMiss(probability_miss);
     tree_inflated_.setProbHit(probability_hit);
@@ -166,8 +166,8 @@ void OctoClass::SetHitMissProbabilities(const double probability_hit,
     ROS_DEBUG("Probability miss: %f", probability_miss);
 }
 
-void OctoClass::SetClampingThresholds(const double clamping_threshold_min,
-                           const double clamping_threshold_max) {
+void OctoClass::SetClampingThresholds(const double &clamping_threshold_min,
+                                      const double &clamping_threshold_max) {
     tree_.setClampingThresMin(clamping_threshold_min);
     tree_.setClampingThresMax(clamping_threshold_max);
     tree_inflated_.setClampingThresMin(clamping_threshold_min);
@@ -263,9 +263,9 @@ void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
             }
 
             // points too close to origin of camera are not added
-            range_sqr = this->VectorNormSquared(v.getX()-point.x,
-                                                v.getY()-point.y,
-                                                v.getZ()-point.z);
+            range_sqr = helper::VectorNormSquared(v.getX()-point.x,
+                                                  v.getY()-point.y,
+                                                  v.getZ()-point.z);
             if ((range_sqr < min_threshold_sqr)) {
                 continue;
             }
@@ -363,9 +363,9 @@ void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
             }
 
             // points too close to origin of camera are not added
-            range_sqr = this->VectorNormSquared(v.getX()-point.x,
-                                                v.getY()-point.y,
-                                                v.getZ()-point.z);
+            range_sqr = helper::VectorNormSquared(v.getX()-point.x,
+                                                  v.getY()-point.y,
+                                                  v.getZ()-point.z);
             // if (range_sqr < closest_range_sqr) {
             //     closest_range_sqr = range_sqr;
             //     closest_point = Eigen::Vector3d(point.x, point.y, point.z);
@@ -405,12 +405,7 @@ void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
                   &occ_cells_in_range, &free_cells, &inflated_free_cells);
 
     for (octomap::KeySet::iterator it = endpoints_inflated.begin(); it != endpoints_inflated.end(); ++it) {
-        // Only add nodes that are being added to the slim tree as well
-        if (free_cells.find(*it) != free_cells.end()) {
-            tree_inflated_.updateNode(*it, true);
-        } else if (endpoints.find(*it) != endpoints.end()) {
-            tree_inflated_.updateNode(*it, true);
-        }
+        tree_inflated_.updateNode(*it, true);
     }
     for (octomap::KeySet::iterator it = occ_cells_in_range.begin(); it != occ_cells_in_range.end(); ++it) {
         const octomap::point3d& p = tree_.keyToCoord(*it);
@@ -947,8 +942,8 @@ void OctoClass::BBXFreeNodes(const Eigen::Vector3d &box_min,
     // octomap::point3d nodeCenter;
     octomap::OcTreeKey key;
     for (it = tree_inflated_.begin_leafs_bbx(octomap::point3d(box_min[0], box_min[1], box_min[2]),
-                                           octomap::point3d(box_max[0], box_max[1], box_max[2]));
-                                           it != tree_inflated_.end_leafs_bbx(); ++it) {
+                                             octomap::point3d(box_max[0], box_max[1], box_max[2]));
+                                             it != tree_inflated_.end_leafs_bbx(); ++it) {
         key = it.getKey();
         n = tree_inflated_.search(key);
         if (n == NULL) {
@@ -973,8 +968,8 @@ void OctoClass::BBXFreeNodes(const Eigen::Vector3d &box_min,
     octomap::OcTreeKey key;
     uint index = 0;
     for (it = tree_inflated_.begin_leafs_bbx(octomap::point3d(box_min[0], box_min[1], box_min[2]),
-                                           octomap::point3d(box_max[0], box_max[1], box_max[2]));
-                                           it != tree_inflated_.end_leafs_bbx(); ++it) {
+                                             octomap::point3d(box_max[0], box_max[1], box_max[2]));
+                                             it != tree_inflated_.end_leafs_bbx(); ++it) {
         key = it.getKey();
         n = tree_inflated_.search(key);
         if (n == NULL) {
@@ -987,6 +982,94 @@ void OctoClass::BBXFreeNodes(const Eigen::Vector3d &box_min,
             index++;
         }
     }
+}
+
+void OctoClass::OccNodesWithinBox(const Eigen::Vector3d &box_min,
+                                  const Eigen::Vector3d &box_max,
+                                  std::vector<Eigen::Vector3d> *node_center,
+                                  std::vector<double> *node_sizes) {
+    octomap::OcTree::leaf_bbx_iterator it;
+    const octomap::OcTreeNode* n;
+    octomap::OcTreeKey key;
+    for (it = tree_inflated_.begin_leafs_bbx(octomap::point3d(box_min[0], box_min[1], box_min[2]),
+                                             octomap::point3d(box_max[0], box_max[1], box_max[2]));
+                                             it != tree_inflated_.end_leafs_bbx(); ++it) {
+        key = it.getKey();
+        n = tree_inflated_.search(key);
+        if (n == NULL) {
+            continue;
+        }
+
+        if (tree_inflated_.isNodeOccupied(n)) {
+            octomap::point3d pos = it.getCoordinate();
+            node_center->push_back(Eigen::Vector3d(pos.x(), pos.y(), pos.z()));
+            node_sizes->push_back(tree_inflated_.getNodeSize(it.getDepth()));
+            std::cout << tree_inflated_.getNodeSize(it.getDepth()) << std::endl;
+        }
+    }
+}
+
+void OctoClass::OccNodesWithinRadius(const geometry_msgs::Point &center_pt,
+                                     const double &radius,
+                                     std::vector<Eigen::Vector3d> *node_center) {
+        Eigen::Vector3d center =
+            msg_conversions::ros_point_to_eigen_vector(center_pt);
+        Eigen::Vector3d box_min = center - Eigen::Vector3d(radius, radius, radius);
+        Eigen::Vector3d box_max = center + Eigen::Vector3d(radius, radius, radius);
+        std::vector<Eigen::Vector3d> candidates;
+        std::vector<double> node_sizes;
+
+        // get all occupied nodes within a box
+        this->OccNodesWithinBox(box_min, box_max, &candidates, &node_sizes);
+
+        // Check if any of the candidates are within radius 
+        const double radius_square = radius*radius;
+        for (uint i = 0; i < candidates.size(); i++) {
+            const Eigen::Vector3d dist_vec = candidates[i] - center;
+            const double dist_sqr = dist_vec.dot(dist_vec);
+            if (dist_sqr <= radius_square) {
+                node_center->push_back(candidates[i]);
+                // costs->push_back(sqrt(dist_sqr));
+            }
+        }
+}
+
+bool OctoClass::NearestOccNodeWithinRadius(const geometry_msgs::Point &center_pt,
+                                           const double &radius,
+                                           Eigen::Vector3d *node_center,
+                                           double *distance) {
+        Eigen::Vector3d center =
+            msg_conversions::ros_point_to_eigen_vector(center_pt);
+        Eigen::Vector3d box_min = center - Eigen::Vector3d(radius, radius, radius);
+        Eigen::Vector3d box_max = center + Eigen::Vector3d(radius, radius, radius);
+        std::vector<Eigen::Vector3d> candidates;
+        std::vector<double> node_sizes;
+
+        // Initialize outputs
+        *distance = std::numeric_limits<double>::infinity();
+        *node_center = Eigen::Vector3d(0.0, 0.0, 0.0);
+
+        // get all occupied nodes within a box
+        this->OccNodesWithinBox(box_min, box_max, &candidates, &node_sizes);
+
+        if (candidates.size() == 0) {
+            return false;
+        }
+
+        // Check if any of the candidates are within radius
+        const double radius_square = radius*radius;
+        for (uint i = 0; i < candidates.size(); i++) {
+            const Eigen::Vector3d dist_vec = candidates[i] - center;
+            const double dist_sqr = dist_vec.dot(dist_vec);
+            if (dist_sqr <= radius_square) {
+                if (dist_sqr < (*distance)) {
+                    *node_center = candidates[i];
+                    *distance = sqrt(dist_sqr);
+                }
+            }
+        }
+
+        return true;
 }
 
 void OctoClass::GetNodeNeighbors(const octomap::OcTreeKey &node_key,
@@ -1040,12 +1123,6 @@ void OctoClass::PrintQueryInfo(octomap::point3d query,
     } else {
         std::cout << "occupancy probability at " << query << ":\t is unknown" << std::endl;
     }
-}
-
-double OctoClass::VectorNormSquared(const double &x,
-                                    const double &y,
-                                    const double &z) {
-    return x*x + y*y + z*z;
 }
 
 // extracted from https://github.com/OctoMap/octomap_mapping

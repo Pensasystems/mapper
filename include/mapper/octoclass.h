@@ -27,6 +27,7 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <vector>
 #include <iostream>
+#include "mapper/helper.h"
 #include "mapper/indexed_octree_key.h"
 #include "mapper/linear_algebra.h"
 #include "mapper/graphs.h"
@@ -52,25 +53,25 @@ class OctoClass{
     OctoClass();
 
     // Mapping methods
-    void SetMemory(const double memory);  // Fading memory time
-    void SetMaxRange(const double max_range);  // Max range for mapping
-    void SetMinRange(const double min_range);  // Min range for mapping
+    void SetMemory(const double &memory);  // Fading memory time
+    void SetMaxRange(const double &max_range);  // Max range for mapping
+    void SetMinRange(const double &min_range);  // Min range for mapping
     void SetInertialFrame(const std::string &inertial_frame_id);  // Inertial frame id
-    void SetResolution(const double resolution_in);  // Resolution of the octomap
+    void SetResolution(const double &resolution_in);  // Resolution of the octomap
     void ResetMap();  // Reset the octomap structure
     void CopyMap(octomap::OcTree &tree, octomap::OcTree &tree_inflated);
     void SetMapInflation(const double &inflate_radius);  // Set the inflation radius (same for xyz)
     void SetMapInflation(const double &inflate_radius_xy,
                          const double &inflate_radius_z);  // Set inflation radius (xy and z different)
-    void SetCamFrustum(const double fov,
-                       const double aspect_ratio);
+    void SetCamFrustum(const double &fov,
+                       const double &aspect_ratio);
     void SetLidarRange(const double &min_range,
                        const double &max_range);
-    void SetOccupancyThreshold(const double occupancy_threshold);
-    void SetHitMissProbabilities(const double probability_hit,
-                                 const double probability_miss);
-    void SetClampingThresholds(const double clamping_threshold_min,
-                               const double clamping_threshold_max);
+    void SetOccupancyThreshold(const double &occupancy_threshold);
+    void SetHitMissProbabilities(const double &probability_hit,
+                                 const double &probability_miss);
+    void SetClampingThresholds(const double &clamping_threshold_min,
+                               const double &clamping_threshold_max);
     void SetMap3d(const bool &map_3d);
     std::string GetInertialFrameId() {return inertial_frame_id_;}
     void PointsOctomapToPointCloud2(const octomap::point3d_list& points,
@@ -142,6 +143,21 @@ class OctoClass{
                       const Eigen::Vector3d &box_max,
                       IndexedKeySet *indexed_node_keys,
                       std::vector<double> *node_sizes);
+
+    // Return all occupied nodes within a bounding box (inflated tree)
+    void OccNodesWithinBox(const Eigen::Vector3d &box_min,
+                           const Eigen::Vector3d &box_max,
+                           std::vector<Eigen::Vector3d> *node_center,
+                           std::vector<double> *node_sizes);
+    // Return all occupied nodes within a radius (inflated tree)
+    void OccNodesWithinRadius(const geometry_msgs::Point &center_pt,
+                              const double &radius,
+                              std::vector<Eigen::Vector3d> *node_center);
+    // Return nearest occupied node within a radius (inflated tree)
+    bool NearestOccNodeWithinRadius(const geometry_msgs::Point &center_pt,
+                                    const double &radius,
+                                    Eigen::Vector3d *node_center,
+                                    double *distance);
 
     // Find all immediate neighbors of a node
     void GetNodeNeighbors(const octomap::OcTreeKey &node_key,

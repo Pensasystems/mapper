@@ -157,4 +157,12 @@ void TrajVisMarkers(const pcl::PointCloud<pcl::PointXYZ> &pcl_traj,
                     const double &size,
                     visualization_msgs::MarkerArray* marker_array);
 
+// Radii-based visualizations
+void VisualizeRange(const Eigen::Vector3d &pos,
+                    const double &radius,
+                    const std::string &frame_id,
+                    const std::string &ns,
+                    const std_msgs::ColorRGBA &color,
+                    visualization_msgs::Marker *range_marker);
+
 }  // namespace visualization_functions

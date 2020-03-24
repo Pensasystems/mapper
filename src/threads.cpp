@@ -115,7 +115,7 @@ void MapperClass::LidarTfTask(const std::string& parent_frame,
     ROS_DEBUG("[mapper]: Exiting lidar tf Thread...");
 }
 
-void MapperClass::CollisionCheckTask() {
+void MapperClass::PathCollisionCheckTask() {
     ROS_DEBUG("[mapper]: collisionCheck Thread started!");
 
     // Rate at which the collision checker will run
@@ -152,7 +152,7 @@ void MapperClass::CollisionCheckTask() {
         // Stop execution if there are no points in the trajectory structure
         if (point_cloud_traj.size() <= 0) {
             visualization_functions::DrawCollidingNodes(colliding_nodes, inertial_frame_id_, 0.015, &collision_markers);
-            this->PublishMarkers(collision_markers, traj_markers, samples_markers, compressed_samples_markers);
+            this->PublishPathMarkers(collision_markers, traj_markers, samples_markers, compressed_samples_markers);
             continue;
         }
 
@@ -187,7 +187,7 @@ void MapperClass::CollisionCheckTask() {
         if (colliding_nodes.size() > 0) {
             helper::FindNearestCollision(colliding_nodes, robot_position, &nearest_collision, &collision_distance);
             this->PublishNearestCollision(nearest_collision, collision_distance);
-            ROS_WARN("[mapper]: Nearest collision in %.3f meters!", collision_distance);
+            ROS_DEBUG("[mapper]: Nearest collision in %.3f meters!", collision_distance);
         }
 
         // Visualization markers -------------------------------------------------------------------------------------
@@ -206,7 +206,7 @@ void MapperClass::CollisionCheckTask() {
                                                     1.01*octomap_resolution, &collision_markers);
 
         // Publish all markers
-        this->PublishMarkers(collision_markers, traj_markers, samples_markers, compressed_samples_markers);
+        this->PublishPathMarkers(collision_markers, traj_markers, samples_markers, compressed_samples_markers);
 
         // ros::Duration solver_time = ros::Time::now() - time_now;
         // ROS_INFO("Collision check time: %f", solver_time.toSec());
@@ -215,6 +215,48 @@ void MapperClass::CollisionCheckTask() {
     }
 
     ROS_DEBUG("[mapper]: Exiting collisionCheck Thread...");
+}
+
+void MapperClass::RadiusCollisionCheck() {
+    ROS_DEBUG("[mapper]: RadiusCollisionCheck Thread started!");
+
+    // Rate at which the collision checker will run
+    ros::Rate loop_rate(collision_check_rate_);
+
+    while (!terminate_node_) {
+        loop_rate.sleep();
+        
+        // Get robot's current position
+        geometry_msgs::Point robot_position = this->GetTfBodyToWorld();
+
+        // Set robot height to z=0 if working with 2D maps only
+        if (!globals_.map_3d) {
+            robot_position.z = 0.0;
+        }
+
+        // Set variables
+        const double radius = 0.3;
+        Eigen::Vector3d center =
+            msg_conversions::ros_point_to_eigen_vector(robot_position);
+
+        // Publish visualization marker for radius
+        this->PublishRadiusMarkers(center, radius);
+
+        // get all occupied nodes within a radius
+        Eigen::Vector3d box_min = center - Eigen::Vector3d(radius, radius, radius);
+        Eigen::Vector3d box_max = center + Eigen::Vector3d(radius, radius, radius);
+        Eigen::Vector3d nearest_node_center;
+        double nearest_node_dist;
+        mutexes_.octomap.lock();
+            bool there_are_nodes = 
+                globals_.octomap.NearestOccNodeWithinRadius(robot_position, radius, 
+                                                            &nearest_node_center, &nearest_node_dist);
+        mutexes_.octomap.unlock();
+
+        if (!there_are_nodes) {
+            continue;
+        }
+    }
 }
 
 void MapperClass::OctomappingTask() {
@@ -390,6 +432,7 @@ void MapperClass::WaitForThreadsToEnd() {
     h_octo_thread_.join();
     h_fade_thread_.join();
     h_collision_check_thread_.join();
+    h_radius_collision_thread_.join();
 
     for (uint i = 0; i < h_cameras_tf_thread_.size(); i++) {
       h_cameras_tf_thread_[i].join();
