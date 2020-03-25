@@ -1,3 +1,6 @@
+// Copyright (c) 2020 by Pensa Systems, Inc. -- All rights reserved
+// Confidential and Proprietary
+
 #include "mapper/helper.h"
 
 // C++ libraries

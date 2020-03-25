@@ -1030,7 +1030,7 @@ void OctoClass::OccNodesWithinRadius(const geometry_msgs::Point &center_pt,
     // get all occupied nodes within a box
     this->OccNodesWithinBox(box_min, box_max, &candidates, &node_sizes);
 
-    // Check if any of the candidates are within radius 
+    // Check if any of the candidates are within radius
     const double radius_square = radius*radius;
     for (uint i = 0; i < candidates.size(); i++) {
         const Eigen::Vector3d dist_vec = candidates[i] - center;

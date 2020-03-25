@@ -10,6 +10,8 @@
 #include <octomap/octomap.h>
 #include <pcl/point_cloud.h>
 
+#include <vector>
+
 namespace helper {
 
 // p2 - p1
