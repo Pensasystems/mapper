@@ -223,9 +223,14 @@ void MapperClass::RadiusCollisionCheck() {
     // Rate at which the collision checker will run
     ros::Rate loop_rate(collision_check_rate_);
 
+    const double radius = radius_collision_check_;
+
     while (!terminate_node_) {
         loop_rate.sleep();
-        
+
+        // Get time for when this task started
+        const ros::Time t0 = ros::Time::now();
+
         // Get robot's current position
         geometry_msgs::Point robot_position = this->GetTfBodyToWorld();
 
@@ -234,8 +239,7 @@ void MapperClass::RadiusCollisionCheck() {
             robot_position.z = 0.0;
         }
 
-        // Set variables
-        const double radius = 0.3;
+        // Convert robot position to Eigen
         Eigen::Vector3d center =
             msg_conversions::ros_point_to_eigen_vector(robot_position);
 
@@ -248,7 +252,7 @@ void MapperClass::RadiusCollisionCheck() {
         Eigen::Vector3d nearest_node_center;
         double nearest_node_dist;
         mutexes_.octomap.lock();
-            bool there_are_nodes = 
+            const bool there_are_nodes = 
                 globals_.octomap.NearestOccNodeWithinRadius(robot_position, radius, 
                                                             &nearest_node_center, &nearest_node_dist);
         mutexes_.octomap.unlock();
@@ -256,6 +260,14 @@ void MapperClass::RadiusCollisionCheck() {
         if (!there_are_nodes) {
             continue;
         }
+
+        // Publish distance to obstacle in radius
+        std_msgs::Float32 obstacle_msg;
+        obstacle_msg.data = nearest_node_dist;
+        obstacle_radius_pub_.publish(obstacle_msg);
+
+        // ros::Duration radius_check_time = ros::Time::now() - t0;
+        // ROS_INFO("RadiusCollisionCheck time: %f", radius_check_time.toSec());
     }
 }
 

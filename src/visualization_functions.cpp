@@ -421,7 +421,6 @@ void VisualizeRange(const Eigen::Vector3d &pos,
     range_marker->scale.y = 2*radius;
     range_marker->scale.z = 0.01;
     range_marker->color = color;
-    range_marker->color.a = 0.1;
     range_marker->lifetime = ros::Duration(1);  // Disappears in 1 second
 }
 

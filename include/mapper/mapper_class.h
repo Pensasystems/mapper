@@ -20,24 +20,21 @@
 
 // Octomap libraries
 #include <octomap/octomap.h>
-#include <octomap/ColorOcTree.h>
 
 // PCL specific includes
-#include <sensor_msgs/PointCloud2.h>
 #include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
 #include <pcl/common/transforms.h>
-#include <pcl/kdtree/kdtree_flann.h>
+#include <sensor_msgs/PointCloud2.h>
 
 // ROS libraries
 #include <ros/ros.h>
 #include <ros/publisher.h>
 #include <ros/subscriber.h>
-#include <tf/transform_listener.h>
-#include <visualization_msgs/MarkerArray.h>
+#include <std_msgs/Float32.h>
 #include <std_srvs/Trigger.h>
 #include <std_srvs/SetBool.h>
-#include <tf/transform_broadcaster.h>
+#include <tf/transform_listener.h>
+#include <visualization_msgs/MarkerArray.h>
 
 // Pensa messages/services
 #include <pensa_msgs/SetFloat.h>
@@ -59,7 +56,7 @@
 // Pensa-ros msg types
 #include "pensa_msgs/VecPVA_4d.h"
 #include "pensa_msgs/WaypointSet.h"
-#include <pensa_msgs/trapezoidal_p2pAction.h>
+#include "pensa_msgs/trapezoidal_p2pAction.h"
 
 // Classes
 #include "mapper/tf_class.h"
@@ -220,6 +217,9 @@ class MapperClass {
   // Thread rates (hz)
   double tf_update_rate_, fading_memory_update_rate_, collision_check_rate_;
 
+  // Collision checking parameters
+  double radius_collision_check_;
+
   // Path planning services
   ros::ServiceServer rrg_srv_;
 
@@ -232,15 +232,17 @@ class MapperClass {
   // Inertial and robot frame ids
   std::string inertial_frame_id_, robot_frame_id_;
 
-  // Publishers
-  ros::Publisher obstacle_path_pub_;
+  // Collision publishers
+  ros::Publisher obstacle_path_pub_, obstacle_radius_pub_;
+
+  // Marker publishers
   ros::Publisher obstacle_marker_pub_;
   ros::Publisher free_space_marker_pub_;
   ros::Publisher inflated_obstacle_marker_pub_;
   ros::Publisher inflated_free_space_marker_pub_;
   ros::Publisher path_marker_pub_;
   ros::Publisher cam_frustum_pub_;
-  ros::Publisher obstacle_radius_pub_;
+  ros::Publisher obstacle_radius_marker_pub_;
 
   // Path planning publishers
   ros::Publisher graph_tree_marker_pub_;

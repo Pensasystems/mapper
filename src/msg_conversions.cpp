@@ -133,6 +133,7 @@ geometry_msgs::Quaternion identity_quaternion() {
   q.y = 0.0;
   q.z = 0.0;
   q.w = 1.0;
+  return q;
 }
 
 void ros_to_array_vector(const geometry_msgs::Vector3 & v, float* array) {

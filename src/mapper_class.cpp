@@ -73,6 +73,9 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     // Get namespace of current node
     nh->getParam("namespace", ns_);
 
+    // Load radius for radius collision-checking
+    nh->getParam("radius_collision_check", radius_collision_check_);
+
     // Load depth camera names
     std::vector<std::string> depth_cam_names;
     std::string depth_cam_prefix, depth_cam_suffix;
@@ -120,8 +123,8 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     std::string obstacle_markers_topic, free_space_markers_topic;
     std::string inflated_obstacle_markers_topic, inflated_free_space_markers_topic;
     std::string frustum_markers_topic, discrete_trajectory_markers_topic;
-    std::string collision_detection_topic, graph_tree_marker_topic;
-    std::string obstacle_radius_markers_topic;
+    std::string path_obstacle_detection_topic, graph_tree_marker_topic;
+    std::string obstacle_radius_detection_topic, obstacle_radius_markers_topic;
     nh->getParam("obstacle_markers", obstacle_markers_topic);
     nh->getParam("free_space_markers", free_space_markers_topic);
     nh->getParam("inflated_obstacle_markers", inflated_obstacle_markers_topic);
@@ -129,7 +132,8 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     nh->getParam("frustum_markers", frustum_markers_topic);
     nh->getParam("obstacle_radius_markers", obstacle_radius_markers_topic);
     nh->getParam("discrete_trajectory_markers", discrete_trajectory_markers_topic);
-    nh->getParam("collision_detection", collision_detection_topic);
+    nh->getParam("path_obstacle_detection", path_obstacle_detection_topic);
+    nh->getParam("obstacle_radius_detection", obstacle_radius_detection_topic);
     nh->getParam("graph_tree_marker_topic", graph_tree_marker_topic);
 
     // Load current package path
@@ -197,7 +201,9 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
 
     // Publishers -----------------------------------------------
     obstacle_path_pub_ =
-        nh->advertise<pensa_msgs::ObstacleInPath>(collision_detection_topic, 10);
+        nh->advertise<pensa_msgs::ObstacleInPath>(path_obstacle_detection_topic, 10);
+    obstacle_radius_pub_ =
+        nh->advertise<std_msgs::Float32>(obstacle_radius_detection_topic, 10);
     obstacle_marker_pub_ =
         nh->advertise<visualization_msgs::MarkerArray>(obstacle_markers_topic, 10);
     free_space_marker_pub_ =
@@ -210,7 +216,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
         nh->advertise<visualization_msgs::MarkerArray>(discrete_trajectory_markers_topic, 10);
     cam_frustum_pub_ =
         nh->advertise<visualization_msgs::Marker>(frustum_markers_topic, 10);
-    obstacle_radius_pub_ =
+    obstacle_radius_marker_pub_ =
         nh->advertise<visualization_msgs::Marker>(obstacle_radius_markers_topic, 10);
     graph_tree_marker_pub_ =
         nh->advertise<visualization_msgs::Marker>(graph_tree_marker_topic, 10);
@@ -314,7 +320,7 @@ void MapperClass::PublishRadiusMarkers(const Eigen::Vector3d &center,
     std_msgs::ColorRGBA color = visualization_functions::Color::Red();
     visualization_functions::VisualizeRange(center, radius,
         inertial_frame_id_, ns, color, &obstacle_radius_marker);
-    obstacle_radius_pub_.publish(obstacle_radius_marker);
+    obstacle_radius_marker_pub_.publish(obstacle_radius_marker);
 }
 
 // PLUGINLIB_EXPORT_CLASS(mapper::MapperClass, nodelet::Nodelet);

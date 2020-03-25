@@ -1003,8 +1003,16 @@ void OctoClass::OccNodesWithinBox(const Eigen::Vector3d &box_min,
         if (tree_inflated_.isNodeOccupied(n)) {
             octomap::point3d pos = it.getCoordinate();
             node_center->push_back(Eigen::Vector3d(pos.x(), pos.y(), pos.z()));
-            node_sizes->push_back(tree_inflated_.getNodeSize(it.getDepth()));
-            std::cout << tree_inflated_.getNodeSize(it.getDepth()) << std::endl;
+            const double size = tree_inflated_.getNodeSize(it.getDepth());
+            node_sizes->push_back(size);
+            if (size != resolution_) {
+                // I did not write code to take into account that nodes in an octomap
+                // can have different sizes. This is fine for now that we are using
+                // planar lidar, so nodes don't get grouped into one as a result
+                // of pruning. If we start using this node with 3d lidar in the future,
+                // then i'll have to revisit this function!
+                ROS_WARN("[mapper]: There might be a bug here!");
+            }
         }
     }
 }
@@ -1012,64 +1020,66 @@ void OctoClass::OccNodesWithinBox(const Eigen::Vector3d &box_min,
 void OctoClass::OccNodesWithinRadius(const geometry_msgs::Point &center_pt,
                                      const double &radius,
                                      std::vector<Eigen::Vector3d> *node_center) {
-        Eigen::Vector3d center =
-            msg_conversions::ros_point_to_eigen_vector(center_pt);
-        Eigen::Vector3d box_min = center - Eigen::Vector3d(radius, radius, radius);
-        Eigen::Vector3d box_max = center + Eigen::Vector3d(radius, radius, radius);
-        std::vector<Eigen::Vector3d> candidates;
-        std::vector<double> node_sizes;
+    Eigen::Vector3d center =
+        msg_conversions::ros_point_to_eigen_vector(center_pt);
+    Eigen::Vector3d box_min = center - Eigen::Vector3d(radius, radius, radius);
+    Eigen::Vector3d box_max = center + Eigen::Vector3d(radius, radius, radius);
+    std::vector<Eigen::Vector3d> candidates;
+    std::vector<double> node_sizes;
 
-        // get all occupied nodes within a box
-        this->OccNodesWithinBox(box_min, box_max, &candidates, &node_sizes);
+    // get all occupied nodes within a box
+    this->OccNodesWithinBox(box_min, box_max, &candidates, &node_sizes);
 
-        // Check if any of the candidates are within radius 
-        const double radius_square = radius*radius;
-        for (uint i = 0; i < candidates.size(); i++) {
-            const Eigen::Vector3d dist_vec = candidates[i] - center;
-            const double dist_sqr = dist_vec.dot(dist_vec);
-            if (dist_sqr <= radius_square) {
-                node_center->push_back(candidates[i]);
-                // costs->push_back(sqrt(dist_sqr));
-            }
+    // Check if any of the candidates are within radius 
+    const double radius_square = radius*radius;
+    for (uint i = 0; i < candidates.size(); i++) {
+        const Eigen::Vector3d dist_vec = candidates[i] - center;
+        const double dist_sqr = dist_vec.dot(dist_vec);
+        if (dist_sqr <= radius_square) {
+            node_center->push_back(candidates[i]);
+            // costs->push_back(sqrt(dist_sqr));
         }
+    }
 }
 
 bool OctoClass::NearestOccNodeWithinRadius(const geometry_msgs::Point &center_pt,
                                            const double &radius,
                                            Eigen::Vector3d *node_center,
                                            double *distance) {
-        Eigen::Vector3d center =
-            msg_conversions::ros_point_to_eigen_vector(center_pt);
-        Eigen::Vector3d box_min = center - Eigen::Vector3d(radius, radius, radius);
-        Eigen::Vector3d box_max = center + Eigen::Vector3d(radius, radius, radius);
-        std::vector<Eigen::Vector3d> candidates;
-        std::vector<double> node_sizes;
+    Eigen::Vector3d center =
+        msg_conversions::ros_point_to_eigen_vector(center_pt);
+    Eigen::Vector3d box_min = center - Eigen::Vector3d(radius, radius, radius);
+    Eigen::Vector3d box_max = center + Eigen::Vector3d(radius, radius, radius);
+    std::vector<Eigen::Vector3d> candidates;
+    std::vector<double> node_sizes;
 
-        // Initialize outputs
-        *distance = std::numeric_limits<double>::infinity();
-        *node_center = Eigen::Vector3d(0.0, 0.0, 0.0);
+    // Initialize outputs
+    *distance = std::numeric_limits<double>::infinity();
+    *node_center = Eigen::Vector3d(0.0, 0.0, 0.0);
 
-        // get all occupied nodes within a box
-        this->OccNodesWithinBox(box_min, box_max, &candidates, &node_sizes);
+    // get all occupied nodes within a box
+    this->OccNodesWithinBox(box_min, box_max, &candidates, &node_sizes);
 
-        if (candidates.size() == 0) {
-            return false;
-        }
+    if (candidates.size() == 0) {
+        return false;
+    }
 
-        // Check if any of the candidates are within radius
-        const double radius_square = radius*radius;
-        for (uint i = 0; i < candidates.size(); i++) {
-            const Eigen::Vector3d dist_vec = candidates[i] - center;
-            const double dist_sqr = dist_vec.dot(dist_vec);
-            if (dist_sqr <= radius_square) {
-                if (dist_sqr < (*distance)) {
-                    *node_center = candidates[i];
-                    *distance = sqrt(dist_sqr);
-                }
+    // Check if any of the candidates are within radius
+    const double radius_square = radius*radius;
+    bool there_are_nodes = false;
+    for (uint i = 0; i < candidates.size(); i++) {
+        const Eigen::Vector3d dist_vec = candidates[i] - center;
+        const double dist_sqr = dist_vec.dot(dist_vec);
+        if (dist_sqr <= radius_square) {
+            if (dist_sqr < (*distance)) {
+                *node_center = candidates[i];
+                *distance = sqrt(dist_sqr);
+                there_are_nodes = true;
             }
         }
+    }
 
-        return true;
+    return there_are_nodes;
 }
 
 void OctoClass::GetNodeNeighbors(const octomap::OcTreeKey &node_key,

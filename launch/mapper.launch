@@ -75,10 +75,13 @@
             <param name="clamping_threshold_min" value="0.1"/>  <!-- 0-1 -->
             <param name="clamping_threshold_max" value="0.9"/>  <!-- 0-1 -->
 
-            <!-- Collision Checking parameters -->
+            <!-- Path Collision Checking parameters -->
             <param name="traj_compression_max_dev" value="0.01"/>     <!-- meters -->
             <param name="traj_compression_resolution" value="0.02"/>  <!-- meters -->
             <param name="collision_check_rate" value="10"/>         <!-- Hz -->
+
+            <!-- Radius Collistion Checking parameters -->
+            <param name="radius_collision_check" value="0.2"/>     <!-- meters -->
 
             <!-- Frequency at which tf listeners update tf -->
             <param name="tf_update_rate" value="50"/>            <!-- Hz -->
@@ -93,7 +96,7 @@
             <param name="process_pcl" value="process_pcl"/>
             <param name="rrg_service" value="rrg"/>
 
-            <!-- Publisher names -->
+            <!-- Marker publisher names -->
             <param name="obstacle_markers" value="obstacle_markers"/>
             <param name="free_space_markers" value="free_space_markers"/>
             <param name="inflated_obstacle_markers" value="inflated_obstacle_markers"/>
@@ -101,7 +104,12 @@
             <param name="frustum_markers" value="frustum_markers"/>
             <param name="obstacle_radius_markers" value="obstacle_radius_markers"/>
             <param name="discrete_trajectory_markers" value="discrete_trajectory_markers"/>
-            <param name="collision_detection" value="detected_obstacles"/>
+            
+            <!-- Collision detection publisher names -->
+            <param name="path_obstacle_detection" value="path_detected_obstacles"/>
+            <param name="obstacle_radius_detection" value="radius_detected_obstacles"/>
+
+            <!-- Path Planning publisher names -->
             <param name="graph_tree_marker_topic" value="graph_tree_path_planner"/>
 
             <!-- Path of mapper in computer: used for saving/loading maps -->
