@@ -81,8 +81,8 @@ class SampledTrajectory3D{
 
 
     // Constructor
-    SampledTrajectory3D(const double &dt,
-                        const polynomials::Trajectory3D &poly_trajectories);
+    // SampledTrajectory3D(const double &dt,
+    //                     const polynomials::Trajectory3D &poly_trajectories);
     SampledTrajectory3D(const std::vector<double> &time_vec,
                         const pcl::PointCloud<pcl::PointXYZ> &pos_vec);
     SampledTrajectory3D(const pensa_msgs::VecPVA_4d &pva_vec,

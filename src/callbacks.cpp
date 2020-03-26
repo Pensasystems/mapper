@@ -80,56 +80,56 @@ void MapperClass::LidarPclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg
 }
 
 
-void MapperClass::SegmentCallback(const mapper::Segment::ConstPtr &msg) {
-    ros::Time t0 = ros::Time::now();
-    while (t0.toSec() == 0) {
-        t0 = ros::Time::now();
-    }
+// void MapperClass::SegmentCallback(const mapper::Segment::ConstPtr &msg) {
+//     ros::Time t0 = ros::Time::now();
+//     while (t0.toSec() == 0) {
+//         t0 = ros::Time::now();
+//     }
 
-    // set segments
-    mapper::Segment segments = *msg;
+//     // set segments
+//     mapper::Segment segments = *msg;
 
-    if (segments.segment.size() == 0) {  // Empty trajectory
-        return;
-    }
+//     if (segments.segment.size() == 0) {  // Empty trajectory
+//         return;
+//     }
 
-    // transform message into set of polynomials
-    polynomials::Trajectory3D poly_trajectories(segments);
+//     // transform message into set of polynomials
+//     polynomials::Trajectory3D poly_trajectories(segments);
 
-    // sample trajectory at 10hz
-    double ts = 0.1;
-    sampled_traj::SampledTrajectory3D sampled_traj(ts, poly_trajectories);
-    // SampledTrajectory3D sampledTraj(Time, Positions); // fake trajectory
+//     // sample trajectory at 10hz
+//     double ts = 0.1;
+//     sampled_traj::SampledTrajectory3D sampled_traj(ts, poly_trajectories);
+//     // SampledTrajectory3D sampledTraj(Time, Positions); // fake trajectory
 
-    mutexes_.sampled_traj.lock();
-        globals_.sampled_traj.pos_ = sampled_traj.pos_;
-        globals_.sampled_traj.time_ = sampled_traj.time_;
-        globals_.sampled_traj.n_points_ = sampled_traj.n_points_;
+//     mutexes_.sampled_traj.lock();
+//         globals_.sampled_traj.pos_ = sampled_traj.pos_;
+//         globals_.sampled_traj.time_ = sampled_traj.time_;
+//         globals_.sampled_traj.n_points_ = sampled_traj.n_points_;
 
-        // compress trajectory into points with max deviation of 1cm from original trajectory
-        globals_.sampled_traj.CompressSamples();
+//         // compress trajectory into points with max deviation of 1cm from original trajectory
+//         globals_.sampled_traj.CompressSamples();
 
-        //  Transform compressed trajectory into a set of pixels in octomap
-        //  Octomap insertion avoids repeated points
-        globals_.sampled_traj.thick_traj_.clear();
-        for (int i = 0; i < globals_.sampled_traj.n_compressed_points_-1; i++) {
-            globals_.sampled_traj.ThickBresenham(globals_.sampled_traj.compressed_pos_[i],
-                                                globals_.sampled_traj.compressed_pos_[i+1]);
-        }
+//         //  Transform compressed trajectory into a set of pixels in octomap
+//         //  Octomap insertion avoids repeated points
+//         globals_.sampled_traj.thick_traj_.clear();
+//         for (int i = 0; i < globals_.sampled_traj.n_compressed_points_-1; i++) {
+//             globals_.sampled_traj.ThickBresenham(globals_.sampled_traj.compressed_pos_[i],
+//                                                 globals_.sampled_traj.compressed_pos_[i+1]);
+//         }
 
-        // populate trajectory node centers in a point cloud
-        globals_.sampled_traj.ThickTrajToPcl();
+//         // populate trajectory node centers in a point cloud
+//         globals_.sampled_traj.ThickTrajToPcl();
 
-        // populate kdtree for finding nearest neighbor w.r.t. collisions
-        globals_.sampled_traj.CreateKdTree();
-    mutexes_.sampled_traj.unlock();
+//         // populate kdtree for finding nearest neighbor w.r.t. collisions
+//         globals_.sampled_traj.CreateKdTree();
+//     mutexes_.sampled_traj.unlock();
 
-    // Notify the collision checker to check for collision
-    // sem_post(&semaphores_.collision_check);
+//     // Notify the collision checker to check for collision
+//     // sem_post(&semaphores_.collision_check);
 
-    // ros::Duration solver_time = ros::Time::now() - t0;
-    // ROS_DEBUG("Time to compute octotraj: %f", solver_time.toSec());
-}
+//     // ros::Duration solver_time = ros::Time::now() - t0;
+//     // ROS_DEBUG("Time to compute octotraj: %f", solver_time.toSec());
+// }
 
 void MapperClass::SampledTrajectoryCallback(const pensa_msgs::VecPVA_4d::ConstPtr &msg) {
     ROS_INFO("New trajectory!");

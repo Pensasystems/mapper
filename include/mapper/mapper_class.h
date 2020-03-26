@@ -49,10 +49,6 @@
 #include <thread>
 #include <atomic>
 
-// Mapper message types
-#include "mapper/Segment.h"
-#include "mapper/ControlState.h"
-
 // Pensa-ros msg types
 #include "pensa_msgs/VecPVA_4d.h"
 #include "pensa_msgs/WaypointSet.h"
@@ -113,9 +109,6 @@ class MapperClass {
   // Callback for handling incoming lidar point cloud messages
   void LidarPclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg,
                          const uint& cam_index);
-
-  // Callback for handling incoming new trajectory messages (astrobee type - deprecated)
-  void SegmentCallback(const mapper::Segment::ConstPtr &msg);
 
   // Callback for handling incoming sampled trajectory
   void SampledTrajectoryCallback(const pensa_msgs::VecPVA_4d::ConstPtr &msg);

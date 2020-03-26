@@ -27,9 +27,6 @@
 #include <complex>
 #include <vector>
 
-#include "mapper/Segment.h"
-#include "mapper/ControlState.h"
-
 namespace polynomials {
 
 // Coefficients go from higher order to lower order
@@ -67,47 +64,47 @@ class Polynomial{
 };
 
 
-// 3D trajectories characterized by three polynomials
-class Poly3D{
- public:
-    Polynomial poly_x_;
-    Polynomial poly_y_;
-    Polynomial poly_z_;
-    double t0_;              // Initial time for definition of polynomials
-    double tf_;              // Final time for definition of polynomials
-    int order_;              // Polynomial order
+// // 3D trajectories characterized by three polynomials
+// class Poly3D{
+//  public:
+//     Polynomial poly_x_;
+//     Polynomial poly_y_;
+//     Polynomial poly_z_;
+//     double t0_;              // Initial time for definition of polynomials
+//     double tf_;              // Final time for definition of polynomials
+//     int order_;              // Polynomial order
 
-    // Constructor: define a polynomial from a "ControlState" msg type (2nd order polynomials only)
-    Poly3D(const double t0_in,
-            const double tf_in,
-            const mapper::ControlState segment);
-    Poly3D();
+//     // Constructor: define a polynomial from a "ControlState" msg type (2nd order polynomials only)
+//     Poly3D(const double t0_in,
+//             const double tf_in,
+//             const mapper::ControlState segment);
+//     Poly3D();
 
-    // Methods
-    void PrintSegmentCoeff();                           // Print all coefficients
-    void SegmentAtTime(const double time,
-                       Eigen::Vector3d *result) const;  // Return 3d value for polynomials at a given time
-    void SegmentAtTime(const double time,
-                       pcl::PointXYZ *result) const;
-};
+//     // Methods
+//     void PrintSegmentCoeff();                           // Print all coefficients
+//     void SegmentAtTime(const double time,
+//                        Eigen::Vector3d *result) const;  // Return 3d value for polynomials at a given time
+//     void SegmentAtTime(const double time,
+//                        pcl::PointXYZ *result) const;
+// };
 
-// 3D trajectories characterized by a set of 3D polynomials
-class Trajectory3D{
- public:
-    std::vector<Poly3D> segments_poly_;
-    double t0_;  // Initial time for the first segment
-    double tf_;  // Final time for the last segment
-    int n_segments_;
+// // 3D trajectories characterized by a set of 3D polynomials
+// class Trajectory3D{
+//  public:
+//     std::vector<Poly3D> segments_poly_;
+//     double t0_;  // Initial time for the first segment
+//     double tf_;  // Final time for the last segment
+//     int n_segments_;
 
-    // Constructor
-    explicit Trajectory3D(const mapper::Segment segments);
+//     // Constructor
+//     explicit Trajectory3D(const mapper::Segment segments);
 
-    // Methods
-    void PrintTrajCoeff();                                  // Print coefficients from all segments
-    void TrajectoryAtTime(const double time,
-                          Eigen::Vector3d *result) const;  // Return 3d value for polynomials at a given time
-    void TrajectoryAtTime(const double time,
-                          pcl::PointXYZ *result) const;    // Return 3d value for polynomials at a given time
-};
+//     // Methods
+//     void PrintTrajCoeff();                                  // Print coefficients from all segments
+//     void TrajectoryAtTime(const double time,
+//                           Eigen::Vector3d *result) const;  // Return 3d value for polynomials at a given time
+//     void TrajectoryAtTime(const double time,
+//                           pcl::PointXYZ *result) const;    // Return 3d value for polynomials at a given time
+// };
 
 }  // namespace polynomials

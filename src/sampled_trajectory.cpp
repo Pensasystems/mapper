@@ -24,32 +24,32 @@
 
 namespace sampled_traj {
 
-SampledTrajectory3D::SampledTrajectory3D(const double &dt,
-                                         const polynomials::Trajectory3D &poly_trajectories) {
-    static double t0, tf, delta_t;
-    t0 = poly_trajectories.t0_;
-    tf = poly_trajectories.tf_;
-    delta_t = tf - t0;
+// SampledTrajectory3D::SampledTrajectory3D(const double &dt,
+//                                          const polynomials::Trajectory3D &poly_trajectories) {
+//     static double t0, tf, delta_t;
+//     t0 = poly_trajectories.t0_;
+//     tf = poly_trajectories.tf_;
+//     delta_t = tf - t0;
 
-    // define number of points for trajectory
-    if (floor(delta_t/dt) == delta_t/dt) {
-        n_points_ = delta_t/dt + 1;
-    } else {
-        n_points_ = delta_t/dt + 2;
-    }
+//     // define number of points for trajectory
+//     if (floor(delta_t/dt) == delta_t/dt) {
+//         n_points_ = delta_t/dt + 1;
+//     } else {
+//         n_points_ = delta_t/dt + 2;
+//     }
 
-    // get vector values
-    // Eigen::Vector3d Point;
-    pcl::PointXYZ point;
-    double time;
-    for (int i = 0; i < n_points_; i++) {
-        time = std::min(static_cast<float>(i)*dt + t0, tf);
-        time_.push_back(time);
-        poly_trajectories.TrajectoryAtTime(time, &point);
-        pos_.push_back(point);
-    }
-    // traj_initial_time_ = ros::Time(0.0);
-}
+//     // get vector values
+//     // Eigen::Vector3d Point;
+//     pcl::PointXYZ point;
+//     double time;
+//     for (int i = 0; i < n_points_; i++) {
+//         time = std::min(static_cast<float>(i)*dt + t0, tf);
+//         time_.push_back(time);
+//         poly_trajectories.TrajectoryAtTime(time, &point);
+//         pos_.push_back(point);
+//     }
+//     // traj_initial_time_ = ros::Time(0.0);
+// }
 
 SampledTrajectory3D::SampledTrajectory3D(const std::vector<double> &time_vec,
                                          const pcl::PointCloud<pcl::PointXYZ> &pos_vec) {

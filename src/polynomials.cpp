@@ -192,145 +192,145 @@ std::vector<std::complex<double>> Polynomial::Roots3rdOrderPoly() {
 }
 
 
-// constructor: define a polynomial from a "ControlState" msg type (2nd order polynomials only)
-Poly3D::Poly3D(const double t0_in,
-               const double tf_in,
-               const mapper::ControlState segment) {
-    int n_coeff = 3;
-    poly_x_.coeff_.resize(n_coeff);
-    poly_y_.coeff_.resize(n_coeff);
-    poly_z_.coeff_.resize(n_coeff);
-    poly_x_ = Polynomial(t0_in, tf_in, n_coeff);
-    poly_y_ = Polynomial(t0_in, tf_in, n_coeff);
-    poly_z_ = Polynomial(t0_in, tf_in, n_coeff);
-    t0_ = t0_in;
-    tf_ = tf_in;
-    order_ = n_coeff - 1;
+// // constructor: define a polynomial from a "ControlState" msg type (2nd order polynomials only)
+// Poly3D::Poly3D(const double t0_in,
+//                const double tf_in,
+//                const mapper::ControlState segment) {
+//     int n_coeff = 3;
+//     poly_x_.coeff_.resize(n_coeff);
+//     poly_y_.coeff_.resize(n_coeff);
+//     poly_z_.coeff_.resize(n_coeff);
+//     poly_x_ = Polynomial(t0_in, tf_in, n_coeff);
+//     poly_y_ = Polynomial(t0_in, tf_in, n_coeff);
+//     poly_z_ = Polynomial(t0_in, tf_in, n_coeff);
+//     t0_ = t0_in;
+//     tf_ = tf_in;
+//     order_ = n_coeff - 1;
 
-    // set the polynomial coefficients
-    Eigen::VectorXd coeff_x(n_coeff), coeff_y(n_coeff), coeff_z(n_coeff);
-    coeff_x << 0.5*segment.accel.linear.x,
-               segment.twist.linear.x,
-               segment.pose.position.x;
-    coeff_y << 0.5*segment.accel.linear.y,
-               segment.twist.linear.y,
-               segment.pose.position.y;
-    coeff_z << 0.5*segment.accel.linear.z,
-               segment.twist.linear.z,
-               segment.pose.position.z;
-    poly_x_.coeff_ = coeff_x;
-    poly_y_.coeff_ = coeff_y;
-    poly_z_.coeff_ = coeff_z;
-}
+//     // set the polynomial coefficients
+//     Eigen::VectorXd coeff_x(n_coeff), coeff_y(n_coeff), coeff_z(n_coeff);
+//     coeff_x << 0.5*segment.accel.linear.x,
+//                segment.twist.linear.x,
+//                segment.pose.position.x;
+//     coeff_y << 0.5*segment.accel.linear.y,
+//                segment.twist.linear.y,
+//                segment.pose.position.y;
+//     coeff_z << 0.5*segment.accel.linear.z,
+//                segment.twist.linear.z,
+//                segment.pose.position.z;
+//     poly_x_.coeff_ = coeff_x;
+//     poly_y_.coeff_ = coeff_y;
+//     poly_z_.coeff_ = coeff_z;
+// }
 
-Poly3D::Poly3D() {
-    int n_coeff = 1;
-    double t0_in = 0.0;
-    double tf_in = 1.0;
-    poly_x_.coeff_.resize(n_coeff);
-    poly_y_.coeff_.resize(n_coeff);
-    poly_z_.coeff_.resize(n_coeff);
-    poly_x_ = Polynomial(t0_in, tf_in, n_coeff);
-    poly_y_ = Polynomial(t0_in, tf_in, n_coeff);
-    poly_z_ = Polynomial(t0_in, tf_in, n_coeff);
-    t0_ = t0_in;
-    tf_ = tf_in;
-}
+// Poly3D::Poly3D() {
+//     int n_coeff = 1;
+//     double t0_in = 0.0;
+//     double tf_in = 1.0;
+//     poly_x_.coeff_.resize(n_coeff);
+//     poly_y_.coeff_.resize(n_coeff);
+//     poly_z_.coeff_.resize(n_coeff);
+//     poly_x_ = Polynomial(t0_in, tf_in, n_coeff);
+//     poly_y_ = Polynomial(t0_in, tf_in, n_coeff);
+//     poly_z_ = Polynomial(t0_in, tf_in, n_coeff);
+//     t0_ = t0_in;
+//     tf_ = tf_in;
+// }
 
-void Poly3D::PrintSegmentCoeff() {
-        std::cout << "t0: " << t0_ << "\ttf: " << tf_ <<  std::endl;
-        std::cout << "polyX: "; poly_x_.PrintPolyCoeff();
-        std::cout << "polyY: "; poly_y_.PrintPolyCoeff();
-        std::cout << "polyZ: "; poly_z_.PrintPolyCoeff();
-}
+// void Poly3D::PrintSegmentCoeff() {
+//         std::cout << "t0: " << t0_ << "\ttf: " << tf_ <<  std::endl;
+//         std::cout << "polyX: "; poly_x_.PrintPolyCoeff();
+//         std::cout << "polyY: "; poly_y_.PrintPolyCoeff();
+//         std::cout << "polyZ: "; poly_z_.PrintPolyCoeff();
+// }
 
-void Poly3D::SegmentAtTime(const double time,
-                            Eigen::Vector3d *result) const {
-    double x, y, z;
-    poly_x_.PolyAtTime(time, &x);
-    poly_y_.PolyAtTime(time, &y);
-    poly_z_.PolyAtTime(time, &z);
-    *result = Eigen::Vector3d(x, y, z);
-}
+// void Poly3D::SegmentAtTime(const double time,
+//                             Eigen::Vector3d *result) const {
+//     double x, y, z;
+//     poly_x_.PolyAtTime(time, &x);
+//     poly_y_.PolyAtTime(time, &y);
+//     poly_z_.PolyAtTime(time, &z);
+//     *result = Eigen::Vector3d(x, y, z);
+// }
 
-void Poly3D::SegmentAtTime(const double time,
-                            pcl::PointXYZ *result) const {
-    double x, y, z;
-    poly_x_.PolyAtTime(time, &x);
-    poly_y_.PolyAtTime(time, &y);
-    poly_z_.PolyAtTime(time, &z);
-    result->x = x;
-    result->y = y;
-    result->z = z;
-}
+// void Poly3D::SegmentAtTime(const double time,
+//                             pcl::PointXYZ *result) const {
+//     double x, y, z;
+//     poly_x_.PolyAtTime(time, &x);
+//     poly_y_.PolyAtTime(time, &y);
+//     poly_z_.PolyAtTime(time, &z);
+//     result->x = x;
+//     result->y = y;
+//     result->z = z;
+// }
 
-Trajectory3D::Trajectory3D(const mapper::Segment segments) {
-    n_segments_ = segments.segment.size() - 1;
+// Trajectory3D::Trajectory3D(const mapper::Segment segments) {
+//     n_segments_ = segments.segment.size() - 1;
 
-    if (n_segments_ > 0) {
-        ros::Time t0_segment;
-        ros::Time tf_segment;
+//     if (n_segments_ > 0) {
+//         ros::Time t0_segment;
+//         ros::Time tf_segment;
 
-        t0_ = segments.segment[0].when.toSec();
-        tf_ = segments.segment[n_segments_].when.toSec();
+//         t0_ = segments.segment[0].when.toSec();
+//         tf_ = segments.segment[n_segments_].when.toSec();
 
-        for (int i = 0; i < n_segments_; i++) {
-            t0_segment = segments.segment[i].when;
-            tf_segment = segments.segment[i+1].when;
+//         for (int i = 0; i < n_segments_; i++) {
+//             t0_segment = segments.segment[i].when;
+//             tf_segment = segments.segment[i+1].when;
 
-            Poly3D newSegment(t0_segment.toSec(),
-                              tf_segment.toSec(),
-                              segments.segment[i]);
-            segments_poly_.push_back(newSegment);
-        }
-    } else {
-        t0_ = 0;
-        tf_ = 0;
-    }
-}
+//             Poly3D newSegment(t0_segment.toSec(),
+//                               tf_segment.toSec(),
+//                               segments.segment[i]);
+//             segments_poly_.push_back(newSegment);
+//         }
+//     } else {
+//         t0_ = 0;
+//         tf_ = 0;
+//     }
+// }
 
-void Trajectory3D::PrintTrajCoeff() {
-    std::cout << "n_segments: " << n_segments_ << std::endl;
-    std::cout << "t0: "   << t0_
-              << "\ttf: " << tf_ << std::endl;
-    for (int i = 0; i < n_segments_; i++) {
-        std::cout << "Segment: " << i+1 << std::endl;
-        segments_poly_[i].PrintSegmentCoeff();
-    }
-}
+// void Trajectory3D::PrintTrajCoeff() {
+//     std::cout << "n_segments: " << n_segments_ << std::endl;
+//     std::cout << "t0: "   << t0_
+//               << "\ttf: " << tf_ << std::endl;
+//     for (int i = 0; i < n_segments_; i++) {
+//         std::cout << "Segment: " << i+1 << std::endl;
+//         segments_poly_[i].PrintSegmentCoeff();
+//     }
+// }
 
-void Trajectory3D::TrajectoryAtTime(const double time,
-                                     Eigen::Vector3d *result) const {
-    // find which segment the given "time" belongs to
-    for (int i = 0; i < n_segments_; i++) {
-        if (time <= segments_poly_[i].tf_) {
-            segments_poly_[i].SegmentAtTime(time, result);
-            return;
-        }
-    }
+// void Trajectory3D::TrajectoryAtTime(const double time,
+//                                      Eigen::Vector3d *result) const {
+//     // find which segment the given "time" belongs to
+//     for (int i = 0; i < n_segments_; i++) {
+//         if (time <= segments_poly_[i].tf_) {
+//             segments_poly_[i].SegmentAtTime(time, result);
+//             return;
+//         }
+//     }
 
-    // if the code reaches this point, it means that we have to
-    // return the value of the polynomial some time after tf (extrapolation)
-    segments_poly_[n_segments_-1].SegmentAtTime(time, result);
-    ROS_WARN("Time extrapolation when returning polynomial!");
-    return;
-}
+//     // if the code reaches this point, it means that we have to
+//     // return the value of the polynomial some time after tf (extrapolation)
+//     segments_poly_[n_segments_-1].SegmentAtTime(time, result);
+//     ROS_WARN("Time extrapolation when returning polynomial!");
+//     return;
+// }
 
-void Trajectory3D::TrajectoryAtTime(const double time,
-                                    pcl::PointXYZ *result) const {
-    // find which segment the given "time" belongs to
-    for (int i = 0; i < n_segments_; i++) {
-        if (time <= segments_poly_[i].tf_) {
-            segments_poly_[i].SegmentAtTime(time, result);
-            return;
-        }
-    }
+// void Trajectory3D::TrajectoryAtTime(const double time,
+//                                     pcl::PointXYZ *result) const {
+//     // find which segment the given "time" belongs to
+//     for (int i = 0; i < n_segments_; i++) {
+//         if (time <= segments_poly_[i].tf_) {
+//             segments_poly_[i].SegmentAtTime(time, result);
+//             return;
+//         }
+//     }
 
-    // if the code reaches this point, it means that we have to
-    // return the value of the polynomial some time after tf (extrapolation)
-    segments_poly_[n_segments_-1].SegmentAtTime(time, result);
-    ROS_WARN("Time extrapolation when returning polynomial!");
-    return;
-}
+//     // if the code reaches this point, it means that we have to
+//     // return the value of the polynomial some time after tf (extrapolation)
+//     segments_poly_[n_segments_-1].SegmentAtTime(time, result);
+//     ROS_WARN("Time extrapolation when returning polynomial!");
+//     return;
+// }
 
 }  // namespace polynomials
