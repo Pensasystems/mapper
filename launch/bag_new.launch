@@ -1,32 +1,34 @@
 <launch>
   <param name="use_sim_time" value="true"/>  
 
-  <param name="robot_description"
-    textfile="$(find mapper)/urdf/cinderella_new.urdf" />
+  <arg name="drone_name" default="C0025"/>
+  <arg name="parent" default="store"/>
+  <arg name="odomtf_xyzypr" value="0 0 0 0 0 0" />
 
-  <node name="robot_state_publisher" pkg="robot_state_publisher"
-    type="robot_state_publisher" />
+  <!-- Store frame to odom frame -->
+  <node pkg="tf2_ros" type="static_transform_publisher"
+        name="$(arg parent)_$(arg drone_name)_odom_tf"
+        args="$(arg odomtf_xyzypr) $(arg parent) $(arg drone_name)_odom" />
 
-  <!-- Store frame -->
-  <node name="store_to_vislam" pkg="tf2_ros" type="static_transform_publisher" output="screen" 
-  args="0 0 0 3.141593 0 0 store vislam"/>
+  <!-- body frame to laser frame -->
+  <node pkg="tf2_ros" type="static_transform_publisher"
+    name="$(arg drone_name)_bl_lidar_hector_tf"
+    args="0 0 0 0.0872665 3.1416 0 $(arg drone_name)_bl laser_hector_frame" />
 
-  <!-- Map frame -->
-  <!-- This frame is kept for old bags, but we won't need it anymore for future bags -->
-  <node name="vislam_to_map" pkg="tf2_ros" type="static_transform_publisher" output="screen" 
-  args="0 0 0 0 0 0 store map"/>
+  <node pkg="tf2_ros" type="static_transform_publisher"
+        name="laser_hector_frame_tf"
+        args="0 0 0 0 0 0 laser_hector_frame laser_frame" />
 
-    <!-- publish odom with twist in body frame to base_link -->
-  <!-- <node name="odom_in_body" pkg="odom_relay"
-    type="odom_relay_twist_body" /> -->
+  <!-- Convert laser msg type to pcl2 -->
+  <include file="$(find system_config)/launch/simulation/laser_to_cloud.launch" > </include>
 
     <!-- Publish tf from odometry origin to base_link link -->
-  <node pkg="odom_relay" type="odom_relay_tf" name="odom_tf"
+<!--   <node pkg="odom_relay" type="odom_relay_tf" name="odom_tf"
     output="screen">
     <param name="odom_topic" value="/vislam/odometry"/> 
     <param name="frame_id" value="vislam"/> 
     <param name="child_frame_id" value="base_link_vislam"/> 
-  </node>
+  </node> -->
 
   <!-- <node type="laser_scan_assembler" pkg="laser_assembler"
         name="my_assembler">
@@ -43,7 +45,7 @@
     <arg name="inertial_frame_id"      value="/store" />
     <arg name="lidar_frame_id"         value="['/laser_hector_frame']" />
     <arg name="lidar_names"            value="['/laser/cloud']" />
-    <arg name="robot_frame_id"         value="/base_link" />
+    <arg name="robot_frame_id"         value="$(arg drone_name)_bl" />
     <arg name="max_range"              value="6.0" />
     <arg name="min_range"              value="0.25" />
   </include>
