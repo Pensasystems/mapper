@@ -139,6 +139,8 @@ void MapperClass::PathCollisionCheckTask() {
     double octomap_resolution;
 
     while (!terminate_node_) {
+        loop_rate.sleep();
+        
         // Get time for when this task started
         ros::Time time_now = ros::Time::now();
 
@@ -210,8 +212,6 @@ void MapperClass::PathCollisionCheckTask() {
 
         // ros::Duration solver_time = ros::Time::now() - time_now;
         // ROS_INFO("Collision check time: %f", solver_time.toSec());
-
-        loop_rate.sleep();
     }
 
     ROS_DEBUG("[mapper]: Exiting collisionCheck Thread...");
