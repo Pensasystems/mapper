@@ -16,115 +16,115 @@
     <arg name="max_range" default="6.0" />
     <arg name="min_range" default="0.25" />
 
-    <group ns="$(arg namespace)">
-        <node pkg="mapper"
-            type="mapper"
-            name="mapper_node"
-            output="screen">
+    <!-- <group ns="$(arg namespace)"> -->
+    <node pkg="mapper"
+        type="mapper"
+        name="mapper_node"
+        output="screen">
 
-            <!-- Namespace -->
-            <param name="namespace" value="$(arg namespace)"/>
+        <!-- Namespace -->
+        <param name="namespace" value="$(arg namespace)"/>
 
-            <!-- Set of depth camera topics -->
-            <param name="depth_cam_prefix" value="$(arg depth_cam_prefix)"/>
-            <rosparam param="depth_cam_names"> [] </rosparam>
-            <param name="depth_cam_suffix" value="$(arg depth_cam_suffix)"/>
+        <!-- Set of depth camera topics -->
+        <param name="depth_cam_prefix" value="$(arg depth_cam_prefix)"/>
+        <rosparam param="depth_cam_names"> [] </rosparam>
+        <param name="depth_cam_suffix" value="$(arg depth_cam_suffix)"/>
 
-            <!-- tf frame ID for the cameras above -->
-            <rosparam param="cam_frame_id"> [] </rosparam>
+        <!-- tf frame ID for the cameras above -->
+        <rosparam param="cam_frame_id"> [] </rosparam>
 
-            <!-- Set of lidar topics -->
-            <param name="lidar_prefix" value="$(arg lidar_prefix)"/>
-            <rosparam param="lidar_names" subst_value="True"> $(arg lidar_names) </rosparam>
-            <param name="lidar_suffix" value="$(arg lidar_suffix)"/>
+        <!-- Set of lidar topics -->
+        <param name="lidar_prefix" value="$(arg lidar_prefix)"/>
+        <rosparam param="lidar_names" subst_value="True"> $(arg lidar_names) </rosparam>
+        <param name="lidar_suffix" value="$(arg lidar_suffix)"/>
 
-            <!-- tf frame ID for the lidars above -->
-            <rosparam param="lidar_frame_id" subst_value="True"> $(arg lidar_frame_id) </rosparam>
+        <!-- tf frame ID for the lidars above -->
+        <rosparam param="lidar_frame_id" subst_value="True"> $(arg lidar_frame_id) </rosparam>
 
-            <!-- Robot Center tf Frame ID -->
-            <param name="robot_frame_id" value="$(arg robot_frame_id)"/>
+        <!-- Robot Center tf Frame ID -->
+        <param name="robot_frame_id" value="$(arg robot_frame_id)"/>
 
-            <!-- Inertial frame name (used for getting tf tree information) -->
-            <param name="inertial_frame_id" value="$(arg inertial_frame_id)"/>
+        <!-- Inertial frame name (used for getting tf tree information) -->
+        <param name="inertial_frame_id" value="$(arg inertial_frame_id)"/>
 
-            <!-- Set parameters for the mapper -->
-            <param name="map_resolution" value="0.10"/>          <!-- meters -->
-            <param name="max_range" value="$(arg max_range)"/>                 <!-- meters -->
-            <param name="min_range" value="$(arg min_range)"/>              <!-- meters -->
+        <!-- Set parameters for the mapper -->
+        <param name="map_resolution" value="0.10"/>          <!-- meters -->
+        <param name="max_range" value="$(arg max_range)"/>                 <!-- meters -->
+        <param name="min_range" value="$(arg min_range)"/>              <!-- meters -->
 
-            <!-- Time to forget information (set as negative if infinity) -->
-            <param name="memory_time" value="-10.0"/>           <!-- seconds -->
+        <!-- Time to forget information (set as negative if infinity) -->
+        <param name="memory_time" value="-10.0"/>           <!-- seconds -->
 
-            <!-- Fading memory thread update rate (Hz) -->
-            <param name="fading_memory_update_rate" value="1"/><!-- Hz -->
+        <!-- Fading memory thread update rate (Hz) -->
+        <param name="fading_memory_update_rate" value="1"/><!-- Hz -->
 
-            <!-- Map inflation parameters -->
-            <param name="inflate_radius_xy" value="0.30"/>       <!-- meters -->
-            <param name="inflate_radius_z" value="0.30"/>       <!-- meters -->
+        <!-- Map inflation parameters -->
+        <param name="inflate_radius_xy" value="0.30"/>       <!-- meters -->
+        <param name="inflate_radius_z" value="0.30"/>       <!-- meters -->
 
-            <!-- Camera FOV (radians): map is only updated within this FOV -->
-            <param name="cam_fov" value="0.8"/>             <!-- radians -->
+        <!-- Camera FOV (radians): map is only updated within this FOV -->
+        <param name="cam_fov" value="0.8"/>             <!-- radians -->
 
-            <!-- Camera's width divided by height (unitless) -->
-            <param name="cam_aspect_ratio" value="1.3099"/>
+        <!-- Camera's width divided by height (unitless) -->
+        <param name="cam_aspect_ratio" value="1.3099"/>
 
-            <!-- Map probabilities -->
-            <param name="occupancy_threshold" value="0.5"/>     <!-- 0-1 -->
-            <param name="probability_hit" value="0.7"/>         <!-- 0-1 -->
-            <param name="probability_miss" value="0.25"/>       <!-- 0-1 -->
-            <param name="clamping_threshold_min" value="0.1"/>  <!-- 0-1 -->
-            <param name="clamping_threshold_max" value="0.9"/>  <!-- 0-1 -->
+        <!-- Map probabilities -->
+        <param name="occupancy_threshold" value="0.5"/>     <!-- 0-1 -->
+        <param name="probability_hit" value="0.7"/>         <!-- 0-1 -->
+        <param name="probability_miss" value="0.25"/>       <!-- 0-1 -->
+        <param name="clamping_threshold_min" value="0.1"/>  <!-- 0-1 -->
+        <param name="clamping_threshold_max" value="0.9"/>  <!-- 0-1 -->
 
-            <!-- Path Collision Checking parameters -->
-            <param name="traj_compression_max_dev" value="0.01"/>     <!-- meters -->
-            <param name="traj_compression_resolution" value="0.02"/>  <!-- meters -->
-            <param name="collision_check_rate" value="10"/>         <!-- Hz -->
+        <!-- Path Collision Checking parameters -->
+        <param name="traj_compression_max_dev" value="0.01"/>     <!-- meters -->
+        <param name="traj_compression_resolution" value="0.02"/>  <!-- meters -->
+        <param name="collision_check_rate" value="10"/>         <!-- Hz -->
 
-            <!-- Radius Collistion Checking parameters -->
-            <param name="radius_collision_check" value="0.2"/>     <!-- meters -->
+        <!-- Radius Collistion Checking parameters -->
+        <param name="radius_collision_check" value="0.2"/>     <!-- meters -->
 
-            <!-- Frequency at which tf listeners update tf -->
-            <param name="tf_update_rate" value="50"/>            <!-- Hz -->
+        <!-- Frequency at which tf listeners update tf -->
+        <param name="tf_update_rate" value="50"/>            <!-- Hz -->
 
-            <!-- Service names -->
-            <param name="update_resolution" value="update_resolution"/>
-            <param name="update_memory_time" value="update_memory_time"/>
-            <param name="update_inflation_radius" value="update_inflation_radius"/>
-            <param name="reset_map" value="reset_map"/>
-            <param name="save_map" value="save_map"/>
-            <param name="load_map" value="load_map"/>
-            <param name="process_pcl" value="process_pcl"/>
-            <param name="rrg_service" value="rrg"/>
+        <!-- Service names -->
+        <param name="update_resolution" value="update_resolution"/>
+        <param name="update_memory_time" value="update_memory_time"/>
+        <param name="update_inflation_radius" value="update_inflation_radius"/>
+        <param name="reset_map" value="reset_map"/>
+        <param name="save_map" value="save_map"/>
+        <param name="load_map" value="load_map"/>
+        <param name="process_pcl" value="process_pcl"/>
+        <param name="rrg_service" value="rrg"/>
 
-            <!-- Marker publisher names -->
-            <param name="obstacle_markers" value="obstacle_markers"/>
-            <param name="free_space_markers" value="free_space_markers"/>
-            <param name="inflated_obstacle_markers" value="inflated_obstacle_markers"/>
-            <param name="inflated_free_space_markers" value="inflated_free_space_markers"/>
-            <param name="frustum_markers" value="frustum_markers"/>
-            <param name="obstacle_radius_markers" value="obstacle_radius_markers"/>
-            <param name="discrete_trajectory_markers" value="discrete_trajectory_markers"/>
-            
-            <!-- Collision detection publisher names -->
-            <param name="path_obstacle_detection" value="path_detected_obstacles"/>
-            <param name="obstacle_radius_detection" value="radius_detected_obstacles"/>
+        <!-- Marker publisher names -->
+        <param name="obstacle_markers" value="obstacle_markers"/>
+        <param name="free_space_markers" value="free_space_markers"/>
+        <param name="inflated_obstacle_markers" value="inflated_obstacle_markers"/>
+        <param name="inflated_free_space_markers" value="inflated_free_space_markers"/>
+        <param name="frustum_markers" value="frustum_markers"/>
+        <param name="obstacle_radius_markers" value="obstacle_radius_markers"/>
+        <param name="discrete_trajectory_markers" value="discrete_trajectory_markers"/>
+        
+        <!-- Collision detection publisher names -->
+        <param name="path_obstacle_detection" value="path_detected_obstacles"/>
+        <param name="obstacle_radius_detection" value="radius_detected_obstacles"/>
 
-            <!-- Path Planning publisher names -->
-            <param name="graph_tree_marker_topic" value="graph_tree_path_planner"/>
+        <!-- Path Planning publisher names -->
+        <param name="graph_tree_marker_topic" value="graph_tree_path_planner"/>
 
-            <!-- Path of mapper in computer: used for saving/loading maps -->
-            <param name="local_path" value="$(find mapper)"/>
+        <!-- Path of mapper in computer: used for saving/loading maps -->
+        <param name="local_path" value="$(find mapper)"/>
 
-            <!-- Whether or not PCL data is processed at startup -->
-            <!-- If chosen as false, pcl processing only starts after request through a service -->
-            <param name="process_pcl_at_startup" value="$(arg process_pcl_at_startup)"/>
+        <!-- Whether or not PCL data is processed at startup -->
+        <!-- If chosen as false, pcl processing only starts after request through a service -->
+        <param name="process_pcl_at_startup" value="$(arg process_pcl_at_startup)"/>
 
-            <!-- Map in 3d or in a plane -->
-            <param name="map_3d" value="$(arg map_3d)"/>            
+        <!-- Map in 3d or in a plane -->
+        <param name="map_3d" value="$(arg map_3d)"/>            
 
-        </node>
+    </node>
 
-    </group>
+    <!-- </group> -->
 
     <!-- Launch RVIZ -->
     <group if="$(arg launch_rviz)">
