@@ -11,7 +11,7 @@
 
   <!-- body frame to laser frame -->
   <node pkg="tf2_ros" type="static_transform_publisher"
-    name="$(arg drone_name)_bl_lidar_hector_tf"
+    name="$(arg drone_name)_bl_lidar_tf"
     args="0 0 0 0.0872665 3.1416 0 $(arg drone_name)_bl laser_frame" />
 
   <!-- <node pkg="tf2_ros" type="static_transform_publisher"
