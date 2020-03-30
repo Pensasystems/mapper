@@ -12,46 +12,30 @@
   <!-- body frame to laser frame -->
   <node pkg="tf2_ros" type="static_transform_publisher"
     name="$(arg drone_name)_bl_lidar_hector_tf"
-    args="0 0 0 0.0872665 3.1416 0 $(arg drone_name)_bl laser_hector_frame" />
+    args="0 0 0 0.0872665 3.1416 0 $(arg drone_name)_bl laser_frame" />
 
-  <node pkg="tf2_ros" type="static_transform_publisher"
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher"
         name="laser_hector_frame_tf"
-        args="0 0 0 0 0 0 laser_hector_frame laser_frame" />
+        args="0 0 0 0 0 0 laser_hector_frame laser_frame" /> -->
 
   <!-- Convert laser msg type to pcl2 -->
-  <include file="$(find system_config)/launch/simulation/laser_to_cloud.launch" > </include>
+  <include file="$(find system_config)/launch/simulation/laser_to_cloud.launch" > 
+    <arg name="lidar_frame_id" value="laser_frame" />
+  </include>
 
-    <!-- Publish tf from odometry origin to base_link link -->
-<!--   <node pkg="odom_relay" type="odom_relay_tf" name="odom_tf"
-    output="screen">
-    <param name="odom_topic" value="/vislam/odometry"/> 
-    <param name="frame_id" value="vislam"/> 
-    <param name="child_frame_id" value="base_link_vislam"/> 
-  </node> -->
-
-  <!-- <node type="laser_scan_assembler" pkg="laser_assembler"
-        name="my_assembler">
-    <remap from="scan" to="/laser/scan"/>
-    <param name="max_scans" type="int" value="1" />
-    <param name="fixed_frame" type="string" value="laser_link" />
-  </node> -->
-
+  <!-- OD node -->
   <include file="$(find mapper)/launch/mapper.launch">
     <arg name="namespace"              value="cinderella" />
     <arg name="launch_rviz"            value="true" />
     <arg name="process_pcl_at_startup" value="true" />
     <arg name="map_3d"                 value="false" />
     <arg name="inertial_frame_id"      value="/store" />
-    <arg name="lidar_frame_id"         value="['/laser_hector_frame']" />
+    <arg name="lidar_frame_id"         value="['/laser_frame']" />
     <arg name="lidar_names"            value="['/laser/cloud']" />
     <arg name="robot_frame_id"         value="$(arg drone_name)_bl" />
     <arg name="max_range"              value="6.0" />
     <arg name="min_range"              value="0.25" />
   </include>
 
-    <!-- <node pkg="motion_planner" type="motion_planner_node" name="motion_planner" output="screen" required = "true">  </node> -->
-
-  <!-- <node name="rviz" pkg="rviz" type="rviz" required="true"
-      args="-d $(find mapper)/cfg/mapper.rviz" /> -->
 
 </launch>
