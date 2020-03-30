@@ -140,7 +140,7 @@ void MapperClass::PathCollisionCheckTask() {
 
     while (!terminate_node_) {
         loop_rate.sleep();
-        
+
         // Get time for when this task started
         ros::Time time_now = ros::Time::now();
 

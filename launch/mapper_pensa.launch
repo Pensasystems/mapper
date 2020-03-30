@@ -15,5 +15,4 @@
     <arg name="min_range"              value="0.5" />
   </include>
 
-
 </launch>
