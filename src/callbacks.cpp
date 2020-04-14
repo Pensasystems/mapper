@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#include <vector>
 #include <string>
+#include <vector>
 #include "mapper/mapper_class.h"
 #include "mapper/pcl_conversions.h"
 

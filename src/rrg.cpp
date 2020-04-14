@@ -16,9 +16,10 @@
  * under the License.
  */
 
+#include "mapper/rrg.h"
+
 #include <limits>
 #include <vector>
-#include "mapper/rrg.h"
 
 namespace octoclass {
 

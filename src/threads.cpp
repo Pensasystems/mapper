@@ -16,11 +16,12 @@
  * under the License.
  */
 
-#include <mapper/mapper_class.h>
-#include <mapper/helper.h>
+#include "mapper/mapper_class.h"
+#include "mapper/helper.h"
+
+#include <algorithm>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 namespace mapper {
 

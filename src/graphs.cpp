@@ -18,8 +18,8 @@
 
 #include "mapper/graphs.h"
 #include <limits>
-#include <vector>
 #include <set>
+#include <vector>
 
 namespace octoclass {
 

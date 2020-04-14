@@ -18,22 +18,23 @@
 
 #pragma once
 
+#include <iostream>
 #include <octomap/octomap.h>
 #include <octomap/OcTree.h>
 #include <pcl/point_cloud.h>
-#include <tf/transform_broadcaster.h>
 #include <pcl/point_types.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
+#include <tf/transform_broadcaster.h>
 #include <visualization_msgs/MarkerArray.h>
-#include <vector>
-#include <iostream>
+
+#include "mapper/graphs.h"
 #include "mapper/helper.h"
 #include "mapper/indexed_octree_key.h"
 #include "mapper/linear_algebra.h"
-#include "mapper/graphs.h"
 #include "mapper/rrg.h"
 
 #include <string>
+#include <vector>
 
 namespace octoclass {
 

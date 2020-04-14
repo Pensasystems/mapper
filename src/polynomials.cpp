@@ -16,9 +16,10 @@
  * under the License.
  */
 
+#include "mapper/polynomials.h"
+
 #include <algorithm>
 #include <vector>
-#include "mapper/polynomials.h"
 
 namespace polynomials {
 

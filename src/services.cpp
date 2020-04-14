@@ -16,10 +16,11 @@
  * under the License.
  */
 
-#include <mapper/mapper_class.h>
+#include "mapper/mapper_class.h"
+
 #include <limits>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace mapper {
 

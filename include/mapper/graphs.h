@@ -19,18 +19,19 @@
 #pragma once
 
 #include <ros/ros.h>
+
+#include <Eigen/Dense>
+#include <iostream>
 #include <octomap/octomap.h>
 #include <octomap/OcTree.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
-#include <Eigen/Dense>
 #include <vector>
-#include <iostream>
 
-#include "mapper/visualization_functions.h"
 #include "mapper/indexed_octree_key.h"
-#include "mapper/priority_queue.h"
 #include "mapper/msg_conversions.h"
+#include "mapper/priority_queue.h"
+#include "mapper/visualization_functions.h"
 
 namespace octoclass {
 

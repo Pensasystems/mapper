@@ -18,9 +18,9 @@
 
 #pragma once
 
+#include <functional>  // For greater<>
 #include <queue>
 #include <utility>  // For pair<>
-#include <functional>  // For greater<>
 #include <vector>
 
 namespace octoclass {

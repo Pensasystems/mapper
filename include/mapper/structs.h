@@ -19,16 +19,16 @@
 #pragma once
 
 // PCL specific includes
-#include <sensor_msgs/PointCloud2.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <sensor_msgs/PointCloud2.h>
 
 // c++ libraries
-#include <semaphore.h>
+#include <mutex>
 #include <queue>
+#include <semaphore.h>
 #include <string>
 #include <vector>
-#include <mutex>
 
 // Locally defined libraries
 #include "mapper/octoclass.h"

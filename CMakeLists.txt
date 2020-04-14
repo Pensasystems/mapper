@@ -8,19 +8,18 @@ add_compile_options(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  cmake_modules
   geometry_msgs
   pcl_conversions
   pcl_ros
+  pensa_msgs
   roscpp
+  roslint
   sensor_msgs
   std_msgs
-  trajectory_msgs
-  visualization_msgs
-  message_generation
-  cmake_modules
   std_srvs
-  pensa_msgs
-  roslint)
+  trajectory_msgs
+  visualization_msgs)
 
 find_package(
   Eigen REQUIRED)
@@ -30,14 +29,6 @@ find_package(
 
 link_directories(
     ${PCL_LIBRARY_DIRS})
-
-catkin_package(
-  DEPENDS Eigen
-  CATKIN_DEPENDS
-    roscpp
-    message_runtime
-    cmake_modules
-)
 
 roslint_cpp()
 
@@ -53,9 +44,8 @@ roslint_cpp()
 catkin_package(
   DEPENDS Eigen
   CATKIN_DEPENDS
-    roscpp
-    message_runtime
     cmake_modules
+    roscpp
 )
 
 ###########
@@ -78,23 +68,22 @@ set( LIBS_TO_LINK
 ) 
 
 add_executable(mapper
+  src/callbacks.cpp
+  src/graphs.cpp
   src/helper.cpp
   src/mapper.cpp
   src/mapper_class.cpp
-  src/polynomials.cpp
-  src/sampled_trajectory.cpp
-  src/octoclass.cpp
   src/msg_conversions.cpp
+  src/octoclass.cpp
+  src/octopath.cpp
+  src/polynomials.cpp
+  src/prm.cpp
+  src/rrt.cpp
+  src/rrg.cpp
+  src/sampled_trajectory.cpp
+  src/services.cpp
   src/threads.cpp
   src/visualization_functions.cpp
-  src/msg_conversions.cpp
-  src/callbacks.cpp
-  src/services.cpp
-  src/graphs.cpp
-  src/rrt.cpp
-  src/prm.cpp
-  src/rrg.cpp
-  src/octopath.cpp
 )
 target_link_libraries( mapper
     ${LIBS_TO_LINK}

@@ -18,10 +18,11 @@
 
 #pragma once
 
-#include <vector>
 #include <string>
-#include "mapper/visualization_functions.h"
+#include <vector>
+
 #include "mapper/msg_conversions.h"
+#include "mapper/visualization_functions.h"
 
 namespace algebra_3d {
 

@@ -16,11 +16,12 @@
  * under the License.
  */
 
-#include "mapper/visualization_functions.h"
 #include "mapper/msg_conversions.h"
+#include "mapper/visualization_functions.h"
+
+#include <set>
 #include <string>
 #include <vector>
-#include <set>
 
 namespace visualization_functions {
 

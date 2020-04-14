@@ -2,8 +2,8 @@
 // Confidential and Proprietary
 
 // Standard includes
-#include <ros/ros.h>
 #include <mapper/mapper_class.h>
+#include <ros/ros.h>
 #include <signal.h>
 
 mapper::MapperClass octomapper;

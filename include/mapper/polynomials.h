@@ -23,8 +23,8 @@
 #include <pcl/point_types.h>
 #include <ros/ros.h>
 
-#include <iostream>
 #include <complex>
+#include <iostream>
 #include <vector>
 
 namespace polynomials {

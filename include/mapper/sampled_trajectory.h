@@ -18,27 +18,29 @@
 
 #pragma once
 
+#include <ros/ros.h>
+
+#include <Eigen/Dense>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/PointStamped.h>
 #include <octomap/octomap.h>
 #include <octomap/OcTree.h>
-#include <visualization_msgs/MarkerArray.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
-#include <ros/ros.h>
-#include <Eigen/Dense>
+#include <visualization_msgs/MarkerArray.h>
 
 // Pensa-ros msg types
 #include "pensa_msgs/VecPVA_4d.h"
 
-#include "mapper/polynomials.h"
+// Classes
 #include "mapper/linear_algebra.h"
+#include "mapper/polynomials.h"
 #include "mapper/visualization_functions.h"
 
 // C++ specific libraries
 #include <iostream>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace sampled_traj {
 

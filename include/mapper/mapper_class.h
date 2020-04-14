@@ -22,8 +22,8 @@
 #include <octomap/octomap.h>
 
 // PCL specific includes
-#include <pcl/point_cloud.h>
 #include <pcl/common/transforms.h>
+#include <pcl/point_cloud.h>
 #include <sensor_msgs/PointCloud2.h>
 
 // ROS libraries
@@ -37,28 +37,28 @@
 #include <visualization_msgs/MarkerArray.h>
 
 // Pensa messages/services
-#include <pensa_msgs/SetFloat.h>
-#include <pensa_msgs/RRT_RRG_PRM.h>
 #include <pensa_msgs/ObstacleInPath.h>
+#include <pensa_msgs/RRT_RRG_PRM.h>
+#include <pensa_msgs/SetFloat.h>
 
 // C++ libraries
-#include <fstream>
-#include <vector>
-#include <string>
-#include <exception>
-#include <thread>
 #include <atomic>
+#include <exception>
+#include <fstream>
+#include <string>
+#include <thread>
+#include <vector>
 
 // Pensa-ros msg types
+#include "pensa_msgs/trapezoidal_p2pAction.h"
 #include "pensa_msgs/VecPVA_4d.h"
 #include "pensa_msgs/WaypointSet.h"
-#include "pensa_msgs/trapezoidal_p2pAction.h"
 
 // Classes
-#include "mapper/tf_class.h"
 #include "mapper/octoclass.h"
 #include "mapper/polynomials.h"
 #include "mapper/sampled_trajectory.h"
+#include "mapper/tf_class.h"
 
 // Data structures
 #include "mapper/structs.h"

@@ -16,11 +16,12 @@
  * under the License.
  */
 
-#include <limits>
-#include <algorithm>
-#include <vector>
-#include <string>
 #include "mapper/sampled_trajectory.h"
+
+#include <algorithm>
+#include <limits>
+#include <string>
+#include <vector>
 
 namespace sampled_traj {
 

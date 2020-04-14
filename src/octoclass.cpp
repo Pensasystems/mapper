@@ -16,12 +16,13 @@
  * under the License.
  */
 
+#include "mapper/octoclass.h"
+
 #include <utility>
 #include <algorithm>
-#include <vector>
 #include <limits>
 #include <string>
-#include "mapper/octoclass.h"
+#include <vector>
 
 namespace octoclass {
 
