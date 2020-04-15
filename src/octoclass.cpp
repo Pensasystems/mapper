@@ -373,10 +373,11 @@ void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
             //     closest_range_sqr = range_sqr;
             //     closest_point = Eigen::Vector3d(point.x, point.y, point.z);
             // }
-            if (range_sqr == 0) {
-                zero_count++;
-            }
+            // if (range_sqr == 0) {
+            //     zero_count++;
+            // }
             if ((range_sqr < min_threshold_sqr)) {
+                zero_count++;
                 continue;
             }
 
