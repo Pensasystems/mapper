@@ -30,7 +30,7 @@ void MapperClass::FadeTask() {
     ROS_DEBUG("[mapper]: Fading Memory Thread started with rate %f: ", fading_memory_update_rate_);
 
     // Rate at which this thread will run
-    ros::Rate loop_rate(1.1);
+    ros::Rate loop_rate(1);
 
     while (!terminate_node_) {
         // Get time for when this task started

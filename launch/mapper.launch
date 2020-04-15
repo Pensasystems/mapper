@@ -15,6 +15,7 @@
     <arg name="map_resolution" default="0.1" />
     <arg name="max_range" default="6.0" />
     <arg name="min_range" default="0.25" />
+    <arg name="memory_time" default="-10" />
 
     <!-- <group ns="$(arg namespace)"> -->
     <node pkg="mapper"
@@ -53,7 +54,7 @@
         <param name="min_range" value="$(arg min_range)"/>              <!-- meters -->
 
         <!-- Time to forget information (set as negative if infinity) -->
-        <param name="memory_time" value="-10.0"/>           <!-- seconds -->
+        <param name="memory_time" value="$(arg memory_time)"/>           <!-- seconds -->
 
         <!-- Fading memory thread update rate (Hz) -->
         <param name="fading_memory_update_rate" value="1"/><!-- Hz -->

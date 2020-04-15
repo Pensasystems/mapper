@@ -346,7 +346,7 @@ void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
     static octomap::point3d central_point, cur_point;
     const double max_range_sqr = max_range_*max_range_;
     pcl::PointXYZ point;
-    int nan_count = 0, zero_count = 0;
+    // int nan_count = 0, zero_count = 0;
     for (uint32_t i = 0; i < height; i++) {
         for (uint32_t j = 0; j < width; j++) {
             if (cloud.is_dense) {
@@ -361,7 +361,7 @@ void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
 
             // Check if the point is invalid
             if (std::isnan(point.x) || std::isnan(point.y) || std::isnan(point.z)) {
-                nan_count++;
+                // nan_count++;
                 continue;
             }
 
@@ -373,9 +373,9 @@ void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
             //     closest_range_sqr = range_sqr;
             //     closest_point = Eigen::Vector3d(point.x, point.y, point.z);
             // }
-            if (range_sqr < 1e-6) {
-                zero_count++;
-            }
+            // if (range_sqr < 1e-6) {
+            //     zero_count++;
+            // }
             if ((range_sqr < min_threshold_sqr)) {
                 continue;
             }
@@ -401,8 +401,8 @@ void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
             }
         }
     }
-    std::cout << "nan_count: "  << nan_count  << std::endl;
-    std::cout << "zero_count: " << zero_count << std::endl;
+    // std::cout << "nan_count: "  << nan_count  << std::endl;
+    // std::cout << "zero_count: " << zero_count << std::endl;
     // std::cout << "Closest range: " << sqrt(closest_range_sqr) << std::endl;
     // std::cout << "Closest point: " << closest_point.transpose() << std::endl;
     // std::cout << "Current point: " << cur_position.transpose() << std::endl;
