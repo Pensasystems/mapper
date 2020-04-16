@@ -98,9 +98,9 @@ bool MapperClass::OctomapProcessPCL(std_srvs::SetBool::Request &req,
         globals_.update_map = req.data;
     mutexes_.update_map.unlock();
     if (req.data) {
-        ROS_INFO("PCL data will be processed!");
+        ROS_INFO("[mapper]: PCL data will be processed!");
     } else {
-        ROS_INFO("PCL data will not be processed!");
+        ROS_INFO("[mapper]: PCL data will not be processed!");
     }
 }
 
