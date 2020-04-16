@@ -110,47 +110,19 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        C0025_ar_marker:
+        c0001_bl:
           Value: true
-        C0025_bl:
-          Value: true
-        C0025_hires:
-          Value: true
-        C0025_odom:
-          Value: true
-        C0025_uwb_tag:
-          Value: true
-        C0025_vo:
-          Value: true
-        base_link_vislam:
-          Value: true
-        enunwu:
+        c0001_odom:
           Value: true
         fcu:
           Value: true
         fcu_frd:
           Value: true
-        laser_frame:
+        laser_hector_frame:
           Value: true
         local_origin:
           Value: true
         local_origin_ned:
-          Value: true
-        lp0:
-          Value: true
-        lp0_cam1:
-          Value: true
-        lp0_cam2:
-          Value: true
-        lp0_uwb_anchor:
-          Value: true
-        lp1:
-          Value: true
-        lp1_cam1:
-          Value: true
-        lp1_cam2:
-          Value: true
-        lp1_uwb_anchor:
           Value: true
         map:
           Value: true
@@ -158,11 +130,7 @@ Visualization Manager:
           Value: true
         octomap:
           Value: true
-        optitrack:
-          Value: true
         store:
-          Value: true
-        vislam:
           Value: true
       Marker Scale: 1
       Name: TF
@@ -172,41 +140,13 @@ Visualization Manager:
       Tree:
         mavros_local:
           store:
-            C0025_odom:
-              C0025_bl:
-                C0025_ar_marker:
+            c0001_odom:
+              c0001_bl:
+                laser_hector_frame:
                   {}
-                C0025_hires:
-                  {}
-                C0025_uwb_tag:
-                  {}
-                C0025_vo:
-                  {}
-                laser_frame:
-                  {}
-            enunwu:
-              vislam:
-                base_link_vislam:
-                  {}
-            lp0:
-              lp0_cam1:
-                {}
-              lp0_cam2:
-                {}
-              lp0_uwb_anchor:
-                {}
-            lp1:
-              lp1_cam1:
-                {}
-              lp1_cam2:
-                {}
-              lp1_uwb_anchor:
-                {}
             map:
               {}
             octomap:
-              {}
-            optitrack:
               {}
       Update Interval: 0
       Value: true
@@ -223,7 +163,13 @@ Visualization Manager:
       Marker Topic: /mapper_node/discrete_trajectory_markers
       Name: DiscretizedTrajectory
       Namespaces:
-        {}
+        ProjectedRobotPos: true
+        ReferencePos: true
+        RobotPos: true
+        SampledTraj: true
+        compressedTraj: true
+        thick_traj: true
+        thick_traj_shifted: true
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -241,7 +187,7 @@ Visualization Manager:
       Marker Topic: /motion_planner/spatial_trajectory
       Name: PlannerTrajectory
       Namespaces:
-        {}
+        trajectory_waypoints: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -277,7 +223,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 8.54231262
+      Distance: 10.715477
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
@@ -292,10 +238,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 1.03979635
+      Pitch: 0.999796033
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.29861832
+      Yaw: 3.07043409
     Saved: ~
 Window Geometry:
   Displays:
