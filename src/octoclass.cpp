@@ -483,6 +483,8 @@ void OctoClass::FadeMemory(const double &rate) {  // rate at which this function
 
     static bool is_occ;
     static octomap::OcTreeKey key;
+
+    // Fade memory in slim tree
     for (octomap::OcTree::leaf_iterator it = tree_.begin_leafs(),
                                        end = tree_.end_leafs();
                                        it != end; ++it) {
@@ -499,6 +501,26 @@ void OctoClass::FadeMemory(const double &rate) {  // rate at which this function
         // tree nodes that are unknown
         if (is_occ != tree_.isNodeOccupied(n)) {  // if it was occupied then disoccupied, delete node
             tree_.deleteNode(key, it.getDepth());
+        }
+    }
+
+    // Fade memory in inflated tree
+    for (octomap::OcTree::leaf_iterator it = tree_inflated_.begin_leafs(),
+                                       end = tree_inflated_.end_leafs();
+                                       it != end; ++it) {
+        // fade obstacles and free areas
+        key = it.getKey();
+        octomap::OcTreeNode* n = tree_inflated_.search(key);
+        is_occ = tree_inflated_.isNodeOccupied(n);
+        if (is_occ) {
+            tree_inflated_.updateNodeLogOdds(n, fading_obs_log_prob_per_run);
+        } else {
+            tree_inflated_.updateNodeLogOdds(n, fading_free_log_prob_per_run);
+        }
+
+        // tree nodes that are unknown
+        if (is_occ != tree_inflated_.isNodeOccupied(n)) {  // if it was occupied then disoccupied, delete node
+            tree_inflated_.deleteNode(key, it.getDepth());
         }
     }
 }
