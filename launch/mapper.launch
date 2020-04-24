@@ -10,7 +10,7 @@
     <arg name="depth_cam_suffix" default="/camera/depth/compressed_points" />
     <arg name="lidar_names" default="['/laser/scan/cloud']" />
     <arg name="lidar_prefix" default="/" />
-    <arg name="lidar_frame_id" default="['/laser_hector_frame']" />
+    <arg name="lidar_frame_id" default="['/laser_frame']" />
     <arg name="lidar_suffix" default="" />
     <arg name="map_resolution" default="0.1" />
     <arg name="max_range" default="6.0" />
