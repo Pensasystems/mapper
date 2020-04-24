@@ -9,7 +9,7 @@
     <arg name="process_pcl_at_startup" value="false" />
     <arg name="map_3d"                 value="false" />
     <arg name="inertial_frame_id"      value="/store" />
-    <arg name="lidar_frame_id"         value="['/laser_hector_frame']" />
+    <arg name="lidar_frame_id"         value="['/laser_frame']" />
     <arg name="lidar_names"            value="['/laser/cloud']" />
     <arg name="robot_frame_id"         value="$(arg robot_frame_id)" />
     <arg name="max_range"              value="6.0" />
