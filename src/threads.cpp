@@ -20,6 +20,7 @@
 #include "mapper/helper.h"
 
 #include <algorithm>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -191,6 +192,10 @@ void MapperClass::PathCollisionCheckTask() {
             helper::FindNearestCollision(colliding_nodes, robot_position, &nearest_collision, &collision_distance);
             this->PublishNearestCollision(nearest_collision, collision_distance);
             ROS_DEBUG("[mapper]: Nearest collision in %.3f meters!", collision_distance);
+        } else {
+            // Publish infinitely distant obstacle so drone_arbiter can clear pause
+            double infty = std::numeric_limits<double>::infinity();
+            this->PublishNearestCollision(msg_conversions::set_ros_point(infty, infty, infty), infty);
         }
 
         // Visualization markers -------------------------------------------------------------------------------------
