@@ -1,0 +1,42 @@
+<launch>
+
+  <arg name="parent" default="store"/>
+  <arg name="bag_path" default="/home/marcelino/Downloads/bags/PCS_OD/raw_bags"/>
+
+  <arg name="drone_name" default="C0021"/>
+  <arg name="bag_name" default="flight_2020-04-23-20-50-43.bag"/>
+  <arg name="bag_time" default="37"/>
+
+  <node name="playbag" pkg="rosbag" type="play"
+      args="$(arg bag_path)/$(arg bag_name) -s $(arg bag_time) -r 1 -d 2" />
+
+  <!-- Drone static transforms -->
+  <include file="$(find system_config)/launch/templates/drone_static_transforms.launch" >
+        <arg name="parent" value="store" />
+        <arg name="drone_name" value="$(arg drone_name)" />
+        <arg name="odomtf_xyzypr" value="0 0 0 0 0 0" />
+        <arg name="is_simulation" value="false" />
+  </include>
+
+  <!-- Basestation static transforms -->
+  <include file="$(find system_config)/launch/stores/pensa_transform_server.launch" >  
+  </include>
+
+  <include file="$(find mapper)/launch/mapper.launch">
+    <arg name="namespace"              value="cinderella" />
+    <arg name="launch_rviz"            value="true" />
+    <arg name="process_pcl_at_startup" value="true" />
+    <arg name="map_3d"                 value="false" />
+    <arg name="inertial_frame_id"      value="/store" />
+    <arg name="lidar_frame_id"         value="['/laser_frame']" />
+    <arg name="lidar_names"            value="['/laser/cloud']" />
+    <arg name="robot_frame_id"         value="$(arg robot_frame_id)" />
+    <arg name="max_range"              value="6.0" />
+    <arg name="min_range"              value="0.5" />
+    <arg name="memory_time"            value="5.0" />
+  </include>
+
+  <!-- Launch rviz -->
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find mapper)/cfg/mapper.rviz"/>
+
+</launch>
