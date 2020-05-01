@@ -82,7 +82,7 @@
         <param name="collision_check_rate" value="10"/>         <!-- Hz -->
 
         <!-- Radius Collistion Checking parameters -->
-        <param name="radius_collision_check" value="0.2"/>     <!-- meters -->
+        <param name="radius_collision_check" value="0.1"/>     <!-- meters -->
 
         <!-- Frequency at which tf listeners update tf -->
         <param name="tf_update_rate" value="50"/>            <!-- Hz -->
