@@ -155,7 +155,8 @@ void MapperClass::PathCollisionCheckTask() {
 
         // Stop execution if there are no points in the trajectory structure
         if (point_cloud_traj.size() <= 0) {
-            // visualization_functions::DrawCollidingNodes(colliding_nodes, inertial_frame_id_, 0.015, &collision_markers);
+            // visualization_functions::DrawCollidingNodes(colliding_nodes, inertial_frame_id_,
+            //                                             0.015, &collision_markers);
             // this->PublishPathMarkers(collision_markers, traj_markers, samples_markers, compressed_samples_markers);
             continue;
         }
