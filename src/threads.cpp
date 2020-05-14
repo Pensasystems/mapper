@@ -150,13 +150,13 @@ void MapperClass::PathCollisionCheckTask() {
         std::vector<octomap::point3d> colliding_nodes;
         mutexes_.sampled_traj.lock();
             const pcl::PointCloud<pcl::PointXYZ> point_cloud_traj = globals_.sampled_traj.point_cloud_traj_;
-            globals_.sampled_traj.GetVisMarkers(&traj_markers, &samples_markers, &compressed_samples_markers);
+            // globals_.sampled_traj.GetVisMarkers(&traj_markers, &samples_markers, &compressed_samples_markers);
         mutexes_.sampled_traj.unlock();
 
         // Stop execution if there are no points in the trajectory structure
         if (point_cloud_traj.size() <= 0) {
-            visualization_functions::DrawCollidingNodes(colliding_nodes, inertial_frame_id_, 0.015, &collision_markers);
-            this->PublishPathMarkers(collision_markers, traj_markers, samples_markers, compressed_samples_markers);
+            // visualization_functions::DrawCollidingNodes(colliding_nodes, inertial_frame_id_, 0.015, &collision_markers);
+            // this->PublishPathMarkers(collision_markers, traj_markers, samples_markers, compressed_samples_markers);
             continue;
         }
 
@@ -200,21 +200,21 @@ void MapperClass::PathCollisionCheckTask() {
 
         // Visualization markers -------------------------------------------------------------------------------------
         // Visualization markers for shifted trajectory
-        visualization_functions::TrajVisMarkers(point_cloud_traj_through_drone,
-            inertial_frame_id_, traj_sample_size, &traj_markers);
+        // visualization_functions::TrajVisMarkers(point_cloud_traj_through_drone,
+        //     inertial_frame_id_, traj_sample_size, &traj_markers);
 
         // Get visualization marker for current set point and robot position (projected and not projected)
-        visualization_functions::ReferenceVisMarker(current_set_point, inertial_frame_id_, &traj_markers);
-        visualization_functions::RobotPosVisMarker(robot_position, inertial_frame_id_, &traj_markers);
-        visualization_functions::ProjectedPosVisMarker(robot_projected_on_traj, inertial_frame_id_, &traj_markers);
+        // visualization_functions::ReferenceVisMarker(current_set_point, inertial_frame_id_, &traj_markers);
+        // visualization_functions::RobotPosVisMarker(robot_position, inertial_frame_id_, &traj_markers);
+        // visualization_functions::ProjectedPosVisMarker(robot_projected_on_traj, inertial_frame_id_, &traj_markers);
 
         // Draw colliding markers (delete if none)
-        this->GetOctomapResolution(&octomap_resolution);
-        visualization_functions::DrawCollidingNodes(colliding_nodes, inertial_frame_id_,
-                                                    1.01*octomap_resolution, &collision_markers);
+        // this->GetOctomapResolution(&octomap_resolution);
+        // visualization_functions::DrawCollidingNodes(colliding_nodes, inertial_frame_id_,
+        //                                             1.01*octomap_resolution, &collision_markers);
 
         // Publish all markers
-        this->PublishPathMarkers(collision_markers, traj_markers, samples_markers, compressed_samples_markers);
+        // this->PublishPathMarkers(collision_markers, traj_markers, samples_markers, compressed_samples_markers);
 
         // ros::Duration solver_time = ros::Time::now() - time_now;
         // ROS_INFO("Collision check time: %f", solver_time.toSec());
@@ -250,7 +250,7 @@ void MapperClass::RadiusCollisionCheck() {
             msg_conversions::ros_point_to_eigen_vector(robot_position);
 
         // Publish visualization marker for radius
-        this->PublishRadiusMarkers(center, radius);
+        // this->PublishRadiusMarkers(center, radius);
 
         // get all occupied nodes within a radius
         Eigen::Vector3d box_min = center - Eigen::Vector3d(radius, radius, radius);
@@ -355,53 +355,53 @@ void MapperClass::OctomappingTask() {
         pub_obstacles_inflated = (inflated_obstacle_marker_pub_.getNumSubscribers() > 0);
         pub_free_inflated = (inflated_free_space_marker_pub_.getNumSubscribers() > 0);
 
-        if (pub_obstacles || pub_free) {
-            visualization_msgs::MarkerArray obstacle_markers;
-            visualization_msgs::MarkerArray free_markers;
-            mutexes_.octomap.lock();
-                globals_.octomap.TreeVisMarkers(&obstacle_markers, &free_markers);
-            mutexes_.octomap.unlock();
-            if (pub_obstacles) {
-                obstacle_marker_pub_.publish(obstacle_markers);
-            }
-            if (pub_free) {
-                free_space_marker_pub_.publish(free_markers);
-            }
-        }
+        // if (pub_obstacles || pub_free) {
+        //     visualization_msgs::MarkerArray obstacle_markers;
+        //     visualization_msgs::MarkerArray free_markers;
+        //     mutexes_.octomap.lock();
+        //         globals_.octomap.TreeVisMarkers(&obstacle_markers, &free_markers);
+        //     mutexes_.octomap.unlock();
+        //     if (pub_obstacles) {
+        //         obstacle_marker_pub_.publish(obstacle_markers);
+        //     }
+        //     if (pub_free) {
+        //         free_space_marker_pub_.publish(free_markers);
+        //     }
+        // }
 
-        if (pub_obstacles_inflated || pub_free_inflated) {
-            visualization_msgs::MarkerArray inflated_markers;
-            visualization_msgs::MarkerArray inflated_free_markers;
-            mutexes_.octomap.lock();
-                globals_.octomap.InflatedVisMarkers(&inflated_markers, &inflated_free_markers);
-            mutexes_.octomap.unlock();
-            if (pub_obstacles_inflated) {
-                inflated_obstacle_marker_pub_.publish(inflated_markers);
-            }
-            if (pub_free_inflated) {
-                inflated_free_space_marker_pub_.publish(inflated_free_markers);
-            }
-        }
+        // if (pub_obstacles_inflated || pub_free_inflated) {
+        //     visualization_msgs::MarkerArray inflated_markers;
+        //     visualization_msgs::MarkerArray inflated_free_markers;
+        //     mutexes_.octomap.lock();
+        //         globals_.octomap.InflatedVisMarkers(&inflated_markers, &inflated_free_markers);
+        //     mutexes_.octomap.unlock();
+        //     if (pub_obstacles_inflated) {
+        //         inflated_obstacle_marker_pub_.publish(inflated_markers);
+        //     }
+        //     if (pub_free_inflated) {
+        //         inflated_free_space_marker_pub_.publish(inflated_free_markers);
+        //     }
+        // }
 
-        if ((!is_lidar) && (cam_frustum_pub_.getNumSubscribers() > 0)) {
-            visualization_msgs::Marker frustum_markers;
-            mutexes_.octomap.lock();
-                globals_.octomap.cam_frustum_.VisualizeFrustum(point_cloud.header.frame_id, &frustum_markers);
-            mutexes_.octomap.unlock();
-            cam_frustum_pub_.publish(frustum_markers);
-        } else if ((is_lidar) && (cam_frustum_pub_.getNumSubscribers() > 0)) {
-            visualization_msgs::Marker lidar_range_marker;
-            Eigen::Vector3d lidar_origin = transform.translation();
-            if (!globals_.map_3d) {
-                lidar_origin[2] = 0.0;
-            }
-            mutexes_.octomap.lock();
-                globals_.octomap.lidar_range_.VisualizeRange(
-                    globals_.octomap.GetInertialFrameId(), lidar_origin,
-                    &lidar_range_marker);
-            mutexes_.octomap.unlock();
-            cam_frustum_pub_.publish(lidar_range_marker);
-        }
+        // if ((!is_lidar) && (cam_frustum_pub_.getNumSubscribers() > 0)) {
+        //     visualization_msgs::Marker frustum_markers;
+        //     mutexes_.octomap.lock();
+        //         globals_.octomap.cam_frustum_.VisualizeFrustum(point_cloud.header.frame_id, &frustum_markers);
+        //     mutexes_.octomap.unlock();
+        //     cam_frustum_pub_.publish(frustum_markers);
+        // } else if ((is_lidar) && (cam_frustum_pub_.getNumSubscribers() > 0)) {
+        //     visualization_msgs::Marker lidar_range_marker;
+        //     Eigen::Vector3d lidar_origin = transform.translation();
+        //     if (!globals_.map_3d) {
+        //         lidar_origin[2] = 0.0;
+        //     }
+        //     mutexes_.octomap.lock();
+        //         globals_.octomap.lidar_range_.VisualizeRange(
+        //             globals_.octomap.GetInertialFrameId(), lidar_origin,
+        //             &lidar_range_marker);
+        //     mutexes_.octomap.unlock();
+        //     cam_frustum_pub_.publish(lidar_range_marker);
+        // }
 
         // // Notify the collision checker to check for collision due to map update
         // sem_post(&semaphores_.collision_check);
