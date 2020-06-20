@@ -1,8 +1,9 @@
 <launch>
   <param name="use_sim_time" value="true"/>
 
-  <arg name="robot_frame_id" default="/c0002_bl" />
-  <arg name="launch_rviz"    default="true" />
+  <arg name="robot_frame_id"    default="/c0002_bl" />
+  <arg name="launch_rviz"       default="true" />
+  <arg name="inertial_frame_id" default="store" />
 
   <include file="$(find mapper)/launch/mapper.launch">
     <arg name="namespace"              value="cinderella" />
@@ -10,6 +11,7 @@
     <arg name="process_pcl_at_startup" value="false" />
     <arg name="map_3d"                 value="false" />
     <arg name="inertial_frame_id"      value="/store" />
+    <arg name="inertial_frame_id"      value="$(arg inertial_frame_id)" />
     <arg name="lidar_frame_id"         value="['/laser_frame']" />
     <arg name="lidar_names"            value="['/laser/cloud']" />
     <arg name="robot_frame_id"         value="$(arg robot_frame_id)" />
