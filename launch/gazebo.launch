@@ -1,9 +1,9 @@
 <launch>
   <param name="use_sim_time" value="true"/>
 
-  <arg name="robot_frame_id" default="/c0002_bl" />
-  <arg name="launch_rviz"    default="true" />
-  <arg name="inertial_frame_id"    default="store" />
+  <arg name="robot_frame_id"    default="/c0002_bl" />
+  <arg name="launch_rviz"       default="true" />
+  <arg name="inertial_frame_id" default="store" />
 
   <include file="$(find mapper)/launch/mapper.launch">
     <arg name="namespace"              value="cinderella" />

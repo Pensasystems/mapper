@@ -1,7 +1,7 @@
 <launch>
 
-  <arg name="robot_frame_id" default="/c0001_bl" /> 
-  <arg name="inertial_frame_id"    default="store" />
+  <arg name="robot_frame_id"    default="/c0001_bl" />
+  <arg name="inertial_frame_id" default="store" />
 
   <include file="$(find mapper)/launch/mapper.launch">
     <arg name="namespace"              value="cinderella" />

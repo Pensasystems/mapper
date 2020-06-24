@@ -77,6 +77,7 @@ bool MapperClass::SaveMap(std_srvs::Trigger::Request &req,
     mutexes_.octomap.unlock();
 
     ROS_INFO("Maps saved in:\n%s \n%s\n", filename1.c_str(), filename2.c_str());
+    return true;
 }
 
 bool MapperClass::LoadMap(std_srvs::Trigger::Request &req,
@@ -90,6 +91,7 @@ bool MapperClass::LoadMap(std_srvs::Trigger::Request &req,
             globals_.octomap.CopyMap(*tree, *tree_inflated);
         mutexes_.octomap.unlock();
     }
+    return true;
 }
 
 bool MapperClass::OctomapProcessPCL(std_srvs::SetBool::Request &req,
@@ -102,6 +104,7 @@ bool MapperClass::OctomapProcessPCL(std_srvs::SetBool::Request &req,
     } else {
         ROS_INFO("[mapper]: PCL data will not be processed!");
     }
+    return true;
 }
 
 bool MapperClass::RRGService(pensa_msgs::RRT_RRG_PRM::Request &req,
