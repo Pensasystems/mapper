@@ -9,7 +9,7 @@ Panels:
         - /TF1
         - /TF1/Frames1
       Splitter Ratio: 0.5
-    Tree Height: 775
+    Tree Height: 359
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -57,7 +57,7 @@ Visualization Manager:
       Marker Topic: /mapper_node/free_space_markers
       Name: FreeArea
       Namespaces:
-        obstacleMap: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -65,7 +65,7 @@ Visualization Manager:
       Marker Topic: /mapper_node/obstacle_markers
       Name: Obstacles
       Namespaces:
-        obstacleMap: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -73,7 +73,7 @@ Visualization Manager:
       Marker Topic: /mapper_node/inflated_obstacle_markers
       Name: ObstaclesInflated
       Namespaces:
-        obstacleMap: true
+        {}
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -111,45 +111,61 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        C0021_bl:
+        c0001_bl:
           Value: true
-        C0021_odom:
+        c0001_odom:
           Value: true
-        base_link_ekf:
-          Value: true
-        base_link_vislam:
-          Value: false
         enunwu:
+          Value: true
+        fcu:
+          Value: true
+        fcu_frd:
+          Value: true
+        front_cam_optical_frame:
           Value: true
         laser_frame:
           Value: true
-        laser_hector_frame:
+        local_origin:
+          Value: true
+        local_origin_ned:
+          Value: true
+        lp0:
           Value: true
         lp0_cam1:
           Value: true
         lp0_cam2:
           Value: true
-        map:
-          Value: true
         mavros_local:
           Value: true
         octomap:
           Value: true
-        scanmatcher_frame:
-          Value: true
         store:
-          Value: true
-        tag134:
-          Value: true
-        tag17:
-          Value: true
-        tag190:
           Value: true
         tag195:
           Value: true
         tag206:
           Value: true
-        tag37:
+        tag36_11_00000_0.10m:
+          Value: true
+        tag36_11_00001_0.10m:
+          Value: true
+        tag36_11_00002_0.10m:
+          Value: true
+        tag36_11_00003_0.10m:
+          Value: true
+        tag36_11_00004_0.10m:
+          Value: true
+        tag36_11_00005_0.10m:
+          Value: true
+        tag36_11_00006_0.10m:
+          Value: true
+        tag_1:
+          Value: true
+        tag_2:
+          Value: true
+        veh_tag195:
+          Value: true
+        veh_tag206:
           Value: true
         vislam:
           Value: true
@@ -160,24 +176,37 @@ Visualization Manager:
       Show Names: true
       Tree:
         mavros_local:
-          {}
-        store:
-          C0021_odom:
-            C0021_bl:
-              laser_frame:
+          store:
+            enunwu:
+              vislam:
                 {}
-          enunwu:
-            vislam:
-              base_link_vislam:
+            lp0:
+              c0001_odom:
+                c0001_bl:
+                  laser_frame:
+                    {}
+              lp0_cam1:
+                tag206:
+                  veh_tag206:
+                    {}
+              lp0_cam2:
                 {}
-          map:
-            base_link_ekf:
-              laser_hector_frame:
-                {}
-            scanmatcher_frame:
+            octomap:
               {}
-          octomap:
-            {}
+            tag36_11_00000_0.10m:
+              {}
+            tag36_11_00001_0.10m:
+              {}
+            tag36_11_00002_0.10m:
+              {}
+            tag36_11_00003_0.10m:
+              {}
+            tag36_11_00004_0.10m:
+              {}
+            tag36_11_00005_0.10m:
+              {}
+            tag36_11_00006_0.10m:
+              {}
       Update Interval: 0
       Value: true
     - Class: rviz/Marker
@@ -185,7 +214,7 @@ Visualization Manager:
       Marker Topic: /mapper_node/frustum_markers
       Name: Frustum
       Namespaces:
-        lidar//store: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -193,14 +222,7 @@ Visualization Manager:
       Marker Topic: /mapper_node/discrete_trajectory_markers
       Name: DiscretizedTrajectory
       Namespaces:
-        ProjectedRobotPos: true
-        ReferencePos: true
-        RobotPos: true
-        SampledTraj: true
-        collision: true
-        compressedTraj: true
-        thick_traj: true
-        thick_traj_shifted: true
+        {}
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -218,7 +240,7 @@ Visualization Manager:
       Marker Topic: /motion_planner/spatial_trajectory
       Name: PlannerTrajectory
       Namespaces:
-        trajectory_waypoints: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -226,7 +248,7 @@ Visualization Manager:
       Marker Topic: /mapper_node/obstacle_radius_markers
       Name: ObstacleRadius
       Namespaces:
-        radius_obstacles: true
+        {}
       Queue Size: 100
       Value: true
   Enabled: true
@@ -254,25 +276,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 7.94472694
+      Distance: 14.9945688
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.697182
-        Y: -0.176227897
-        Z: -0.191007569
+        X: -0.917179167
+        Y: -2.59850287
+        Z: 0.571009934
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.859796405
+      Pitch: 0.719797134
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.5754329
+      Yaw: 2.95043921
     Saved: ~
 Window Geometry:
   Displays:
