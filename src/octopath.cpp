@@ -4,6 +4,7 @@
 #include "mapper/octoclass.h"
 
 #include <algorithm>
+#include <limits>
 #include <vector>
 
 namespace octoclass {
@@ -12,84 +13,84 @@ namespace octoclass {
 void OctoClass::PathPruning(const std::vector<Eigen::Vector3d> &path,
                             const bool &free_space_only,
                             std::vector<Eigen::Vector3d> *compressed_path) {
-    // the minimum number of points for final vector
-    static int min_points = 2;
+  // the minimum number of points for final vector
+  static int min_points = 2;
 
-    // initialize compressed points as all samples
-    *compressed_path = path;
-    int compressed_points = path.size();
+  // initialize compressed points as all samples
+  *compressed_path = path;
+  int compressed_points = path.size();
 
-    // first delete colinear points
-    static double epsilon = 0.0001, dist;
-    static int delete_index;
-    static Eigen::Vector3d p1, p2, p;
-    while (true) {
-        delete_index = -1;
-        for (int i = 1; i < compressed_points-1; i++) {
-            p1 << (*compressed_path)[i-1][0],
-                  (*compressed_path)[i-1][1],
-                  (*compressed_path)[i-1][2];
-            p2 << (*compressed_path)[i+1][0],
-                  (*compressed_path)[i+1][1],
-                  (*compressed_path)[i+1][2];
-            p  << (*compressed_path)[i][0],
-                  (*compressed_path)[i][1],
-                  (*compressed_path)[i][2];
-            algebra_3d::Line3d line(p1, p2);
-            line.DistancePoint2Line(p, &dist);
-            if (dist < epsilon) {
-                delete_index = i;
-                break;
-            }
-        }
-        if (delete_index > 0) {
-            compressed_path->erase(compressed_path->begin() + delete_index);
-            compressed_points = compressed_points - 1;
-        } else {
-            break;
-        }
+  // first delete colinear points
+  static double epsilon = 0.0001, dist;
+  static int delete_index;
+  static Eigen::Vector3d p1, p2, p;
+  while (true) {
+    delete_index = -1;
+    for (int i = 1; i < compressed_points-1; i++) {
+      p1 << (*compressed_path)[i-1][0],
+            (*compressed_path)[i-1][1],
+            (*compressed_path)[i-1][2];
+      p2 << (*compressed_path)[i+1][0],
+            (*compressed_path)[i+1][1],
+            (*compressed_path)[i+1][2];
+      p  << (*compressed_path)[i][0],
+            (*compressed_path)[i][1],
+            (*compressed_path)[i][2];
+      algebra_3d::Line3d line(p1, p2);
+      line.DistancePoint2Line(p, &dist);
+      if (dist < epsilon) {
+        delete_index = i;
+        break;
+      }
     }
-
-    // Compress the remaining points
-    static double max_dist;
-    int col_check;
-    while (compressed_points > min_points) {
-        // first find the point that deviates the least in the whole set
-        max_dist = -1;
-        delete_index = -1;
-        for (int i = 1; i < compressed_points-1; i++) {
-            p1 << (*compressed_path)[i-1][0],
-                  (*compressed_path)[i-1][1],
-                  (*compressed_path)[i-1][2];
-            p2 << (*compressed_path)[i+1][0],
-                  (*compressed_path)[i+1][1],
-                  (*compressed_path)[i+1][2];
-            p  << (*compressed_path)[i][0],
-                  (*compressed_path)[i][1],
-                  (*compressed_path)[i][2];
-            algebra_3d::Line3d line(p1, p2);
-            line.DistancePoint2Line(p, &dist);
-
-            // Check for collision
-            if (free_space_only) {
-                col_check = CheckCollision(p1, p2);
-            } else {
-                col_check = CheckOccupancy(p1, p2);
-            }
-            if ((dist > max_dist) && (col_check != 1)) {
-                max_dist = dist;
-                delete_index = i;
-            }
-        }
-        if (delete_index > 0) {
-            compressed_path->erase(compressed_path->begin() + delete_index);
-            compressed_points = compressed_points - 1;
-        } else {
-            break;
-        }
+    if (delete_index > 0) {
+      compressed_path->erase(compressed_path->begin() + delete_index);
+      compressed_points = compressed_points - 1;
+    } else {
+      break;
     }
+  }
 
-    // ROS_INFO("Compressed points: %d", compressed_points);
+  // Compress the remaining points
+  static double max_dist;
+  int col_check;
+  while (compressed_points > min_points) {
+    // first find the point that deviates the least in the whole set
+    max_dist = -1;
+    delete_index = -1;
+    for (int i = 1; i < compressed_points-1; i++) {
+      p1 << (*compressed_path)[i-1][0],
+            (*compressed_path)[i-1][1],
+            (*compressed_path)[i-1][2];
+      p2 << (*compressed_path)[i+1][0],
+            (*compressed_path)[i+1][1],
+            (*compressed_path)[i+1][2];
+      p  << (*compressed_path)[i][0],
+            (*compressed_path)[i][1],
+            (*compressed_path)[i][2];
+      algebra_3d::Line3d line(p1, p2);
+      line.DistancePoint2Line(p, &dist);
+
+      // Check for collision
+      if (free_space_only) {
+        col_check = CheckCollision(p1, p2);
+      } else {
+        col_check = CheckOccupancy(p1, p2);
+      }
+      if ((dist > max_dist) && (col_check != 1)) {
+        max_dist = dist;
+        delete_index = i;
+      }
+    }
+    if (delete_index > 0) {
+      compressed_path->erase(compressed_path->begin() + delete_index);
+      compressed_points = compressed_points - 1;
+    } else {
+      break;
+    }
+  }
+
+  // ROS_INFO("Compressed points: %d", compressed_points);
 }
 
 bool OctoClass::OctoRRG(const Eigen::Vector3d &p0,
@@ -106,199 +107,310 @@ bool OctoClass::OctoRRG(const Eigen::Vector3d &p0,
                         int *n_rrg_nodes,
                         std::vector<Eigen::Vector3d> *path,
                         visualization_msgs::Marker *graph_markers) {
-    // Check whether initial and final points are within box
-    if ((p0[0] < box_min[0]) || (p0[1] < box_min[1]) || (p0[2] < box_min[2]) ||
-        (p0[0] > box_max[0]) || (p0[1] > box_max[1]) || (p0[2] > box_max[2])) {
-        ROS_WARN("[mapper] RRG Error: Initial point not within box!");
-        return false;
-    }
-    if ((pf[0] < box_min[0]) || (pf[1] < box_min[1]) || (pf[2] < box_min[2]) ||
-        (pf[0] > box_max[0]) || (pf[1] > box_max[1]) || (pf[2] > box_max[2])) {
-        ROS_WARN("[mapper] RRG Error: Final point not within box!");
-        return false;
-    }
+  // Check whether initial and final points are within box
+  if ((p0[0] < box_min[0]) || (p0[1] < box_min[1]) || (p0[2] < box_min[2]) ||
+      (p0[0] > box_max[0]) || (p0[1] > box_max[1]) || (p0[2] > box_max[2])) {
+    ROS_WARN("[mapper] RRG Error: Initial point not within box!");
+    return false;
+  }
+  if ((pf[0] < box_min[0]) || (pf[1] < box_min[1]) || (pf[2] < box_min[2]) ||
+      (pf[0] > box_max[0]) || (pf[1] > box_max[1]) || (pf[2] > box_max[2])) {
+    ROS_WARN("[mapper] RRG Error: Final point not within box!");
+    return false;
+  }
 
-    ROS_INFO("[mapper] Finding RRG path from [%.2f %.2f %.2f] to [%.2f %.2f %.2f]",
-             p0[0], p0[1], p0[2], pf[0], pf[1], pf[2]);
+  ROS_INFO("[mapper] Finding RRG path from [%.2f %.2f %.2f] to [%.2f %.2f %.2f]",
+           p0[0], p0[1], p0[2], pf[0], pf[1], pf[2]);
 
-    // Check whether the initial and final points are colliding
+  // Check whether the initial and final points are colliding
+  if (free_space_only) {
+    if (CheckCollision(p0)) {
+      ROS_WARN("[mapper] RRG Error: Initial point is colliding!");
+      return false;
+    }
+    if (CheckCollision(pf)) {
+      ROS_WARN("[mapper] RRG Error: Final point is colliding!");
+      return false;
+    }
+  } else {
+    if (CheckOccupancy(p0) == 1) {
+      ROS_WARN("[mapper] RRG Error: Initial point is colliding!");
+      return false;
+    }
+    if (CheckOccupancy(pf) == 1) {
+      ROS_WARN("[mapper] RRG Error: Final point is colliding!");
+      return false;
+    }
+  }
+
+  const ros::Time t0 = ros::Time::now();
+
+  // Get free area volume
+  double free_vol;
+  if (free_space_only) {
+    BBXFreeVolume(box_min, box_max, &free_vol);
+  } else {
+    Eigen::Vector3d range = box_max - box_min;
+    double box_vol = range[0]*range[1]*range[2];
+    double occ_vol;
+    BBXOccVolume(box_min, box_max, &occ_vol);
+    free_vol = box_vol - occ_vol;
+  }
+
+  // RRG specific parameters
+  const double unit_sphere_vol = M_PI*3.0/4.0;
+  const double dim = 3.0;
+  const double dim_inv = 1.0/dim;
+  const double gamma_star = 2.0*pow(1.0+dim_inv, dim_inv)*pow(free_vol/unit_sphere_vol, dim_inv);
+  const double gamma = 1.1*gamma_star;
+
+  // Create RRG class and add initial position to the graph
+  uint index;
+  RRG obj_rrg(steer_param);
+  obj_rrg.AddNode(p0, &index);
+
+  // Run RRG until maximum allowed time
+  Eigen::Vector3d sample, neighbor_pos;
+  static double cost;
+  static uint min_index, n_nodes, final_index = 0;
+  n_nodes = obj_rrg.rrgraph_.n_nodes_;
+  bool connected_graph = false;  // Becomes true when a path has been found from p0 to pf
+  while (((ros::Time::now() - t0).toSec() < max_time) && (n_nodes < max_nodes)) {
+    // Get a new sample
+    obj_rrg.SampleNodeBox(box_min, box_max, &sample);
+
+    // Find nearest node for sample
+    obj_rrg.OctoNN(sample, &min_index, &cost);
+
+    // Steer sample
+    obj_rrg.Steer(min_index, &sample, &cost);
+
+    // Check for collision
+    int col_check;
+    neighbor_pos = obj_rrg.rrgraph_.nodes_[min_index].pos_;
     if (free_space_only) {
-        if (CheckCollision(p0)) {
-            ROS_WARN("[mapper] RRG Error: Initial point is colliding!");
-            return false;
-        }
-        if (CheckCollision(pf)) {
-            ROS_WARN("[mapper] RRG Error: Final point is colliding!");
-            return false;
-        }
+      col_check = CheckCollision(neighbor_pos, sample);
     } else {
-        if (CheckOccupancy(p0) == 1) {
-            ROS_WARN("[mapper] RRG Error: Initial point is colliding!");
-            return false;
-        }
-        if (CheckOccupancy(pf) == 1) {
-            ROS_WARN("[mapper] RRG Error: Final point is colliding!");
-            return false;
-        }
+      col_check = CheckOccupancy(neighbor_pos, sample);
     }
 
-    const ros::Time t0 = ros::Time::now();
-
-    // Get free area volume
-    double free_vol;
-    if (free_space_only) {
-        BBXFreeVolume(box_min, box_max, &free_vol);
-    } else {
-        Eigen::Vector3d range = box_max - box_min;
-        double box_vol = range[0]*range[1]*range[2];
-        double occ_vol;
-        BBXOccVolume(box_min, box_max, &occ_vol);
-        free_vol = box_vol - occ_vol;
+    // Stop if collides with nearest neighbor
+    if (col_check == 1) {
+      continue;
     }
 
-    // RRG specific parameters
-    const double unit_sphere_vol = M_PI*3.0/4.0;
-    const double dim = 3.0;
-    const double dim_inv = 1.0/dim;
-    const double gamma_star = 2.0*pow(1.0+dim_inv, dim_inv)*pow(free_vol/unit_sphere_vol, dim_inv);
-    const double gamma = 1.1*gamma_star;
+    // Try to add node: fails if there is another node in the same voxel
+    obj_rrg.AddNode(sample, &index);
+    if (index == 0) {  // Node was not added succesfully
+      continue;
+    }
 
-    // Create RRG class and add initial position to the graph
-    uint index;
-    RRG obj_rrg(steer_param);
-    obj_rrg.AddNode(p0, &index);
-
-    // Run RRG until maximum allowed time
-    Eigen::Vector3d sample, neighbor_pos;
-    static double cost;
-    static uint min_index, n_nodes, final_index = 0;
+    // Get RRG parameter
     n_nodes = obj_rrg.rrgraph_.n_nodes_;
-    bool connected_graph = false;  // Becomes true when a path has been found from p0 to pf
-    while (((ros::Time::now() - t0).toSec() < max_time) && (n_nodes < max_nodes)) {
-        // Get a new sample
-        obj_rrg.SampleNodeBox(box_min, box_max, &sample);
+    const double max_dist = std::min(gamma*pow(log(n_nodes)/n_nodes,
+                                    dim_inv), steer_param);
 
-        // Find nearest node for sample
-        obj_rrg.OctoNN(sample, &min_index, &cost);
+    // Get nodes within max_dist radius
+    std::vector<uint> near_nodes;
+    std::vector<double> costs;
+    obj_rrg.NodesWithinRadius(max_dist, sample, &near_nodes, &costs);
 
-        // Steer sample
-        obj_rrg.Steer(min_index, &sample, &cost);
+    // Add non-colliding nodes within max_dist radius
+    for (uint i = 0; i < near_nodes.size(); i++) {
+      neighbor_pos = obj_rrg.rrgraph_.nodes_[near_nodes[i]].pos_;
+      if (free_space_only) {
+        col_check = CheckCollision(neighbor_pos, sample);
+      } else {
+        col_check = CheckOccupancy(neighbor_pos, sample);
+      }
 
-        // Check for collision
-        int col_check;
-        neighbor_pos = obj_rrg.rrgraph_.nodes_[min_index].pos_;
-        if (free_space_only) {
-            col_check = CheckCollision(neighbor_pos, sample);
-        } else {
-            col_check = CheckOccupancy(neighbor_pos, sample);
-        }
-
-        // Stop if collides with nearest neighbor
-        if (col_check == 1) {
-            continue;
-        }
-
-        // Try to add node: fails if there is another node in the same voxel
-        obj_rrg.AddNode(sample, &index);
-        if (index == 0) {  // Node was not added succesfully
-            continue;
-        }
-
-        // Get RRG parameter
-        n_nodes = obj_rrg.rrgraph_.n_nodes_;
-        const double max_dist = std::min(gamma*pow(log(n_nodes)/n_nodes,
-                                        dim_inv), steer_param);
-
-        // Get nodes within max_dist radius
-        std::vector<uint> near_nodes;
-        std::vector<double> costs;
-        obj_rrg.NodesWithinRadius(max_dist, sample, &near_nodes, &costs);
-
-        // Add non-colliding nodes within max_dist radius
-        for (uint i = 0; i < near_nodes.size(); i++) {
-            neighbor_pos = obj_rrg.rrgraph_.nodes_[near_nodes[i]].pos_;
-            if (free_space_only) {
-                col_check = CheckCollision(neighbor_pos, sample);
-            } else {
-                col_check = CheckOccupancy(neighbor_pos, sample);
-            }
-
-            if (col_check != 1) {
-                obj_rrg.AddEdge(index, near_nodes[i], costs[i]);
-            }
-        }
-
-        // Go back to 'while' if there is a connection between p0 and pf
-        if (connected_graph) {
-            continue;
-        }
-
-        // Check if new node connects with the final destination
-        // This portion does not need to execute after one path has been found between p0 and pf
-        cost = obj_rrg.DistanceToNode(index, pf);
-        if (cost <= max_dist) {
-            if (free_space_only) {
-                col_check = CheckCollision(pf, sample);
-            } else {
-                col_check = CheckOccupancy(pf, sample);
-            }
-
-            if (col_check != 1) {
-                obj_rrg.AddNode(pf, &final_index);
-                obj_rrg.AddEdge(index, final_index, cost);
-                connected_graph = true;
-                ROS_INFO("[mapper] Found connection to destination!");
-            }
-        }
+      if (col_check != 1) {
+        obj_rrg.AddEdge(index, near_nodes[i], costs[i]);
+      }
     }
 
-    // Publish graph into Rviz if requested
-    if (publish_rviz) {
-        obj_rrg.rrgraph_.GraphVisualization(graph_markers);
+    // Go back to 'while' if there is a connection between p0 and pf
+    if (connected_graph) {
+      continue;
     }
 
-    // Calculate Astar from initial node to final node
-    std::vector<Eigen::Vector3d> sol_path;
-    if (final_index > 0) {
-        std::vector<uint> index_path;
-        ROS_INFO("[mapper] Trying A* from node %d to node %d!", 0,
-                             static_cast<int>(final_index));
-        obj_rrg.rrgraph_.Astar2(0, final_index, index_path);
+    // Check if new node connects with the final destination
+    // This portion does not need to execute after one path has been found between p0 and pf
+    cost = obj_rrg.DistanceToNode(index, pf);
+    if (cost <= max_dist) {
+      if (free_space_only) {
+        col_check = CheckCollision(pf, sample);
+      } else {
+        col_check = CheckOccupancy(pf, sample);
+      }
 
-        // Populate final path
-        if (index_path.size() == 0) {
-            ROS_WARN("[mapper] RRG Error: Couldn't find solution through Astar!");
-            *n_rrg_nodes = n_nodes;
-            *plan_time = (ros::Time::now() - t0).toSec();
-            return false;
-        } else {
-            for (uint i = 0; i < index_path.size(); i++) {
-                sol_path.push_back(obj_rrg.rrgraph_.nodes_[index_path[i]].pos_);
-            }
-            // ROS_INFO("Path size: %d", static_cast<int>(sol_path.size()));
-        }
+      if (col_check != 1) {
+        obj_rrg.AddNode(pf, &final_index);
+        obj_rrg.AddEdge(index, final_index, cost);
+        connected_graph = true;
+        ROS_INFO("[mapper] Found connection to destination!");
+      }
+    }
+  }
+
+  // Publish graph into Rviz if requested
+  if (publish_rviz) {
+    obj_rrg.rrgraph_.GraphVisualization(graph_markers);
+  }
+
+  // Calculate Astar from initial node to final node
+  std::vector<Eigen::Vector3d> sol_path;
+  if (final_index > 0) {
+    std::vector<uint> index_path;
+    ROS_INFO("[mapper] Trying A* from node %d to node %d!", 0,
+                         static_cast<int>(final_index));
+    obj_rrg.rrgraph_.Astar2(0, final_index, index_path);
+
+    // Populate final path
+    if (index_path.size() == 0) {
+      ROS_WARN("[mapper] RRG Error: Couldn't find solution through Astar!");
+      *n_rrg_nodes = n_nodes;
+      *plan_time = (ros::Time::now() - t0).toSec();
+      return false;
     } else {
-        ROS_WARN("[mapper] RRG Error: Could not find a path from p0 to pf!");
-        *n_rrg_nodes = n_nodes;
-        *plan_time = (ros::Time::now() - t0).toSec();
-        return false;
+      for (uint i = 0; i < index_path.size(); i++) {
+        sol_path.push_back(obj_rrg.rrgraph_.nodes_[index_path[i]].pos_);
+      }
+      // ROS_INFO("Path size: %d", static_cast<int>(sol_path.size()));
     }
-
-    // Prune results if requested
-    if (prune_result) {
-        this->PathPruning(sol_path, free_space_only, path);
-    } else {
-        *path = sol_path;
-    }
-
-    // Populate time and nodes
+  } else {
+    ROS_WARN("[mapper] RRG Error: Could not find a path from p0 to pf!");
     *n_rrg_nodes = n_nodes;
     *plan_time = (ros::Time::now() - t0).toSec();
+    return false;
+  }
 
-    // ROS_INFO("[mapper] nNodes: %d", static_cast<int>(obj_rrg.rrgraph_.n_nodes_));
-    // ROS_INFO("[mapper] nEdges: %d", static_cast<int>(obj_rrg.rrgraph_.n_edges_));
+  // Prune results if requested
+  if (prune_result) {
+    this->PathPruning(sol_path, free_space_only, path);
+  } else {
+    *path = sol_path;
+  }
 
-    return true;
+  // Populate time and nodes
+  *n_rrg_nodes = n_nodes;
+  *plan_time = (ros::Time::now() - t0).toSec();
+
+  // ROS_INFO("[mapper] nNodes: %d", static_cast<int>(obj_rrg.rrgraph_.n_nodes_));
+  // ROS_INFO("[mapper] nEdges: %d", static_cast<int>(obj_rrg.rrgraph_.n_edges_));
+
+  return true;
+}
+
+void OctoClass::Astar(const octomap::point3d &p0,
+                      const octomap::point3d &pf,
+                      const bool &free_space_only,
+                      const bool &prune_result,
+                      float *plan_time,
+                      std::vector<Eigen::Vector3d> *path) {
+  const ros::Time t0 = ros::Time::now();
+
+  // Check whether p0 and pf are free nodes in the octomap
+  static int is_occ;
+  is_occ = this->CheckOccupancy(p0);
+  if ((is_occ == -1) && (free_space_only)) {
+    ROS_INFO("Astar failed: initial node is unknown in the octomap!");
+    return;
+  } else if (is_occ == 1) {
+    ROS_INFO("Astar failed: initial node is occupied in the octomap!");
+    return;
+  }
+  is_occ = this->CheckOccupancy(pf);
+  if ((is_occ == -1) && (free_space_only)) {
+    ROS_INFO("Astar failed: final node is unknown in the octomap!");
+    return;
+  } else if (is_occ == 1) {
+    ROS_INFO("Astar failed: final node is occupied in the octomap!");
+    return;
+  }
+
+  // Get map info
+  IndexedKeySet indexed_free_keys;
+  std::vector<double> node_sizes;
+  static Eigen::Vector3d map_min, map_max;
+  tree_inflated_.getMetricMin(map_min[0], map_min[1], map_min[2]);
+  tree_inflated_.getMetricMax(map_max[0], map_max[1], map_max[2]);
+  this->BBXFreeNodes(map_min, map_max, &indexed_free_keys, &node_sizes);
+  ROS_INFO("Number of nodes: %d", static_cast<int>(indexed_free_keys.Size()));
+
+  // Find initial and final indexes
+  static uint initial_index, final_index;
+  static octomap::OcTreeKey initial_key, final_key;
+  initial_key = tree_inflated_.coordToKey(p0);
+  final_key = tree_inflated_.coordToKey(pf);
+
+  // Astar algorithm variables
+  const uint n_nodes = indexed_free_keys.Size();
+  uint n_neighbors;
+  octomap::OcTreeKey current_key;
+  octomap::point3d current_pos, neighbor_pos;
+  uint current_index, neighbor_index;
+  double tentative_cost, priority;
+  PriorityQueue<octomap::OcTreeKey, double> queue;      // octomap::OcTreeKey index, double cost
+  std::vector<double> cost_so_far(n_nodes, std::numeric_limits<float>::infinity());
+  std::vector<octomap::OcTreeKey> come_from(n_nodes), neighbor_keys;
+
+  // Initialize algorithm
+  queue.put(initial_key, 0.0);
+  come_from[initial_index] = initial_key;
+  cost_so_far[initial_index] = 0;
+
+  while (!queue.empty()) {
+    current_key = queue.get();
+    if (!indexed_free_keys.Key2Index(current_key, &current_index)) {
+      ROS_INFO("Astar failed: Error retrieving index for current node!");
+      return;
+    }
+
+    // Check whether we reached the goal
+    if (current_key == final_key) {
+      Eigen::Vector3d pos;
+      current_pos = tree_inflated_.keyToCoord(current_key);
+      pos = Eigen::Vector3d(current_pos.x(), current_pos.y(), current_pos.z());
+      path->insert(path->begin(), pos);
+      while (current_key != initial_key) {
+        if (!indexed_free_keys.Key2Index(current_key, &current_index)) {
+          ROS_INFO("Astar failed when retrieving path from initial to final point!");
+          return;
+        }
+        // ROS_INFO("Come from: %d", int(current_index));
+        current_key = come_from[current_index];
+        current_pos = tree_inflated_.keyToCoord(current_key);
+        pos = Eigen::Vector3d(current_pos.x(), current_pos.y(), current_pos.z());
+        path->insert(path->begin(), pos);
+      }
+      break;
+    }
+
+    // Check neighbors
+    neighbor_keys.clear();
+    this->GetNodeNeighbors(current_key, node_sizes[current_index], &neighbor_keys);
+    n_neighbors = neighbor_keys.size();
+    current_pos = tree_inflated_.keyToCoord(current_key);
+    // ROS_INFO("Current index: %d (%f, %f, %f)", int(current_index),
+    //           current_pos.x(), current_pos.y(), current_pos.z());
+    for (uint i = 0; i < n_neighbors; i++) {
+      // Get neighbor index
+      if (!indexed_free_keys.Key2Index(neighbor_keys[i], &neighbor_index)) {
+        ROS_INFO("Astar failed: Error retrieving index for neighbor node!");
+        return;
+      }
+      // Check whether this neighbor leades to a new path
+      neighbor_pos = tree_inflated_.keyToCoord(neighbor_keys[i]);
+      tentative_cost = cost_so_far[current_index] + (current_pos - neighbor_pos).norm();
+      if (tentative_cost < cost_so_far[neighbor_index]) {
+        cost_so_far[neighbor_index] = tentative_cost;
+        priority = tentative_cost + (neighbor_pos - pf).norm();
+        queue.put(neighbor_keys[i], priority);
+        come_from[neighbor_index] = current_key;
+      }
+    }
+  }
 }
 
 }  // namespace octoclass
