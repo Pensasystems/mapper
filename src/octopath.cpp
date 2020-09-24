@@ -304,7 +304,6 @@ bool OctoClass::OctoRRG(const Eigen::Vector3d &p0,
 
 void OctoClass::Astar(const octomap::point3d &p0,
                       const octomap::point3d &pf,
-                      const bool &free_space_only,
                       const bool &prune_result,
                       float *plan_time,
                       std::vector<Eigen::Vector3d> *path) {
@@ -313,7 +312,7 @@ void OctoClass::Astar(const octomap::point3d &p0,
   // Check whether p0 and pf are free nodes in the octomap
   static int is_occ;
   is_occ = this->CheckOccupancy(p0);
-  if ((is_occ == -1) && (free_space_only)) {
+  if (is_occ == -1) {
     ROS_INFO("Astar failed: initial node is unknown in the octomap!");
     return;
   } else if (is_occ == 1) {
@@ -321,7 +320,7 @@ void OctoClass::Astar(const octomap::point3d &p0,
     return;
   }
   is_occ = this->CheckOccupancy(pf);
-  if ((is_occ == -1) && (free_space_only)) {
+  if (is_occ == -1) {
     ROS_INFO("Astar failed: final node is unknown in the octomap!");
     return;
   } else if (is_occ == 1) {
@@ -360,6 +359,7 @@ void OctoClass::Astar(const octomap::point3d &p0,
   come_from[initial_index] = initial_key;
   cost_so_far[initial_index] = 0;
 
+  std::vector<Eigen::Vector3d> solution_path;
   while (!queue.empty()) {
     current_key = queue.get();
     if (!indexed_free_keys.Key2Index(current_key, &current_index)) {
@@ -372,7 +372,7 @@ void OctoClass::Astar(const octomap::point3d &p0,
       Eigen::Vector3d pos;
       current_pos = tree_inflated_.keyToCoord(current_key);
       pos = Eigen::Vector3d(current_pos.x(), current_pos.y(), current_pos.z());
-      path->insert(path->begin(), pos);
+      solution_path.insert(solution_path.begin(), pos);
       while (current_key != initial_key) {
         if (!indexed_free_keys.Key2Index(current_key, &current_index)) {
           ROS_INFO("Astar failed when retrieving path from initial to final point!");
@@ -382,7 +382,7 @@ void OctoClass::Astar(const octomap::point3d &p0,
         current_key = come_from[current_index];
         current_pos = tree_inflated_.keyToCoord(current_key);
         pos = Eigen::Vector3d(current_pos.x(), current_pos.y(), current_pos.z());
-        path->insert(path->begin(), pos);
+        solution_path.insert(solution_path.begin(), pos);
       }
       break;
     }
@@ -410,6 +410,14 @@ void OctoClass::Astar(const octomap::point3d &p0,
         come_from[neighbor_index] = current_key;
       }
     }
+  }
+
+  // Prune results if requested
+  if (prune_result) {
+    const bool free_space_only = true;
+    this->PathPruning(solution_path, free_space_only, path);
+  } else {
+    *path = solution_path;
   }
 }
 

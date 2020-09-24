@@ -188,7 +188,6 @@ class OctoClass{
                  visualization_msgs::Marker *graph_markers);
     void Astar(const octomap::point3d &p0,
                const octomap::point3d &pf,
-               const bool &free_space_only,
                const bool &prune_result,
                float *plan_time,
                std::vector<Eigen::Vector3d> *path);
