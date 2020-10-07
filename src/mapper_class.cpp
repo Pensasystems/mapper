@@ -323,6 +323,10 @@ void MapperClass::PublishRadiusMarkers(const Eigen::Vector3d &center,
     obstacle_radius_marker_pub_.publish(obstacle_radius_marker);
 }
 
+// void MapperClass::LoadPathPlanningConfig(const std::string &path_planning_config_service) {
+//     load_path_planning_config_client_
+// }
+
 // PLUGINLIB_EXPORT_CLASS(mapper::MapperClass, nodelet::Nodelet);
 
 }  // namespace mapper

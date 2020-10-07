@@ -207,6 +207,9 @@ class MapperClass {
   ros::ServiceServer map_inflation_srv_, reset_map_srv_;
   ros::ServiceServer save_map_srv_, load_map_srv_, process_pcl_srv_;
 
+  // Service clients
+  ros::ServiceClient load_path_planning_config_client_;
+
   // Thread rates (hz)
   double tf_update_rate_, fading_memory_update_rate_, collision_check_rate_;
 
