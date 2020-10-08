@@ -184,6 +184,10 @@ void OctoClass::SetMap3d(const bool &map_3d) {
     }
 }
 
+void OctoClass::SetPathPlanningConfig(const pensa_msgs::PathPlanningConfig &path_planning_config) {
+    path_planning_config_ = path_planning_config;
+}
+
 // Function obtained from https://github.com/OctoMap/octomap_ros
 void OctoClass::PointsOctomapToPointCloud2(const octomap::point3d_list& points,
                                            sensor_msgs::PointCloud2& cloud) {

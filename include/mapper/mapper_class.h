@@ -38,6 +38,7 @@
 
 // Pensa messages/services
 #include <pensa_msgs/ObstacleInPath.h>
+#include <pensa_msgs/PathPlanningConfig.h>
 #include <pensa_msgs/RRT_RRG_PRM.h>
 #include <pensa_msgs/SetFloat.h>
 
@@ -100,6 +101,12 @@ class MapperClass {
 
   void PublishRadiusMarkers(const Eigen::Vector3d &center,
                             const double &radius);
+
+  void PublishNoFlyZones(const std::vector<pensa_msgs::NoFlyZone> &no_fly_zones);
+
+  void LoadPathPlanningConfig(const std::string &inertial_frame_id,
+                              pensa_msgs::PathPlanningConfig *path_planning_config,
+                              ros::NodeHandle *nh);
 
   // Callbacks (see callbacks.cc for implementation) ----------------
   // Callback for handling incoming camera point cloud messages
@@ -239,6 +246,7 @@ class MapperClass {
   ros::Publisher path_marker_pub_;
   ros::Publisher cam_frustum_pub_;
   ros::Publisher obstacle_radius_marker_pub_;
+  ros::Publisher no_fly_zones_pub_;
 
   // Path planning publishers
   ros::Publisher graph_tree_marker_pub_;

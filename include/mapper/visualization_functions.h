@@ -20,6 +20,8 @@
 
 #include "mapper/msg_conversions.h"
 
+#include <pensa_msgs/NoFlyZone.h>
+
 #include <octomap/octomap.h>
 #include <octomap/OcTree.h>
 #include <pcl/point_cloud.h>
@@ -164,5 +166,24 @@ void VisualizeRange(const Eigen::Vector3d &pos,
                     const std::string &ns,
                     const std_msgs::ColorRGBA &color,
                     visualization_msgs::Marker *range_marker);
+
+// Create a cuboid visualization marker
+void SetCuboidMarker(const Eigen::Vector3d &center,
+                     const double &x_dim,
+                     const double &y_dim,
+                     const double &z_dim,
+                     const std::string &frame_id,
+                     const std::string &ns,  // namespace
+                     const uint &id,
+                     const std_msgs::ColorRGBA &color,
+                     const double &lifetime,
+                     visualization_msgs::Marker *cuboid_marker);
+
+// Create an array of visualization markers for no-fly-zones
+void DrawNoFlyZones(const std::vector<pensa_msgs::NoFlyZone> &no_fly_zones,
+                    const std::string &ns,  // namespace
+                    const std_msgs::ColorRGBA &color,
+                    const double &thickness,  // in meters
+                    visualization_msgs::MarkerArray *marker_array);
 
 }  // namespace visualization_functions

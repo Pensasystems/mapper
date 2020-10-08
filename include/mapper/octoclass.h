@@ -33,6 +33,8 @@
 #include "mapper/linear_algebra.h"
 #include "mapper/rrg.h"
 
+#include <pensa_msgs/PathPlanningConfig.h>
+
 #include <string>
 #include <vector>
 
@@ -74,6 +76,7 @@ class OctoClass{
     void SetClampingThresholds(const double &clamping_threshold_min,
                                const double &clamping_threshold_max);
     void SetMap3d(const bool &map_3d);
+    void SetPathPlanningConfig(const pensa_msgs::PathPlanningConfig &path_planning_config);
     std::string GetInertialFrameId() {return inertial_frame_id_;}
     void PointsOctomapToPointCloud2(const octomap::point3d_list& points,
                                     sensor_msgs::PointCloud2& cloud);  // Convert from octomap to pointcloud2
@@ -201,6 +204,7 @@ class OctoClass{
     std::vector<double> depth_volumes_;     // Volume per depth in the tree
     std::string inertial_frame_id_;
     bool map_3d_;
+    pensa_msgs::PathPlanningConfig path_planning_config_;
 
     // Methods
     double VectorNormSquared(const double &x,

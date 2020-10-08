@@ -425,4 +425,54 @@ void VisualizeRange(const Eigen::Vector3d &pos,
     range_marker->lifetime = ros::Duration(1);  // Disappears in 1 second
 }
 
+void SetCuboidMarker(const Eigen::Vector3d &center,
+                     const double &x_dim,
+                     const double &y_dim,
+                     const double &z_dim,
+                     const std::string &frame_id,
+                     const std::string &ns,  // namespace
+                     const uint &id,
+                     const std_msgs::ColorRGBA &color,
+                     const double &lifetime,
+                     visualization_msgs::Marker *cuboid_marker) {
+    // Initialize array
+    cuboid_marker->header.frame_id = frame_id;
+    cuboid_marker->header.stamp = ros::Time::now();
+    cuboid_marker->ns = ns;
+    cuboid_marker->action = visualization_msgs::Marker::ADD;
+    cuboid_marker->pose.position = msg_conversions::eigen_to_ros_point(center);
+    cuboid_marker->pose.orientation = msg_conversions::identity_quaternion();
+    cuboid_marker->type = visualization_msgs::Marker::CUBE;
+    cuboid_marker->id = id;
+    cuboid_marker->scale.x = x_dim;
+    cuboid_marker->scale.y = y_dim;
+    cuboid_marker->scale.z = z_dim;
+    cuboid_marker->color = color;
+    cuboid_marker->lifetime = ros::Duration(lifetime);
+}
+
+void DrawNoFlyZones(const std::vector<pensa_msgs::NoFlyZone> &no_fly_zones,
+                    const std::string &ns,  // namespace
+                    const std_msgs::ColorRGBA &color,
+                    const double &thickness,  // in meters
+                    visualization_msgs::MarkerArray *marker_array) {
+  const double lifetime = 0.0;  // Should not disappear over time
+  uint id = 0;
+  for (const auto& no_fly_zone : no_fly_zones) {
+    // Compute marker dimensions
+    const double x_center = 0.5*(no_fly_zone.x_corner1 + no_fly_zone.x_corner2);
+    const double y_center = 0.5*(no_fly_zone.y_corner1 + no_fly_zone.y_corner2);
+    const double x_width = std::fabs(no_fly_zone.x_corner1 - no_fly_zone.x_corner2);
+    const double y_width = std::fabs(no_fly_zone.y_corner1 - no_fly_zone.y_corner2);
+    const double z_width = thickness;
+    Eigen::Vector3d center(x_center, y_center, 0.0);
+
+    // Get marker
+    visualization_msgs::Marker no_fly_zone_marker;
+    SetCuboidMarker(center, x_width, y_width, z_width, no_fly_zone.frame_id,
+                    ns, id++, color, lifetime, &no_fly_zone_marker);
+    marker_array->markers.push_back(no_fly_zone_marker);
+  }
+}
+
 }  // namespace visualization_functions

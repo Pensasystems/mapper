@@ -16,9 +16,13 @@
  * under the License.
  */
 
-// Standard includes
+// Local includes
 #include <mapper/mapper_class.h>
 
+// Pensa includes
+#include <pensa_msgs/PathPlanningConfigInFrame.h>
+
+// Cpp includes
 #include <string>
 #include <vector>
 
@@ -100,10 +104,10 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
 
     // Check if number of cameras/lidar added match the number of frame_id for each of them
     if (depth_cam_names.size() != cam_frame_id.size()) {
-        ROS_ERROR("Number of cameras is different from camera tf frame_ids!");
+        ROS_ERROR("[mapper]: Number of cameras is different from camera tf frame_ids!");
     }
     if (lidar_names.size() != lidar_frame_id.size()) {
-        ROS_ERROR("Number of lidar topics is different from lidar tf frame_ids!");
+        ROS_ERROR("[mapper]: Number of lidar topics is different from lidar tf frame_ids!");
     }
 
     // Load service names
@@ -125,6 +129,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     std::string frustum_markers_topic, discrete_trajectory_markers_topic;
     std::string path_obstacle_detection_topic, graph_tree_marker_topic;
     std::string obstacle_radius_detection_topic, obstacle_radius_markers_topic;
+    std::string no_fly_zones_markers_topic;
     nh->getParam("obstacle_markers", obstacle_markers_topic);
     nh->getParam("free_space_markers", free_space_markers_topic);
     nh->getParam("inflated_obstacle_markers", inflated_obstacle_markers_topic);
@@ -134,6 +139,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     nh->getParam("discrete_trajectory_markers", discrete_trajectory_markers_topic);
     nh->getParam("path_obstacle_detection", path_obstacle_detection_topic);
     nh->getParam("obstacle_radius_detection", obstacle_radius_detection_topic);
+    nh->getParam("no_fly_zones_markers", no_fly_zones_markers_topic);
     nh->getParam("graph_tree_marker_topic", graph_tree_marker_topic);
 
     // Load current package path
@@ -154,6 +160,11 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     // Shutdown ROS if sigint is detected
     terminate_node_ = false;
 
+    // Load path planning config
+    pensa_msgs::PathPlanningConfig path_planning_config;
+    this->LoadPathPlanningConfig(inertial_frame_id_, &path_planning_config, nh);
+    ROS_ERROR_STREAM(path_planning_config);
+
     // update tree parameters
     globals_.octomap.SetResolution(map_resolution);
     globals_.octomap.SetMaxRange(max_range);
@@ -167,6 +178,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     globals_.octomap.SetHitMissProbabilities(probability_hit, probability_miss);
     globals_.octomap.SetClampingThresholds(clamping_threshold_min, clamping_threshold_max);
     globals_.octomap.SetMap3d(map_3d);
+    globals_.octomap.SetPathPlanningConfig(path_planning_config);
 
     // update trajectory discretization parameters (used in collision check)
     globals_.sampled_traj.SetMaxDev(compression_max_dev);
@@ -220,6 +232,11 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
         nh->advertise<visualization_msgs::Marker>(obstacle_radius_markers_topic, 10);
     graph_tree_marker_pub_ =
         nh->advertise<visualization_msgs::Marker>(graph_tree_marker_topic, 10);
+    no_fly_zones_pub_ =
+        nh->advertise<visualization_msgs::MarkerArray>(no_fly_zones_markers_topic, 10, true);
+
+    // Publish no-fly-zones for Rviz visualization
+    this->PublishNoFlyZones(path_planning_config.no_fly_zones);
 
     // threads --------------------------------------------------
     h_octo_thread_ = std::thread(&MapperClass::OctomappingTask, this);
@@ -323,9 +340,39 @@ void MapperClass::PublishRadiusMarkers(const Eigen::Vector3d &center,
     obstacle_radius_marker_pub_.publish(obstacle_radius_marker);
 }
 
-// void MapperClass::LoadPathPlanningConfig(const std::string &path_planning_config_service) {
-//     load_path_planning_config_client_
-// }
+void MapperClass::PublishNoFlyZones(const std::vector<pensa_msgs::NoFlyZone> &no_fly_zones) {
+    const std::string ns = "no_fly_zones";
+    const double thickness = 0.1;
+    std_msgs::ColorRGBA color = visualization_functions::Color::Red();
+    color.a = 0.3;  // make them slightly transparent
+    visualization_msgs::MarkerArray marker_array;
+    visualization_functions::DrawNoFlyZones(no_fly_zones, ns, color, thickness, &marker_array);
+    no_fly_zones_pub_.publish(marker_array);
+}
+
+void MapperClass::LoadPathPlanningConfig(const std::string &inertial_frame_id,
+                                         pensa_msgs::PathPlanningConfig *path_planning_config,
+                                         ros::NodeHandle *nh) {
+    // Capture service name and wait for it to start existing
+    const std::string srv_return_path_planning_config = nh->resolveName("/srv_return_path_planning_config");
+    while (ros::ok() && !ros::service::waitForService(srv_return_path_planning_config, ros::Duration(5.0))) {
+        ROS_INFO("[mapper]: Waiting for path planning config service...");
+    }
+    ROS_INFO("[mapper]: Connected to path planning config service");
+
+    // Start client
+    load_path_planning_config_client_ =
+        nh->serviceClient<pensa_msgs::PathPlanningConfigInFrame>(srv_return_path_planning_config);
+
+    // Call service to capture the planner config
+    pensa_msgs::PathPlanningConfigInFrame load_path_planning_config_msg;
+    load_path_planning_config_msg.request.frame_id = inertial_frame_id;
+    if (!load_path_planning_config_client_.call(load_path_planning_config_msg)) {
+        ROS_ERROR("[mapper]: Could not call service to load path planning config!");
+        return;
+    }
+    *path_planning_config = load_path_planning_config_msg.response.config;
+}
 
 // PLUGINLIB_EXPORT_CLASS(mapper::MapperClass, nodelet::Nodelet);
 

@@ -105,6 +105,7 @@
         <param name="frustum_markers" value="frustum_markers"/>
         <param name="obstacle_radius_markers" value="obstacle_radius_markers"/>
         <param name="discrete_trajectory_markers" value="discrete_trajectory_markers"/>
+        <param name="no_fly_zones_markers" value="no_fly_zones_markers"/>
         
         <!-- Collision detection publisher names -->
         <param name="path_obstacle_detection" value="path_detected_obstacles"/>
