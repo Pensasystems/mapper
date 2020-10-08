@@ -451,14 +451,18 @@ void SetCuboidMarker(const Eigen::Vector3d &center,
     cuboid_marker->lifetime = ros::Duration(lifetime);
 }
 
-void DrawNoFlyZones(const std::vector<pensa_msgs::NoFlyZone> &no_fly_zones,
-                    const std::string &ns,  // namespace
-                    const std_msgs::ColorRGBA &color,
-                    const double &thickness,  // in meters
-                    visualization_msgs::MarkerArray *marker_array) {
+void DrawPathPlanningConfig(const pensa_msgs::PathPlanningConfig &path_planning_config,
+                            const std::string &ns,  // namespace
+                            const std::string &inertial_frame_id,
+                            const std_msgs::ColorRGBA &no_fly_zone_color,
+                            const std_msgs::ColorRGBA &fly_zone_color,
+                            const double &thickness,  // in meters
+                            visualization_msgs::MarkerArray *marker_array) {
   const double lifetime = 0.0;  // Should not disappear over time
   uint id = 0;
-  for (const auto& no_fly_zone : no_fly_zones) {
+
+  // Markers for no-fly-zones
+  for (const auto& no_fly_zone : path_planning_config.no_fly_zones) {
     // Compute marker dimensions
     const double x_center = 0.5*(no_fly_zone.x_corner1 + no_fly_zone.x_corner2);
     const double y_center = 0.5*(no_fly_zone.y_corner1 + no_fly_zone.y_corner2);
@@ -470,9 +474,23 @@ void DrawNoFlyZones(const std::vector<pensa_msgs::NoFlyZone> &no_fly_zones,
     // Get marker
     visualization_msgs::Marker no_fly_zone_marker;
     SetCuboidMarker(center, x_width, y_width, z_width, no_fly_zone.frame_id,
-                    ns, id++, color, lifetime, &no_fly_zone_marker);
+                    ns, id++, no_fly_zone_color, lifetime, &no_fly_zone_marker);
     marker_array->markers.push_back(no_fly_zone_marker);
   }
+
+  // Markers for allowed area
+  const double x_center = 0.5*(path_planning_config.map_x_corner1 + path_planning_config.map_x_corner2);
+  const double y_center = 0.5*(path_planning_config.map_y_corner1 + path_planning_config.map_y_corner2);
+  const double x_width = std::fabs(path_planning_config.map_x_corner1 - path_planning_config.map_x_corner2);
+  const double y_width = std::fabs(path_planning_config.map_y_corner1 - path_planning_config.map_y_corner2);
+  const double z_width = thickness;
+  Eigen::Vector3d center(x_center, y_center, 0.0);
+
+  // Get marker
+  visualization_msgs::Marker fly_zone_marker;
+  SetCuboidMarker(center, x_width, y_width, z_width, inertial_frame_id,
+                  ns, id++, fly_zone_color, lifetime, &fly_zone_marker);
+  marker_array->markers.push_back(fly_zone_marker);
 }
 
 }  // namespace visualization_functions

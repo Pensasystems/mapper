@@ -102,7 +102,8 @@ class MapperClass {
   void PublishRadiusMarkers(const Eigen::Vector3d &center,
                             const double &radius);
 
-  void PublishNoFlyZones(const std::vector<pensa_msgs::NoFlyZone> &no_fly_zones);
+  void PublishPathPlanningConfigMarkers(const pensa_msgs::PathPlanningConfig &path_planning_config,
+                                        const std::string &inertial_frame_id);
 
   void LoadPathPlanningConfig(const std::string &inertial_frame_id,
                               pensa_msgs::PathPlanningConfig *path_planning_config,
@@ -246,7 +247,7 @@ class MapperClass {
   ros::Publisher path_marker_pub_;
   ros::Publisher cam_frustum_pub_;
   ros::Publisher obstacle_radius_marker_pub_;
-  ros::Publisher no_fly_zones_pub_;
+  ros::Publisher path_planning_config_pub_;
 
   // Path planning publishers
   ros::Publisher graph_tree_marker_pub_;

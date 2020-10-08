@@ -129,7 +129,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     std::string frustum_markers_topic, discrete_trajectory_markers_topic;
     std::string path_obstacle_detection_topic, graph_tree_marker_topic;
     std::string obstacle_radius_detection_topic, obstacle_radius_markers_topic;
-    std::string no_fly_zones_markers_topic;
+    std::string path_planning_config_markers_topic;
     nh->getParam("obstacle_markers", obstacle_markers_topic);
     nh->getParam("free_space_markers", free_space_markers_topic);
     nh->getParam("inflated_obstacle_markers", inflated_obstacle_markers_topic);
@@ -139,7 +139,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     nh->getParam("discrete_trajectory_markers", discrete_trajectory_markers_topic);
     nh->getParam("path_obstacle_detection", path_obstacle_detection_topic);
     nh->getParam("obstacle_radius_detection", obstacle_radius_detection_topic);
-    nh->getParam("no_fly_zones_markers", no_fly_zones_markers_topic);
+    nh->getParam("path_planning_config_markers", path_planning_config_markers_topic);
     nh->getParam("graph_tree_marker_topic", graph_tree_marker_topic);
 
     // Load current package path
@@ -232,11 +232,11 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
         nh->advertise<visualization_msgs::Marker>(obstacle_radius_markers_topic, 10);
     graph_tree_marker_pub_ =
         nh->advertise<visualization_msgs::Marker>(graph_tree_marker_topic, 10);
-    no_fly_zones_pub_ =
-        nh->advertise<visualization_msgs::MarkerArray>(no_fly_zones_markers_topic, 10, true);
+    path_planning_config_pub_ =
+        nh->advertise<visualization_msgs::MarkerArray>(path_planning_config_markers_topic, 10, true);
 
     // Publish no-fly-zones for Rviz visualization
-    this->PublishNoFlyZones(path_planning_config.no_fly_zones);
+    this->PublishPathPlanningConfigMarkers(path_planning_config, inertial_frame_id_);
 
     // threads --------------------------------------------------
     h_octo_thread_ = std::thread(&MapperClass::OctomappingTask, this);
@@ -340,14 +340,18 @@ void MapperClass::PublishRadiusMarkers(const Eigen::Vector3d &center,
     obstacle_radius_marker_pub_.publish(obstacle_radius_marker);
 }
 
-void MapperClass::PublishNoFlyZones(const std::vector<pensa_msgs::NoFlyZone> &no_fly_zones) {
-    const std::string ns = "no_fly_zones";
+void MapperClass::PublishPathPlanningConfigMarkers(const pensa_msgs::PathPlanningConfig &path_planning_config,
+                                                   const std::string &inertial_frame_id) {
+    const std::string ns = "path_planning_config";
     const double thickness = 0.1;
-    std_msgs::ColorRGBA color = visualization_functions::Color::Red();
-    color.a = 0.3;  // make them slightly transparent
-    visualization_msgs::MarkerArray marker_array;
-    visualization_functions::DrawNoFlyZones(no_fly_zones, ns, color, thickness, &marker_array);
-    no_fly_zones_pub_.publish(marker_array);
+    std_msgs::ColorRGBA no_fly_zone_color = visualization_functions::Color::Red();
+    std_msgs::ColorRGBA fly_zone_color = visualization_functions::Color::Green();
+    no_fly_zone_color.a = 0.3;  // make them slightly transparent
+    fly_zone_color.a = 0.15;    // make them slightly transparent
+    visualization_msgs::MarkerArray no_fly_zones_markers;
+    visualization_functions::DrawPathPlanningConfig(path_planning_config, ns, inertial_frame_id, no_fly_zone_color,
+                                                    fly_zone_color, thickness, &no_fly_zones_markers);
+    path_planning_config_pub_.publish(no_fly_zones_markers);
 }
 
 void MapperClass::LoadPathPlanningConfig(const std::string &inertial_frame_id,

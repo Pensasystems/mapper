@@ -20,7 +20,7 @@
 
 #include "mapper/msg_conversions.h"
 
-#include <pensa_msgs/NoFlyZone.h>
+#include <pensa_msgs/PathPlanningConfig.h>
 
 #include <octomap/octomap.h>
 #include <octomap/OcTree.h>
@@ -180,10 +180,12 @@ void SetCuboidMarker(const Eigen::Vector3d &center,
                      visualization_msgs::Marker *cuboid_marker);
 
 // Create an array of visualization markers for no-fly-zones
-void DrawNoFlyZones(const std::vector<pensa_msgs::NoFlyZone> &no_fly_zones,
-                    const std::string &ns,  // namespace
-                    const std_msgs::ColorRGBA &color,
-                    const double &thickness,  // in meters
-                    visualization_msgs::MarkerArray *marker_array);
+void DrawPathPlanningConfig(const pensa_msgs::PathPlanningConfig &path_planning_config,
+                            const std::string &ns,  // namespace
+                            const std::string &inertial_frame_id,
+                            const std_msgs::ColorRGBA &no_fly_zone_color,
+                            const std_msgs::ColorRGBA &fly_zone_color,
+                            const double &thickness,  // in meters
+                            visualization_msgs::MarkerArray *marker_array);
 
 }  // namespace visualization_functions
