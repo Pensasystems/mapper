@@ -35,6 +35,7 @@ OctoClass::OctoClass(const double &resolution,
     resolution_ = resolution;
     inertial_frame_id_ = inertial_frame_id;
     map_3d_ = map_3d;
+    using_path_planning_config_map_ = false;
 }
 
 OctoClass::OctoClass() {
@@ -43,22 +44,22 @@ OctoClass::OctoClass() {
 
 void OctoClass::SetMemory(const double &memory) {
     memory_time_ = memory;
-    ROS_DEBUG("Fading memory time: %f seconds", memory_time_);
+    ROS_DEBUG("[mapper]: Fading memory time: %f seconds", memory_time_);
 }
 
 void OctoClass::SetMaxRange(const double &max_range) {
     max_range_ = max_range;
-    ROS_DEBUG("Maximum range: %f meters", max_range_);
+    ROS_DEBUG("[mapper]: Maximum range: %f meters", max_range_);
 }
 
 void OctoClass::SetMinRange(const double &min_range) {
     min_range_ = min_range;
-    ROS_DEBUG("Minimum range: %f meters", min_range_);
+    ROS_DEBUG("[mapper]: Minimum range: %f meters", min_range_);
 }
 
 void OctoClass::SetInertialFrame(const std::string &inertial_frame_id) {
     inertial_frame_id_ = inertial_frame_id;
-    ROS_DEBUG("Inertial frame id: %s", inertial_frame_id.c_str());
+    ROS_DEBUG("[mapper]: Inertial frame id: %s", inertial_frame_id.c_str());
 }
 
 void OctoClass::SetResolution(const double &resolution_in) {
@@ -76,7 +77,7 @@ void OctoClass::SetResolution(const double &resolution_in) {
 
     this->SetMapInflation(inflate_radius_xy_, inflate_radius_z_);
 
-    ROS_DEBUG("Map resolution: %f meters", resolution_);
+    ROS_DEBUG("[mapper]: Map resolution: %f meters", resolution_);
 }
 
 void OctoClass::SetMapInflation(const double &inflate_radius_xy, const double &inflate_radius_z) {
@@ -91,8 +92,8 @@ void OctoClass::SetMapInflation(const double &inflate_radius_xy, const double &i
 
     sphere_.clear();
     static Eigen::Vector3d xyz, xyz_normalized;
-    ROS_DEBUG("The map is being inflated by a radius of %f in XY direction!", inflate_radius_xy_);
-    ROS_DEBUG("The map is being inflated by a radius of %f in Z direction!", inflate_radius_z_);
+    ROS_DEBUG("[mapper]: The map is being inflated by a radius of %f in XY direction!", inflate_radius_xy_);
+    ROS_DEBUG("[mapper]: The map is being inflated by a radius of %f in Z direction!", inflate_radius_z_);
     const int max_xy = static_cast<int>(round(inflate_radius_xy/resolution_));
     const int max_z = static_cast<int>(round(inflate_radius_z/resolution_));
     static float d_origin;
@@ -121,19 +122,20 @@ void OctoClass::SetMapInflation(const double &inflate_radius) {
 void OctoClass::SetCamFrustum(const double &fov,
                               const double &aspect_ratio) {
     cam_frustum_ = algebra_3d::FrustumPlanes(fov, aspect_ratio);
-    ROS_DEBUG("Cam frustum was set!");
+    ROS_DEBUG("[mapper]: Cam frustum was set!");
 }
 
 void OctoClass::SetLidarRange(const double &min_range,
                               const double &max_range) {
     lidar_range_ = algebra_3d::PlanarLidar(min_range, max_range);
-    ROS_DEBUG("Cam frustum was set!");
+    ROS_DEBUG("[mapper]: Lidar range was set!");
 }
 
 void OctoClass::ResetMap() {
     tree_.clear();
     tree_inflated_.clear();
-    ROS_DEBUG("Map was reset!");
+    using_path_planning_config_map_ = false;
+    ROS_DEBUG("[mapper]: Map was reset!");
 }
 
 void OctoClass::CopyMap(octomap::OcTree &tree, octomap::OcTree &tree_inflated) {
@@ -154,7 +156,7 @@ void OctoClass::CopyMap(octomap::OcTree &tree, octomap::OcTree &tree_inflated) {
 void OctoClass::SetOccupancyThreshold(const double &occupancy_threshold) {
     tree_.setOccupancyThres(occupancy_threshold);
     tree_inflated_.setOccupancyThres(occupancy_threshold);
-    ROS_DEBUG("Occupancy probability threshold: %f", occupancy_threshold);
+    ROS_DEBUG("[mapper]: Occupancy probability threshold: %f", occupancy_threshold);
 }
 
 void OctoClass::SetHitMissProbabilities(const double &probability_hit,
@@ -163,8 +165,8 @@ void OctoClass::SetHitMissProbabilities(const double &probability_hit,
     tree_.setProbMiss(probability_miss);
     tree_inflated_.setProbHit(probability_hit);
     tree_inflated_.setProbMiss(probability_miss);
-    ROS_DEBUG("Probability hit: %f", probability_hit);
-    ROS_DEBUG("Probability miss: %f", probability_miss);
+    ROS_DEBUG("[mapper]: Probability hit: %f", probability_hit);
+    ROS_DEBUG("[mapper]: Probability miss: %f", probability_miss);
 }
 
 void OctoClass::SetClampingThresholds(const double &clamping_threshold_min,
@@ -173,8 +175,8 @@ void OctoClass::SetClampingThresholds(const double &clamping_threshold_min,
     tree_.setClampingThresMax(clamping_threshold_max);
     tree_inflated_.setClampingThresMin(clamping_threshold_min);
     tree_inflated_.setClampingThresMax(clamping_threshold_max);
-    ROS_DEBUG("Clamping threshold minimum: %f", clamping_threshold_min);
-    ROS_DEBUG("Clamping threshold maximum: %f", clamping_threshold_max);
+    ROS_DEBUG("[mapper]: Clamping threshold minimum: %f", clamping_threshold_min);
+    ROS_DEBUG("[mapper]: Clamping threshold maximum: %f", clamping_threshold_max);
 }
 
 void OctoClass::SetMap3d(const bool &map_3d) {
@@ -207,7 +209,7 @@ void OctoClass::PointsOctomapToPointCloud2(const octomap::point3d_list& points,
     }
 
     if ((!has_x) || (!has_y) || (!has_z))
-        throw std::runtime_error("One of the fields xyz does not exist");
+        throw std::runtime_error("[mapper]: One of the fields xyz does not exist");
 
     sensor_msgs::PointCloud2Modifier pcd_modifier(cloud);
     pcd_modifier.resize(points.size());
@@ -323,8 +325,13 @@ void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
         }
     }
     for (octomap::KeySet::iterator it = inflated_free_cells.begin(); it != inflated_free_cells.end(); ++it) {
-            tree_inflated_.updateNode(*it, false);
-            tree_.updateNode(*it, false);
+        // Cannot update occupied nodes in no-fly-zone
+        const octomap::point3d& point = tree_inflated_.keyToCoord(*it);
+        if (using_path_planning_config_map_ && this->IsPointInANoFlyZone(point)) {
+            continue;
+        }
+        tree_inflated_.updateNode(*it, false);
+        tree_.updateNode(*it, false);
     }
 }
 
@@ -426,8 +433,13 @@ void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
         }
     }
     for (octomap::KeySet::iterator it = inflated_free_cells.begin(); it != inflated_free_cells.end(); ++it) {
-            tree_inflated_.updateNode(*it, false);
-            tree_.updateNode(*it, false);
+        // Cannot update occupied nodes in no-fly-zone
+        const octomap::point3d& point = tree_inflated_.keyToCoord(*it);
+        if (using_path_planning_config_map_ && this->IsPointInANoFlyZone(point)) {
+            continue;
+        }
+        tree_inflated_.updateNode(*it, false);
+        tree_.updateNode(*it, false);
     }
 }
 
@@ -492,6 +504,17 @@ void OctoClass::FadeMemory(const double &rate) {  // rate at which this function
     for (octomap::OcTree::leaf_iterator it = tree_.begin_leafs(),
                                        end = tree_.end_leafs();
                                        it != end; ++it) {
+        // This if statement is a workaround for a bug in octomap. For some reason
+        // after we delete all nodes from the octree we end up with the root node
+        // not being deleted. If we have only the root node available (which we can
+        // capure by checking the depth of the iterator), then we can safely clear
+        // the tree, as it is not a use case we need
+        const uint depth = it.getDepth();
+        if (depth == 0) {
+            tree_.clear();
+            break;
+        }
+
         // fade obstacles and free areas
         key = it.getKey();
         octomap::OcTreeNode* n = tree_.search(key);
@@ -504,7 +527,7 @@ void OctoClass::FadeMemory(const double &rate) {  // rate at which this function
 
         // tree nodes that are unknown
         if (is_occ != tree_.isNodeOccupied(n)) {  // if it was occupied then disoccupied, delete node
-            tree_.deleteNode(key, it.getDepth());
+            tree_.deleteNode(key, depth);
         }
     }
 
@@ -512,6 +535,17 @@ void OctoClass::FadeMemory(const double &rate) {  // rate at which this function
     for (octomap::OcTree::leaf_iterator it = tree_inflated_.begin_leafs(),
                                        end = tree_inflated_.end_leafs();
                                        it != end; ++it) {
+        // This if statement is a workaround for a bug in octomap. For some reason
+        // after we delete all nodes from the octree we end up with the root node
+        // not being deleted. If we have only the root node available (which we can
+        // capure by checking the depth of the iterator), then we can safely clear
+        // the tree, as it is not a use case we need
+        const uint depth = it.getDepth();
+        if (depth == 0) {
+            tree_inflated_.clear();
+            break;
+        }
+
         // fade obstacles and free areas
         key = it.getKey();
         octomap::OcTreeNode* n = tree_inflated_.search(key);
@@ -524,7 +558,7 @@ void OctoClass::FadeMemory(const double &rate) {  // rate at which this function
 
         // tree nodes that are unknown
         if (is_occ != tree_inflated_.isNodeOccupied(n)) {  // if it was occupied then disoccupied, delete node
-            tree_inflated_.deleteNode(key, it.getDepth());
+            tree_inflated_.deleteNode(key, depth);
         }
     }
 }
@@ -1034,6 +1068,14 @@ void OctoClass::OccNodesWithinBox(const Eigen::Vector3d &box_min,
             continue;
         }
 
+        uint count = 0;
+        for (octomap::OcTree::leaf_iterator it = tree_inflated_.begin_leafs(),
+                                           end = tree_inflated_.end_leafs();
+                                           it != end; ++it) {
+            count++;
+        }
+
+        // std::cout << count << std::endl;
         if (tree_inflated_.isNodeOccupied(n)) {
             octomap::point3d pos = it.getCoordinate();
             node_center->push_back(Eigen::Vector3d(pos.x(), pos.y(), pos.z()));
@@ -1046,6 +1088,7 @@ void OctoClass::OccNodesWithinBox(const Eigen::Vector3d &box_min,
                 // of pruning. If we start using this node with 3d lidar in the future,
                 // then i'll have to revisit this function!
                 ROS_WARN("[mapper]: There might be a bug here!");
+                // std::cout << size << std::endl;
             }
         }
     }
@@ -1166,6 +1209,60 @@ void OctoClass::PrintQueryInfo(octomap::point3d query,
         std::cout << "occupancy probability at " << query << ":\t " << node->getOccupancy() << std::endl;
     } else {
         std::cout << "occupancy probability at " << query << ":\t is unknown" << std::endl;
+    }
+}
+
+void OctoClass::InitializeMapToPathPlanningConfig() {
+    // Reset map first
+    tree_.clear();
+    tree_inflated_.clear();
+
+    // Get min/max coordinates of the map based on the config
+    const double x_min = std::min(path_planning_config_.map_x_corner1, path_planning_config_.map_x_corner2) + 0.001;
+    const double x_max = std::max(path_planning_config_.map_x_corner1, path_planning_config_.map_x_corner2) + 0.001;
+    const double y_min = std::min(path_planning_config_.map_y_corner1, path_planning_config_.map_y_corner2) + 0.001;
+    const double y_max = std::max(path_planning_config_.map_y_corner1, path_planning_config_.map_y_corner2) + 0.001;
+    const uint n_x_nodes = ceil((x_max - x_min)/resolution_);
+    const uint n_y_nodes = ceil((y_max - y_min)/resolution_);
+
+    // Iterate over map points and add free/occupied based on no-fly-zones
+    for (uint i = 0; i < n_x_nodes; i++) {
+        const double cur_x = x_min + static_cast<double>(i)*resolution_;
+        for (uint j = 0; j < n_y_nodes; j++) {
+            const double cur_y = y_min + static_cast<double>(j)*resolution_;
+            const octomap::point3d point(cur_x, cur_y, 0.0);
+            if (this->IsPointInANoFlyZone(point)) {
+                tree_.updateNode(point, 1.0f);
+                tree_inflated_.updateNode(point, 1.0f);
+            } else {
+                tree_.updateNode(point, false);
+                tree_inflated_.updateNode(point, false);
+            }
+        }
+    }
+    using_path_planning_config_map_ = true;
+}
+
+bool OctoClass::IsPointInANoFlyZone(const octomap::point3d &point) {
+    for (const auto& no_fly_zone : path_planning_config_.no_fly_zones) {
+        if (this->IsPointInNoFlyZone(point, no_fly_zone)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool OctoClass::IsPointInNoFlyZone(const octomap::point3d &point,
+                                   const pensa_msgs::NoFlyZone &no_fly_zone) {
+    const double no_fly_zone_x_min = std::min(no_fly_zone.x_corner1, no_fly_zone.x_corner2);
+    const double no_fly_zone_x_max = std::max(no_fly_zone.x_corner1, no_fly_zone.x_corner2);
+    const double no_fly_zone_y_min = std::min(no_fly_zone.y_corner1, no_fly_zone.y_corner2);
+    const double no_fly_zone_y_max = std::max(no_fly_zone.y_corner1, no_fly_zone.y_corner2);
+    if ((point.x() >= no_fly_zone_x_min) && (point.x() <= no_fly_zone_x_max) &&
+        (point.y() >= no_fly_zone_y_min) && (point.y() <= no_fly_zone_y_max)) {
+        return true;
+    } else {
+        return false;
     }
 }
 

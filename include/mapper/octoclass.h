@@ -171,6 +171,17 @@ class OctoClass{
     void PrintQueryInfo(octomap::point3d query,
                         octomap::OcTreeNode* node);
 
+    // Path planning config functions ------------------------------------
+    // Initializes the map to use data from the path planning config
+    void InitializeMapToPathPlanningConfig();
+
+    // Returns true if the input point is inside any no-fly-zone
+    bool IsPointInANoFlyZone(const octomap::point3d &point);
+
+    // Returns trye if the input point is inside the input no-fly-zone
+    bool IsPointInNoFlyZone(const octomap::point3d &point,
+                            const pensa_msgs::NoFlyZone &no_fly_zone);
+
     // path planning methods (implementations in octopath.cc)
     void PathPruning(const std::vector<Eigen::Vector3d> &path,
                      const bool &free_space_only,
@@ -204,6 +215,7 @@ class OctoClass{
     std::vector<double> depth_volumes_;     // Volume per depth in the tree
     std::string inertial_frame_id_;
     bool map_3d_;
+    bool using_path_planning_config_map_;
     pensa_msgs::PathPlanningConfig path_planning_config_;
 
     // Methods

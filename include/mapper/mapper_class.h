@@ -143,9 +143,13 @@ class MapperClass {
   bool MapInflation(pensa_msgs::SetFloat::Request &req,
                     pensa_msgs::SetFloat::Response &res);
 
-  // Reset the map
-  bool ResetMap(std_srvs::Trigger::Request &req,
-                std_srvs::Trigger::Response &res);
+  // Reset the map and update the map's memory time through the SetFloat parameter
+  bool ResetMap(pensa_msgs::SetFloat::Request &req,
+                pensa_msgs::SetFloat::Response &res);
+
+  // Reset the map and load it as the path planning config
+  bool InitializeMapToPathPlanningConfig(std_srvs::Trigger::Request &req,
+                                         std_srvs::Trigger::Response &res);
 
   // Save octomap
   bool SaveMap(std_srvs::Trigger::Request &req,
@@ -213,6 +217,7 @@ class MapperClass {
   // Octomap services
   ros::ServiceServer resolution_srv_, memory_time_srv_;
   ros::ServiceServer map_inflation_srv_, reset_map_srv_;
+  ros::ServiceServer initialize_map_to_path_planning_config_srv_;
   ros::ServiceServer save_map_srv_, load_map_srv_, process_pcl_srv_;
 
   // Service clients

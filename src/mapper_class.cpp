@@ -114,12 +114,14 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     std::string resolution_srv_name, memory_time_srv_name;
     std::string map_inflation_srv_name, reset_map_srv_name, rrg_srv_name;
     std::string save_map_srv_name, load_map_srv_name, process_pcl_srv_name;
+    std::string initialize_map_to_path_planning_config_srv_name;
     nh->getParam("update_resolution", resolution_srv_name);
     nh->getParam("update_memory_time", memory_time_srv_name);
     nh->getParam("update_inflation_radius", map_inflation_srv_name);
     nh->getParam("reset_map", reset_map_srv_name);
     nh->getParam("save_map", save_map_srv_name);
     nh->getParam("load_map", load_map_srv_name);
+    nh->getParam("initialize_map_to_path_planning_config", initialize_map_to_path_planning_config_srv_name);
     nh->getParam("process_pcl", process_pcl_srv_name);
     nh->getParam("rrg_service", rrg_srv_name);
 
@@ -163,7 +165,6 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     // Load path planning config
     pensa_msgs::PathPlanningConfig path_planning_config;
     this->LoadPathPlanningConfig(inertial_frame_id_, &path_planning_config, nh);
-    ROS_ERROR_STREAM(path_planning_config);
 
     // update tree parameters
     globals_.octomap.SetResolution(map_resolution);
@@ -206,6 +207,8 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
         save_map_srv_name, &MapperClass::SaveMap, this);
     load_map_srv_ = nh->advertiseService(
         load_map_srv_name, &MapperClass::LoadMap, this);
+    initialize_map_to_path_planning_config_srv_ = nh->advertiseService(
+        initialize_map_to_path_planning_config_srv_name, &MapperClass::InitializeMapToPathPlanningConfig, this);
     process_pcl_srv_ = nh->advertiseService(
         process_pcl_srv_name, &MapperClass::OctomapProcessPCL, this);
     rrg_srv_ = nh->advertiseService(

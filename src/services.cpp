@@ -56,14 +56,26 @@ bool MapperClass::MapInflation(pensa_msgs::SetFloat::Request &req,
     return true;
 }
 
-bool MapperClass::ResetMap(std_srvs::Trigger::Request &req,
-                           std_srvs::Trigger::Response &res) {
+bool MapperClass::ResetMap(pensa_msgs::SetFloat::Request &req,
+                           pensa_msgs::SetFloat::Response &res) {
     mutexes_.octomap.lock();
         globals_.octomap.ResetMap();
+        globals_.octomap.SetMemory(req.data);
     mutexes_.octomap.unlock();
 
     res.success = true;
-    res.message = "Map has been reset!";
+    return true;
+}
+
+bool MapperClass::InitializeMapToPathPlanningConfig(std_srvs::Trigger::Request &req,
+                                                    std_srvs::Trigger::Response &res) {
+    mutexes_.octomap.lock();
+        globals_.octomap.InitializeMapToPathPlanningConfig();
+        globals_.octomap.SetMemory(-1.0);  // Infinite memory
+    mutexes_.octomap.unlock();
+
+    res.success = true;
+    res.message = "Map has been reset to path planning config!";
     return true;
 }
 

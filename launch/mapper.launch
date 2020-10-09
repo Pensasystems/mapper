@@ -94,6 +94,7 @@
         <param name="reset_map" value="reset_map"/>
         <param name="save_map" value="save_map"/>
         <param name="load_map" value="load_map"/>
+        <param name="initialize_map_to_path_planning_config" value="initialize_map_to_path_planning_config"/>
         <param name="process_pcl" value="process_pcl"/>
         <param name="rrg_service" value="rrg"/>
 
