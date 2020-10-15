@@ -1068,14 +1068,6 @@ void OctoClass::OccNodesWithinBox(const Eigen::Vector3d &box_min,
             continue;
         }
 
-        uint count = 0;
-        for (octomap::OcTree::leaf_iterator it = tree_inflated_.begin_leafs(),
-                                           end = tree_inflated_.end_leafs();
-                                           it != end; ++it) {
-            count++;
-        }
-
-        // std::cout << count << std::endl;
         if (tree_inflated_.isNodeOccupied(n)) {
             octomap::point3d pos = it.getCoordinate();
             node_center->push_back(Eigen::Vector3d(pos.x(), pos.y(), pos.z()));
@@ -1088,7 +1080,6 @@ void OctoClass::OccNodesWithinBox(const Eigen::Vector3d &box_min,
                 // of pruning. If we start using this node with 3d lidar in the future,
                 // then i'll have to revisit this function!
                 ROS_WARN("[mapper]: There might be a bug here!");
-                // std::cout << size << std::endl;
             }
         }
     }
