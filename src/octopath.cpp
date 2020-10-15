@@ -302,10 +302,10 @@ bool OctoClass::OctoRRG(const Eigen::Vector3d &p0,
   return true;
 }
 
-void OctoClass::Astar(const octomap::point3d &p0,
+bool OctoClass::Astar(const octomap::point3d &p0,
                       const octomap::point3d &pf,
                       const bool &prune_result,
-                      float *plan_time,
+                      double *plan_time,
                       std::vector<Eigen::Vector3d> *path) {
   const ros::Time t0 = ros::Time::now();
 
@@ -313,19 +313,19 @@ void OctoClass::Astar(const octomap::point3d &p0,
   static int is_occ;
   is_occ = this->CheckOccupancy(p0);
   if (is_occ == -1) {
-    ROS_INFO("Astar failed: initial node is unknown in the octomap!");
-    return;
+    ROS_INFO("[mapper] A* failed: initial node is unknown in the octomap!");
+    return false;
   } else if (is_occ == 1) {
-    ROS_INFO("Astar failed: initial node is occupied in the octomap!");
-    return;
+    ROS_INFO("[mapper] A* failed: initial node is occupied in the octomap!");
+    return false;
   }
   is_occ = this->CheckOccupancy(pf);
   if (is_occ == -1) {
-    ROS_INFO("Astar failed: final node is unknown in the octomap!");
-    return;
+    ROS_INFO("[mapper] A* failed: final node is unknown in the octomap!");
+    return false;
   } else if (is_occ == 1) {
-    ROS_INFO("Astar failed: final node is occupied in the octomap!");
-    return;
+    ROS_INFO("[mapper] A* failed: final node is occupied in the octomap!");
+    return false;
   }
 
   // Get map info
@@ -335,7 +335,9 @@ void OctoClass::Astar(const octomap::point3d &p0,
   tree_inflated_.getMetricMin(map_min[0], map_min[1], map_min[2]);
   tree_inflated_.getMetricMax(map_max[0], map_max[1], map_max[2]);
   this->BBXFreeNodes(map_min, map_max, &indexed_free_keys, &node_sizes);
-  ROS_INFO("Number of nodes: %d", static_cast<int>(indexed_free_keys.Size()));
+  ROS_INFO("[mapper] A* computing trajectory from [%.3f, %.3f, %.3f] to [%.3f, %.3f, %.3f]",
+           p0.x(), p0.y(), p0.z(), pf.x(), pf.y(), pf.z());
+  ROS_INFO("[mapper] Number of nodes: %d", static_cast<int>(indexed_free_keys.Size()));
 
   // Find initial and final indexes
   static uint initial_index, final_index;
@@ -363,8 +365,8 @@ void OctoClass::Astar(const octomap::point3d &p0,
   while (!queue.empty()) {
     current_key = queue.get();
     if (!indexed_free_keys.Key2Index(current_key, &current_index)) {
-      ROS_INFO("Astar failed: Error retrieving index for current node!");
-      return;
+      ROS_INFO("[mapper] Astar failed: Error retrieving index for current node!");
+      return false;
     }
 
     // Check whether we reached the goal
@@ -375,8 +377,8 @@ void OctoClass::Astar(const octomap::point3d &p0,
       solution_path.insert(solution_path.begin(), pos);
       while (current_key != initial_key) {
         if (!indexed_free_keys.Key2Index(current_key, &current_index)) {
-          ROS_INFO("Astar failed when retrieving path from initial to final point!");
-          return;
+          ROS_INFO("[mapper] Astar failed when retrieving path from initial to final point!");
+          return false;
         }
         // ROS_INFO("Come from: %d", int(current_index));
         current_key = come_from[current_index];
@@ -397,8 +399,8 @@ void OctoClass::Astar(const octomap::point3d &p0,
     for (uint i = 0; i < n_neighbors; i++) {
       // Get neighbor index
       if (!indexed_free_keys.Key2Index(neighbor_keys[i], &neighbor_index)) {
-        ROS_INFO("Astar failed: Error retrieving index for neighbor node!");
-        return;
+        ROS_INFO("[mapper] Astar failed: Error retrieving index for neighbor node!");
+        return false;
       }
       // Check whether this neighbor leades to a new path
       neighbor_pos = tree_inflated_.keyToCoord(neighbor_keys[i]);
@@ -413,12 +415,15 @@ void OctoClass::Astar(const octomap::point3d &p0,
   }
 
   // Prune results if requested
+  ROS_INFO("[mapper]: Path found with %zu waypoints", solution_path.size());
   if (prune_result) {
     const bool free_space_only = true;
     this->PathPruning(solution_path, free_space_only, path);
+    ROS_INFO("[mapper]: Path compressed to %zu waypoints", path->size());
   } else {
     *path = solution_path;
   }
+  return true;
 }
 
 }  // namespace octoclass

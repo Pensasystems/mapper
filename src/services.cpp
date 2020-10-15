@@ -121,7 +121,35 @@ bool MapperClass::OctomapProcessPCL(std_srvs::SetBool::Request &req,
 
 bool MapperClass::AStarService(pensa_msgs::Astar::Request &req,
                                pensa_msgs::Astar::Response &res) {
-    res.success = true;
+    octomap::point3d p0(req.origin.x,           req.origin.y,      req.origin.z);
+    octomap::point3d pf(req.destination.x, req.destination.y, req.destination.z);
+    double planning_time;
+    std::vector<Eigen::Vector3d> path;
+    double plan_height;
+    mutexes_.update_map.lock();
+        const bool is_mapping_3d = globals_.octomap.IsMapping3D();
+        if (!is_mapping_3d && !helper::AreDoubleSame(p0.z(), pf.z())) {
+            ROS_ERROR("[mapper]: Mapping in 2D and the waypoints are not at the same height. Cannot compute A*");
+            res.success = false;
+        } else {
+            if (!is_mapping_3d) {
+                plan_height = p0.z();
+                p0.z() = 0.0;
+                pf.z() = 0.0;
+            }
+            res.success = globals_.octomap.Astar(p0, pf, req.prune_result, &planning_time, &path);
+        }
+    mutexes_.update_map.unlock();
+    if (res.success) {
+        res.planning_time = planning_time;
+        for (const auto& waypoint : path) {
+            if (is_mapping_3d) {
+                res.path.push_back(msg_conversions::eigen_to_ros_point(waypoint));
+            } else {
+                res.path.push_back(msg_conversions::set_ros_point(waypoint[0], waypoint[1], plan_height));
+            }
+        }
+    }
     return true;
 }
 

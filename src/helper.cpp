@@ -82,4 +82,8 @@ struct timespec TimeFromNow(const uint& increment_sec) {
   return ts;
 }
 
+bool AreDoubleSame(const double &value1, const double &value2) {
+  return std::fabs(value1 - value2) < std::numeric_limits<double>::epsilon();
+}
+
 }  // namespace helper

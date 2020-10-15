@@ -55,7 +55,7 @@ class OctoClass{
                        const bool &map_3d);
     OctoClass();
 
-    // Mapping methods
+    // Setters
     void SetMemory(const double &memory);  // Fading memory time
     void SetMaxRange(const double &max_range);  // Max range for mapping
     void SetMinRange(const double &min_range);  // Min range for mapping
@@ -77,7 +77,12 @@ class OctoClass{
                                const double &clamping_threshold_max);
     void SetMap3d(const bool &map_3d);
     void SetPathPlanningConfig(const pensa_msgs::PathPlanningConfig &path_planning_config);
+
+    // Getters
+    bool IsMapping3D() {return map_3d_;}
     std::string GetInertialFrameId() {return inertial_frame_id_;}
+
+    // Mapping methods
     void PointsOctomapToPointCloud2(const octomap::point3d_list& points,
                                     sensor_msgs::PointCloud2& cloud);  // Convert from octomap to pointcloud2
     void PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
@@ -200,10 +205,10 @@ class OctoClass{
                  int *n_rrg_nodes,
                  std::vector<Eigen::Vector3d> *path,
                  visualization_msgs::Marker *graph_markers);
-    void Astar(const octomap::point3d &p0,
+    bool Astar(const octomap::point3d &p0,
                const octomap::point3d &pf,
                const bool &prune_result,
-               float *plan_time,
+               double *plan_time,
                std::vector<Eigen::Vector3d> *path);
 
  private:
