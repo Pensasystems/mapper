@@ -119,6 +119,12 @@ bool MapperClass::OctomapProcessPCL(std_srvs::SetBool::Request &req,
     return true;
 }
 
+bool MapperClass::AStarService(pensa_msgs::Astar::Request &req,
+                               pensa_msgs::Astar::Response &res) {
+    res.success = true;
+    return true;
+}
+
 bool MapperClass::RRGService(pensa_msgs::RRT_RRG_PRM::Request &req,
                              pensa_msgs::RRT_RRG_PRM::Response &res) {
     std::vector<Eigen::Vector3d> e_path;

@@ -115,6 +115,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     std::string map_inflation_srv_name, reset_map_srv_name, rrg_srv_name;
     std::string save_map_srv_name, load_map_srv_name, process_pcl_srv_name;
     std::string initialize_map_to_path_planning_config_srv_name;
+    std::string a_star_path_planning_srv_name;
     nh->getParam("update_resolution", resolution_srv_name);
     nh->getParam("update_memory_time", memory_time_srv_name);
     nh->getParam("update_inflation_radius", map_inflation_srv_name);
@@ -123,6 +124,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     nh->getParam("load_map", load_map_srv_name);
     nh->getParam("initialize_map_to_path_planning_config", initialize_map_to_path_planning_config_srv_name);
     nh->getParam("process_pcl", process_pcl_srv_name);
+    nh->getParam("a_star_path_planning", a_star_path_planning_srv_name);
     nh->getParam("rrg_service", rrg_srv_name);
 
     // Load publisher names
@@ -211,6 +213,8 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
         initialize_map_to_path_planning_config_srv_name, &MapperClass::InitializeMapToPathPlanningConfig, this);
     process_pcl_srv_ = nh->advertiseService(
         process_pcl_srv_name, &MapperClass::OctomapProcessPCL, this);
+    a_star_path_planning_srv_ = nh->advertiseService(
+        a_star_path_planning_srv_name, &MapperClass::AStarService, this);
     rrg_srv_ = nh->advertiseService(
         rrg_srv_name, &MapperClass::RRGService, this);
 

@@ -37,6 +37,7 @@
 #include <visualization_msgs/MarkerArray.h>
 
 // Pensa messages/services
+#include <pensa_msgs/Astar.h>
 #include <pensa_msgs/ObstacleInPath.h>
 #include <pensa_msgs/PathPlanningConfig.h>
 #include <pensa_msgs/RRT_RRG_PRM.h>
@@ -163,6 +164,10 @@ class MapperClass {
   bool OctomapProcessPCL(std_srvs::SetBool::Request &req,
                          std_srvs::SetBool::Response &res);
 
+  // A* path planning service
+  bool AStarService(pensa_msgs::Astar::Request &req,
+                    pensa_msgs::Astar::Response &res);
+
   // RRG path planning
   bool RRGService(pensa_msgs::RRT_RRG_PRM::Request &req,
                   pensa_msgs::RRT_RRG_PRM::Response &res);
@@ -219,6 +224,7 @@ class MapperClass {
   ros::ServiceServer map_inflation_srv_, reset_map_srv_;
   ros::ServiceServer initialize_map_to_path_planning_config_srv_;
   ros::ServiceServer save_map_srv_, load_map_srv_, process_pcl_srv_;
+  ros::ServiceServer a_star_path_planning_srv_;
 
   // Service clients
   ros::ServiceClient load_path_planning_config_client_;

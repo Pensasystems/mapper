@@ -96,6 +96,7 @@
         <param name="load_map" value="load_map"/>
         <param name="initialize_map_to_path_planning_config" value="initialize_map_to_path_planning_config"/>
         <param name="process_pcl" value="process_pcl"/>
+        <param name="a_star_path_planning" value="a_star_path_planning"/>
         <param name="rrg_service" value="rrg"/>
 
         <!-- Marker publisher names -->
