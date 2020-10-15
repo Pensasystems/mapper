@@ -75,6 +75,14 @@ void FindNearestCollision(const std::vector<octomap::point3d> &colliding_nodes,
     }
 }
 
+bool ClearIfEmpty(const uint &depth, octomap::OcTree *tree) {
+  if (depth == 0) {
+    tree->clear();
+    return true;
+  }
+  return false;
+}
+
 struct timespec TimeFromNow(const uint& increment_sec) {
   struct timespec ts;
   clock_gettime(CLOCK_REALTIME, &ts);

@@ -493,9 +493,7 @@ void OctoClass::FadeMemory(const double &rate) {  // rate at which this function
         // not being deleted. If we have only the root node available (which we can
         // capure by checking the depth of the iterator), then we can safely clear
         // the tree, as it is not a use case we need
-        const uint depth = it.getDepth();
-        if (depth == 0) {
-            tree_.clear();
+        if (helper::ClearIfEmpty(it.getDepth(), &tree_)) {
             break;
         }
 
@@ -511,7 +509,7 @@ void OctoClass::FadeMemory(const double &rate) {  // rate at which this function
 
         // tree nodes that are unknown
         if (is_occ != tree_.isNodeOccupied(n)) {  // if it was occupied then disoccupied, delete node
-            tree_.deleteNode(key, depth);
+            tree_.deleteNode(key, it.getDepth());
         }
     }
 
@@ -524,9 +522,7 @@ void OctoClass::FadeMemory(const double &rate) {  // rate at which this function
         // not being deleted. If we have only the root node available (which we can
         // capure by checking the depth of the iterator), then we can safely clear
         // the tree, as it is not a use case we need
-        const uint depth = it.getDepth();
-        if (depth == 0) {
-            tree_inflated_.clear();
+        if (helper::ClearIfEmpty(it.getDepth(), &tree_inflated_)) {
             break;
         }
 
@@ -542,7 +538,7 @@ void OctoClass::FadeMemory(const double &rate) {  // rate at which this function
 
         // tree nodes that are unknown
         if (is_occ != tree_inflated_.isNodeOccupied(n)) {  // if it was occupied then disoccupied, delete node
-            tree_inflated_.deleteNode(key, depth);
+            tree_inflated_.deleteNode(key, it.getDepth());
         }
     }
 }
