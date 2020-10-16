@@ -75,9 +75,13 @@ void FindNearestCollision(const std::vector<octomap::point3d> &colliding_nodes,
     }
 }
 
-bool ClearIfEmpty(const uint &depth, octomap::OcTree *tree) {
-  if (depth == 0) {
-    tree->clear();
+bool IsTreeRootOnly(const octomap::OcTree &tree) {
+  octomap::OcTree::leaf_iterator it = tree.begin_leafs();
+  if (it == tree.end_leafs()) {
+    // Empty tree, return false
+    return false;
+  } else if (it.getDepth() == 0) {
+    // Yeah, first node is the root, return true
     return true;
   }
   return false;

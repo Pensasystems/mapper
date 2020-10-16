@@ -488,15 +488,6 @@ void OctoClass::FadeMemory(const double &rate) {  // rate at which this function
     for (octomap::OcTree::leaf_iterator it = tree_.begin_leafs(),
                                        end = tree_.end_leafs();
                                        it != end; ++it) {
-        // This if statement is a workaround for a bug in octomap. For some reason
-        // after we delete all nodes from the octree we end up with the root node
-        // not being deleted. If we have only the root node available (which we can
-        // capure by checking the depth of the iterator), then we can safely clear
-        // the tree, as it is not a use case we need
-        if (helper::ClearIfEmpty(it.getDepth(), &tree_)) {
-            break;
-        }
-
         // fade obstacles and free areas
         key = it.getKey();
         octomap::OcTreeNode* n = tree_.search(key);
@@ -517,15 +508,6 @@ void OctoClass::FadeMemory(const double &rate) {  // rate at which this function
     for (octomap::OcTree::leaf_iterator it = tree_inflated_.begin_leafs(),
                                        end = tree_inflated_.end_leafs();
                                        it != end; ++it) {
-        // This if statement is a workaround for a bug in octomap. For some reason
-        // after we delete all nodes from the octree we end up with the root node
-        // not being deleted. If we have only the root node available (which we can
-        // capure by checking the depth of the iterator), then we can safely clear
-        // the tree, as it is not a use case we need
-        if (helper::ClearIfEmpty(it.getDepth(), &tree_inflated_)) {
-            break;
-        }
-
         // fade obstacles and free areas
         key = it.getKey();
         octomap::OcTreeNode* n = tree_inflated_.search(key);
@@ -540,6 +522,18 @@ void OctoClass::FadeMemory(const double &rate) {  // rate at which this function
         if (is_occ != tree_inflated_.isNodeOccupied(n)) {  // if it was occupied then disoccupied, delete node
             tree_inflated_.deleteNode(key, it.getDepth());
         }
+    }
+
+    // These if statements are a workaround for a bug in octomap. For some reason
+    // after we delete all nodes from the octree we end up with the root node
+    // not being deleted. If we have only the root node available (which we can
+    // capure by checking the depth of the iterator), then we can safely clear
+    // the tree, as it is not a use case we need
+    if (helper::IsTreeRootOnly(tree_)) {
+        tree_.clear();
+    }
+    if (helper::IsTreeRootOnly(tree_inflated_)) {
+        tree_inflated_.clear();
     }
 }
 
