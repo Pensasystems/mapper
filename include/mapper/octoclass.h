@@ -76,7 +76,8 @@ class OctoClass{
     void SetClampingThresholds(const double &clamping_threshold_min,
                                const double &clamping_threshold_max);
     void SetMap3d(const bool &map_3d);
-    void SetPathPlanningConfig(const pensa_msgs::PathPlanningConfig &path_planning_config);
+    void SetPathPlanningConfig(const pensa_msgs::PathPlanningConfig &path_planning_config,
+                               const double &desired_obstacle_planning_distance);
 
     // Getters
     bool IsMapping3D() {return map_3d_;}
@@ -116,6 +117,18 @@ class OctoClass{
     // void inflatedFreeVisMarkers(visualization_msgs::MarkerArray* marker_array);
 
     // Useful methods
+    // Get all octomap nodes in a straight line between the points p1 and p2
+    void GetNodesBetweenWaypoints(const octomap::point3d &p1,
+                                  const octomap::point3d &p2,
+                                  const bool &add_final_waypoint,
+                                  std::vector<octomap::point3d> *intermediate_nodes);
+
+    // Overload previous function with Eigen inputs
+    void GetNodesBetweenWaypoints(const Eigen::Vector3d &p1,
+                                  const Eigen::Vector3d &p2,
+                                  const bool &add_final_waypoint,
+                                  std::vector<octomap::point3d> *intermediate_nodes);
+
     // checkOccupancy functions: Returns -1 if node is unknown, 0 if its free and 1 if its occupied
     int CheckOccupancy(const octomap::point3d &p);  // Point collision
     int CheckOccupancy(const pcl::PointXYZ &p);  // Point collision
@@ -165,8 +178,17 @@ class OctoClass{
     // Return nearest occupied node within a radius (inflated tree)
     bool NearestOccNodeWithinRadius(const geometry_msgs::Point &center_pt,
                                     const double &radius,
-                                    Eigen::Vector3d *node_center,
                                     double *distance);
+
+    // Same as previous, but with different input variable
+    bool NearestOccNodeWithinRadius(const octomap::point3d &center_pt,
+                                    const double &radius,
+                                    double *distance);
+
+    // Return nearest occupied node within a square box
+    bool NearestOccNodeWithinBox(const octomap::point3d &center_pt,
+                                 const double &box_half_width,
+                                 double *distance);
 
     // Find all immediate neighbors of a node
     void GetNodeNeighbors(const octomap::OcTreeKey &node_key,
@@ -187,10 +209,26 @@ class OctoClass{
     bool IsPointInNoFlyZone(const octomap::point3d &point,
                             const pensa_msgs::NoFlyZone &no_fly_zone);
 
-    // path planning methods (implementations in octopath.cc)
+    // Path Planning methods (implementations in octopath.cc) ---------------------------------------
+
+    // Delete colinear waypoints to reduce the number of waypoints to traverse
+    void DeleteColinearWaypoints(const std::vector<Eigen::Vector3d> &path,
+                                 std::vector<Eigen::Vector3d> *compressed_path);
+
+    // Reduce the number of waypoints by pruning intermediate ones, where the compressed_path
+    // does not collide with the environment
     void PathPruning(const std::vector<Eigen::Vector3d> &path,
                      const bool &free_space_only,
                      std::vector<Eigen::Vector3d> *compressed_path);
+
+    // Function that computes an added cost to traverse a node based on its
+    // distance to the nearest obstacle
+    double NearestObstaclePathCost(const octomap::point3d &node_position);
+
+    // Computes the average cost of a set of input nodes using the cost from "NearestObstaclePathCost"
+    double AverageObstaclePathCost(const std::vector<octomap::point3d> &node_positions);
+
+    // RRG implementation on the octomap
     bool OctoRRG(const Eigen::Vector3d &p0,
                  const Eigen::Vector3d &pf,
                  const Eigen::Vector3d &box_min,
@@ -205,11 +243,14 @@ class OctoClass{
                  int *n_rrg_nodes,
                  std::vector<Eigen::Vector3d> *path,
                  visualization_msgs::Marker *graph_markers);
+
+    // A* implementation on the octomap
     bool Astar(const octomap::point3d &p0,
                const octomap::point3d &pf,
                const bool &prune_result,
                double *plan_time,
-               std::vector<Eigen::Vector3d> *path);
+               std::vector<Eigen::Vector3d> *path,
+               std::vector<Eigen::Vector3d> *pruned_path);
 
  private:
     int tree_depth_;
@@ -221,7 +262,10 @@ class OctoClass{
     std::string inertial_frame_id_;
     bool map_3d_;
     bool using_path_planning_config_map_;
+
+    // Path planning configuration variables
     pensa_msgs::PathPlanningConfig path_planning_config_;
+    double desired_obstacle_planning_distance_;
 
     // Methods
     double VectorNormSquared(const double &x,

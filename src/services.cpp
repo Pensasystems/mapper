@@ -124,7 +124,7 @@ bool MapperClass::AStarService(pensa_msgs::Astar::Request &req,
     octomap::point3d p0(req.origin.x,           req.origin.y,      req.origin.z);
     octomap::point3d pf(req.destination.x, req.destination.y, req.destination.z);
     double planning_time;
-    std::vector<Eigen::Vector3d> path;
+    std::vector<Eigen::Vector3d> path, pruned_path;
     double plan_height;
     mutexes_.update_map.lock();
         const bool is_mapping_3d = globals_.octomap.IsMapping3D();
@@ -137,12 +137,12 @@ bool MapperClass::AStarService(pensa_msgs::Astar::Request &req,
                 p0.z() = 0.0;
                 pf.z() = 0.0;
             }
-            res.success = globals_.octomap.Astar(p0, pf, req.prune_result, &planning_time, &path);
+            res.success = globals_.octomap.Astar(p0, pf, req.prune_result, &planning_time, &path, &pruned_path);
         }
     mutexes_.update_map.unlock();
     if (res.success) {
         res.planning_time = planning_time;
-        for (const auto& waypoint : path) {
+        for (const auto& waypoint : pruned_path) {
             if (is_mapping_3d) {
                 res.path.push_back(msg_conversions::eigen_to_ros_point(waypoint));
             } else {
@@ -150,6 +150,19 @@ bool MapperClass::AStarService(pensa_msgs::Astar::Request &req,
             }
         }
     }
+
+    // Publish path for Rviz visualization
+    this->PublishPathPlanningPathMarkers(path, pruned_path, inertial_frame_id_);
+
+    return true;
+}
+
+bool MapperClass::ClearAstarTrajectoryInRviz(std_srvs::Trigger::Request &req,
+                                             std_srvs::Trigger::Response &res) {
+    // Request to publish an empty trajectory
+    std::vector<Eigen::Vector3d> path, pruned_path;
+    this->PublishPathPlanningPathMarkers(path, pruned_path, inertial_frame_id_);
+    res.success = true;
     return true;
 }
 

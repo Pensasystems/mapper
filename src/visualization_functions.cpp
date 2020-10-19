@@ -269,6 +269,41 @@ void PathVisualization(const std::vector<Eigen::Vector3d> &total_path,
     markers->markers.push_back(line_list);
 }
 
+void PathVisualization(const std::vector<Eigen::Vector3d> &total_path,
+                       const std_msgs::ColorRGBA &color,
+                       const std::string &inertial_frame_id,
+                       const std::string &ns,  // namespace
+                       visualization_msgs::MarkerArray *markers) {
+    // Initialize edges marker
+    visualization_msgs::Marker line_list;
+    line_list.header.frame_id = inertial_frame_id;
+    line_list.header.stamp = ros::Time::now();
+    line_list.ns = ns;
+    line_list.action = visualization_msgs::Marker::ADD;
+    line_list.type = visualization_msgs::Marker::LINE_LIST;
+    line_list.id = 0;
+    line_list.scale.x = 0.02;  // Line width
+    line_list.pose.orientation.w = 1.0;
+    line_list.color = color;
+
+    // Populate edges
+    uint path_n_points = total_path.size();
+    geometry_msgs::Point node;
+    if (path_n_points >= 2) {
+        node = msg_conversions::eigen_to_ros_point(total_path[0]);
+        line_list.points.push_back(node);
+        for (uint i = 1; i < total_path.size()-1; i++) {
+            node = msg_conversions::eigen_to_ros_point(total_path[i]);
+            line_list.points.push_back(node);
+            line_list.points.push_back(node);
+        }
+        node = msg_conversions::eigen_to_ros_point(total_path[total_path.size()-1]);
+        line_list.points.push_back(node);
+    }
+
+    markers->markers.push_back(line_list);
+}
+
 void DrawArrowPoints(const Eigen::Vector3d& p1,
                      const Eigen::Vector3d& p2,
                      const std_msgs::ColorRGBA &color,

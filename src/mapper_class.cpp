@@ -116,6 +116,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     std::string save_map_srv_name, load_map_srv_name, process_pcl_srv_name;
     std::string initialize_map_to_path_planning_config_srv_name;
     std::string a_star_path_planning_srv_name;
+    std::string clear_a_star_visualization_rviz_srv_name;
     nh->getParam("update_resolution", resolution_srv_name);
     nh->getParam("update_memory_time", memory_time_srv_name);
     nh->getParam("update_inflation_radius", map_inflation_srv_name);
@@ -125,6 +126,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     nh->getParam("initialize_map_to_path_planning_config", initialize_map_to_path_planning_config_srv_name);
     nh->getParam("process_pcl", process_pcl_srv_name);
     nh->getParam("a_star_path_planning", a_star_path_planning_srv_name);
+    nh->getParam("clear_a_star_visualization_rviz", clear_a_star_visualization_rviz_srv_name);
     nh->getParam("rrg_service", rrg_srv_name);
 
     // Load publisher names
@@ -133,7 +135,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     std::string frustum_markers_topic, discrete_trajectory_markers_topic;
     std::string path_obstacle_detection_topic, graph_tree_marker_topic;
     std::string obstacle_radius_detection_topic, obstacle_radius_markers_topic;
-    std::string path_planning_config_markers_topic;
+    std::string path_planning_config_markers_topic, path_planning_path_markers_topic;
     nh->getParam("obstacle_markers", obstacle_markers_topic);
     nh->getParam("free_space_markers", free_space_markers_topic);
     nh->getParam("inflated_obstacle_markers", inflated_obstacle_markers_topic);
@@ -144,6 +146,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     nh->getParam("path_obstacle_detection", path_obstacle_detection_topic);
     nh->getParam("obstacle_radius_detection", obstacle_radius_detection_topic);
     nh->getParam("path_planning_config_markers", path_planning_config_markers_topic);
+    nh->getParam("path_planning_path_markers", path_planning_path_markers_topic);
     nh->getParam("graph_tree_marker_topic", graph_tree_marker_topic);
 
     // Load current package path
@@ -166,6 +169,8 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
 
     // Load path planning config
     pensa_msgs::PathPlanningConfig path_planning_config;
+    double desired_obstacle_planning_distance;
+    nh->getParam("desired_obstacle_planning_distance", desired_obstacle_planning_distance);
     this->LoadPathPlanningConfig(inertial_frame_id_, &path_planning_config, nh);
 
     // update tree parameters
@@ -181,7 +186,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     globals_.octomap.SetHitMissProbabilities(probability_hit, probability_miss);
     globals_.octomap.SetClampingThresholds(clamping_threshold_min, clamping_threshold_max);
     globals_.octomap.SetMap3d(map_3d);
-    globals_.octomap.SetPathPlanningConfig(path_planning_config);
+    globals_.octomap.SetPathPlanningConfig(path_planning_config, desired_obstacle_planning_distance);
 
     // update trajectory discretization parameters (used in collision check)
     globals_.sampled_traj.SetMaxDev(compression_max_dev);
@@ -215,6 +220,8 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
         process_pcl_srv_name, &MapperClass::OctomapProcessPCL, this);
     a_star_path_planning_srv_ = nh->advertiseService(
         a_star_path_planning_srv_name, &MapperClass::AStarService, this);
+    clear_a_star_visualization_rviz_srv_ = nh->advertiseService(
+        clear_a_star_visualization_rviz_srv_name, &MapperClass::ClearAstarTrajectoryInRviz, this);
     rrg_srv_ = nh->advertiseService(
         rrg_srv_name, &MapperClass::RRGService, this);
 
@@ -241,6 +248,8 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
         nh->advertise<visualization_msgs::Marker>(graph_tree_marker_topic, 10);
     path_planning_config_pub_ =
         nh->advertise<visualization_msgs::MarkerArray>(path_planning_config_markers_topic, 10, true);
+    path_planning_path_marker_pub_ =
+        nh->advertise<visualization_msgs::MarkerArray>(path_planning_path_markers_topic, 10, true);
 
     // Publish no-fly-zones for Rviz visualization
     this->PublishPathPlanningConfigMarkers(path_planning_config, inertial_frame_id_);
@@ -359,6 +368,20 @@ void MapperClass::PublishPathPlanningConfigMarkers(const pensa_msgs::PathPlannin
     visualization_functions::DrawPathPlanningConfig(path_planning_config, ns, inertial_frame_id, no_fly_zone_color,
                                                     fly_zone_color, thickness, &no_fly_zones_markers);
     path_planning_config_pub_.publish(no_fly_zones_markers);
+}
+
+void MapperClass::PublishPathPlanningPathMarkers(const std::vector<Eigen::Vector3d> &path,
+                                                 const std::vector<Eigen::Vector3d> &pruned_path,
+                                                 const std::string &inertial_frame_id) {
+    visualization_msgs::MarkerArray markers;
+    const std_msgs::ColorRGBA color_path = visualization_functions::Color::Yellow();
+    const std_msgs::ColorRGBA color_pruned_path = visualization_functions::Color::Purple();
+    const std::string ns_path = "Astar";
+    const std::string ns_path_pruned = "Astar_pruned";
+    visualization_functions::PathVisualization(path, color_path, inertial_frame_id, ns_path, &markers);
+    visualization_functions::PathVisualization(pruned_path, color_pruned_path, inertial_frame_id,
+                                               ns_path_pruned, &markers);
+    path_planning_path_marker_pub_.publish(markers);
 }
 
 void MapperClass::LoadPathPlanningConfig(const std::string &inertial_frame_id,

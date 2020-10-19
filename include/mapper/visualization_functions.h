@@ -128,6 +128,13 @@ void PathVisualization(const std::vector<Eigen::Vector3d> &total_path,
                        const std::string &ns,  // namespace
                        visualization_msgs::MarkerArray* markers);
 
+// Visualize a list of lines containing all intermediate waypoints
+void PathVisualization(const std::vector<Eigen::Vector3d> &total_path,
+                       const std_msgs::ColorRGBA &color,
+                       const std::string &inertial_frame_id,
+                       const std::string &ns,  // namespace
+                       visualization_msgs::MarkerArray *markers);
+
 void DrawArrowPoints(const Eigen::Vector3d &p1,
                      const Eigen::Vector3d &p2,
                      const std_msgs::ColorRGBA &color,

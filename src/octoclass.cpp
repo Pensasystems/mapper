@@ -186,8 +186,10 @@ void OctoClass::SetMap3d(const bool &map_3d) {
     }
 }
 
-void OctoClass::SetPathPlanningConfig(const pensa_msgs::PathPlanningConfig &path_planning_config) {
+void OctoClass::SetPathPlanningConfig(const pensa_msgs::PathPlanningConfig &path_planning_config,
+                                      const double &desired_obstacle_planning_distance) {
     path_planning_config_ = path_planning_config;
+    desired_obstacle_planning_distance_ = desired_obstacle_planning_distance;
 }
 
 // Function obtained from https://github.com/OctoMap/octomap_ros
@@ -811,6 +813,32 @@ void OctoClass::InflatedVisMarkers(visualization_msgs::MarkerArray* obstacles,
     }
 }
 
+void OctoClass::GetNodesBetweenWaypoints(const octomap::point3d &p1,
+                                         const octomap::point3d &p2,
+                                         const bool &add_final_waypoint,
+                                         std::vector<octomap::point3d> *intermediate_nodes) {
+    octomap::KeyRay ray;
+    tree_inflated_.computeRayKeys(p1, p2, ray);
+    const octomap::OcTreeNode* n;
+    for (octomap::KeyRay::iterator it = ray.begin(); it != ray.end(); ++it) {
+        intermediate_nodes->push_back(tree_inflated_.keyToCoord(*it));
+    }
+
+    // computeRayKeys does not compute the final point, so we add manually
+    if (add_final_waypoint) {
+        intermediate_nodes->push_back(p2);
+    }
+}
+
+void OctoClass::GetNodesBetweenWaypoints(const Eigen::Vector3d &p1,
+                                         const Eigen::Vector3d &p2,
+                                         const bool &add_final_waypoint,
+                                         std::vector<octomap::point3d> *intermediate_nodes) {
+    this->GetNodesBetweenWaypoints(octomap::point3d(p1[0], p1[1], p1[2]),
+                                   octomap::point3d(p2[0], p2[1], p2[2]),
+                                   add_final_waypoint, intermediate_nodes);
+}
+
 // Returns -1 if node is unknown, 0 if its free and 1 if its occupied
 int OctoClass::CheckOccupancy(const octomap::point3d &p) {
     static octomap::OcTreeKey key;
@@ -1112,7 +1140,6 @@ void OctoClass::OccNodesWithinRadius(const geometry_msgs::Point &center_pt,
 
 bool OctoClass::NearestOccNodeWithinRadius(const geometry_msgs::Point &center_pt,
                                            const double &radius,
-                                           Eigen::Vector3d *node_center,
                                            double *distance) {
     Eigen::Vector3d center =
         msg_conversions::ros_point_to_eigen_vector(center_pt);
@@ -1123,7 +1150,6 @@ bool OctoClass::NearestOccNodeWithinRadius(const geometry_msgs::Point &center_pt
 
     // Initialize outputs
     *distance = std::numeric_limits<double>::infinity();
-    *node_center = Eigen::Vector3d(0.0, 0.0, 0.0);
 
     // get all occupied nodes within a box
     this->OccNodesWithinBox(box_min, box_max, &candidates, &node_sizes);
@@ -1140,10 +1166,44 @@ bool OctoClass::NearestOccNodeWithinRadius(const geometry_msgs::Point &center_pt
         const double dist_sqr = dist_vec.dot(dist_vec);
         if (dist_sqr <= radius_square) {
             if (dist_sqr < (*distance)) {
-                *node_center = candidates[i];
                 *distance = sqrt(dist_sqr);
                 there_are_nodes = true;
             }
+        }
+    }
+
+    return there_are_nodes;
+}
+
+bool OctoClass::NearestOccNodeWithinRadius(const octomap::point3d &center_pt,
+                                           const double &radius,
+                                           double *distance) {
+    this->NearestOccNodeWithinRadius(msg_conversions::set_ros_point(center_pt.x(), center_pt.y(), center_pt.z()),
+                                     radius, distance);
+}
+
+bool OctoClass::NearestOccNodeWithinBox(const octomap::point3d &center_pt,
+                                        const double &box_half_width,
+                                        double *distance) {
+    const Eigen::Vector3d center(center_pt.x(), center_pt.y(), center_pt.z());
+    const Eigen::Vector3d box_min = center - Eigen::Vector3d(box_half_width, box_half_width, box_half_width);
+    const Eigen::Vector3d box_max = center + Eigen::Vector3d(box_half_width, box_half_width, box_half_width);
+    std::vector<Eigen::Vector3d> candidates;
+    std::vector<double> node_sizes;
+
+    // Initialize output
+    *distance = std::numeric_limits<double>::infinity();
+
+    // get all occupied nodes within a box
+    this->OccNodesWithinBox(box_min, box_max, &candidates, &node_sizes);
+
+    // Check if any of the candidates are within radius
+    bool there_are_nodes = false;
+    for (uint i = 0; i < candidates.size(); i++) {
+        const Eigen::Vector3d dist_vec = candidates[i] - center;
+        if (dist_vec.norm() < *distance) {
+            *distance = dist_vec.norm();
+            there_are_nodes = true;
         }
     }
 

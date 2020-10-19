@@ -106,6 +106,10 @@ class MapperClass {
   void PublishPathPlanningConfigMarkers(const pensa_msgs::PathPlanningConfig &path_planning_config,
                                         const std::string &inertial_frame_id);
 
+  void PublishPathPlanningPathMarkers(const std::vector<Eigen::Vector3d> &path,
+                                      const std::vector<Eigen::Vector3d> &pruned_path,
+                                      const std::string &inertial_frame_id);
+
   void LoadPathPlanningConfig(const std::string &inertial_frame_id,
                               pensa_msgs::PathPlanningConfig *path_planning_config,
                               ros::NodeHandle *nh);
@@ -168,6 +172,10 @@ class MapperClass {
   bool AStarService(pensa_msgs::Astar::Request &req,
                     pensa_msgs::Astar::Response &res);
 
+  // Service to clear A* path visualization in Rviz
+  bool ClearAstarTrajectoryInRviz(std_srvs::Trigger::Request &req,
+                                  std_srvs::Trigger::Response &res);
+
   // RRG path planning
   bool RRGService(pensa_msgs::RRT_RRG_PRM::Request &req,
                   pensa_msgs::RRT_RRG_PRM::Response &res);
@@ -225,6 +233,7 @@ class MapperClass {
   ros::ServiceServer initialize_map_to_path_planning_config_srv_;
   ros::ServiceServer save_map_srv_, load_map_srv_, process_pcl_srv_;
   ros::ServiceServer a_star_path_planning_srv_;
+  ros::ServiceServer clear_a_star_visualization_rviz_srv_;
 
   // Service clients
   ros::ServiceClient load_path_planning_config_client_;
@@ -259,6 +268,7 @@ class MapperClass {
   ros::Publisher cam_frustum_pub_;
   ros::Publisher obstacle_radius_marker_pub_;
   ros::Publisher path_planning_config_pub_;
+  ros::Publisher path_planning_path_marker_pub_;
 
   // Path planning publishers
   ros::Publisher graph_tree_marker_pub_;
