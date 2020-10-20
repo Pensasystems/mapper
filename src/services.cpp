@@ -159,7 +159,7 @@ bool MapperClass::AStarService(pensa_msgs::Astar::Request &req,
 
 bool MapperClass::ClearAstarTrajectoryInRviz(std_srvs::Trigger::Request &req,
                                              std_srvs::Trigger::Response &res) {
-    // Request to publish an empty trajectory
+    // Request to publish an empty trajectory, which should delete the previous one
     std::vector<Eigen::Vector3d> path, pruned_path;
     this->PublishPathPlanningPathMarkers(path, pruned_path, inertial_frame_id_);
     res.success = true;

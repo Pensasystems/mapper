@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -152,123 +151,11 @@ class Plane3d{
 
     Plane3d() {}
 
-    void transformPlane(const Eigen::Affine3d &transform,
+    void TransformPlane(const Eigen::Affine3d &transform,
                         Plane3d *transformedPlane) {
         transformedPlane->origin_ = transform*origin_;
         transformedPlane->normal_ = (transform.linear()*normal_).normalized();
     }
-
-    // This function returns a positive value if point is in the
-    // direction of the normal, and a negative value if it is
-    // in the opposite direction of the normal
-    double DistancePoint2Plane(const Eigen::Vector3d &point) {
-        // Get distance between point and origin
-        const Eigen::Vector3d dist_point_origin = point - origin_;
-
-        // Project the calculated distance into the normal vector
-        return dist_point_origin.dot(normal_);
-    }
-};
-
-// Create box with normals facing inwards
-class BoxPlanes {
- public:
-    // Constructors ----------------------------------------------
-    BoxPlanes() { }
-
-    // Construct box from opposite corners
-    BoxPlanes(const Eigen::Vector3d corner1,
-              const Eigen::Vector3d corner2,
-              const std::string name) {
-        const double min_x = std::min(corner1[0], corner2[0]);
-        const double max_x = std::max(corner1[0], corner2[0]);
-        const double min_y = std::min(corner1[1], corner2[1]);
-        const double max_y = std::max(corner1[1], corner2[1]);
-        const double min_z = std::min(corner1[2], corner2[2]);
-        const double max_z = std::max(corner1[2], corner2[2]);
-
-        // Set lower and upper corners
-        lower_corner_ = Eigen::Vector3d(min_x, min_y, min_z);
-        upper_corner_ = Eigen::Vector3d(max_x, max_y, max_z);
-
-        // Create a plane for each face of the box
-        bottom_plane_ = Plane3d(lower_corner_, Eigen::Vector3d(0.0, 0.0, 1.0));
-        right_plane_ = Plane3d(lower_corner_, Eigen::Vector3d(0.0, 1.0, 0.0));
-        back_plane_ = Plane3d(lower_corner_, Eigen::Vector3d(1.0, 0.0, 0.0));
-        upper_plane_ = Plane3d(upper_corner_, Eigen::Vector3d(0.0, 0.0, -1.0));
-        left_plane_ = Plane3d(upper_corner_, Eigen::Vector3d(0.0, -1.0, 0.0));
-        front_plane_ = Plane3d(upper_corner_, Eigen::Vector3d(-1.0, 0.0, 0.0));
-
-        // Set name of the box
-        name_ = name;
-    }
-
-    // Methods ---------------------------------------------------
-
-    // Is point within box
-    bool IsPointWithinBox(const Eigen::Vector3d &point) {
-        // If the distance between the point and any plane is less than zero,
-        // it means that the point is outside the box, since the normal of all
-        // the planes point inwards into the box
-        if (bottom_plane_.DistancePoint2Plane(point) < 0.0) {
-            return false;
-        }
-        if (upper_plane_.DistancePoint2Plane(point) < 0.0) {
-            return false;
-        }
-        if (left_plane_.DistancePoint2Plane(point) < 0.0) {
-            return false;
-        }
-        if (right_plane_.DistancePoint2Plane(point) < 0.0) {
-            return false;
-        }
-        if (back_plane_.DistancePoint2Plane(point) < 0.0) {
-            return false;
-        }
-        if (front_plane_.DistancePoint2Plane(point) < 0.0) {
-            return false;
-        }
-        return true;
-    }
-
-    // Return visualization marker for box visualization
-    void VisualizeBox(const std::string frame_id,
-                      visualization_msgs::MarkerArray *box_marker) {
-        // Get box dimensions
-        const Eigen::Vector3d diagonal_vector = upper_corner_ - lower_corner_;
-        const Eigen::Vector3d box_center = lower_corner_ + diagonal_vector/2.0;
-        const double depth = diagonal_vector[0];
-        const double width = diagonal_vector[1];
-        const double height = diagonal_vector[2];
-
-        // Initialize array
-        visualization_msgs::Marker marker;
-        marker.header.frame_id = frame_id;
-        marker.header.stamp = ros::Time::now();
-        marker.ns = "box/" + name_;
-        marker.action = visualization_msgs::Marker::ADD;
-        marker.pose.orientation.w = 1.0;
-        marker.type = visualization_msgs::Marker::CUBE;
-        marker.id = 0;
-        marker.scale.x = depth;
-        marker.scale.y = width;
-        marker.scale.z = height;
-        marker.color = visualization_functions::Color::Red();
-        marker.color.a = 0.4;
-
-        box_marker->markers.push_back(marker);
-    }
-
- private:
-    std::string name_;
-    Plane3d bottom_plane_;
-    Plane3d upper_plane_;
-    Plane3d left_plane_;
-    Plane3d right_plane_;
-    Plane3d back_plane_;
-    Plane3d front_plane_;
-    Eigen::Vector3d lower_corner_;
-    Eigen::Vector3d upper_corner_;
 };
 
 class FrustumPlanes{
@@ -325,10 +212,10 @@ class FrustumPlanes{
 
     void TransformFrustum(const Eigen::Affine3d &transform,
                           FrustumPlanes *transformed_frustum) {
-        left_plane_.transformPlane(transform, &transformed_frustum->left_plane_);
-        right_plane_.transformPlane(transform, &transformed_frustum->right_plane_);
-        up_plane_.transformPlane(transform, &transformed_frustum->up_plane_);
-        down_plane_.transformPlane(transform, &transformed_frustum->down_plane_);
+        left_plane_.TransformPlane(transform, &transformed_frustum->left_plane_);
+        right_plane_.TransformPlane(transform, &transformed_frustum->right_plane_);
+        up_plane_.TransformPlane(transform, &transformed_frustum->up_plane_);
+        down_plane_.TransformPlane(transform, &transformed_frustum->down_plane_);
         transformed_frustum->origin_ = transform*origin_;
         transformed_frustum->UL_ = transform*UL_;
         transformed_frustum->UR_ = transform*UR_;
