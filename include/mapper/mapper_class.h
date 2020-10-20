@@ -103,13 +103,16 @@ class MapperClass {
   void PublishRadiusMarkers(const Eigen::Vector3d &center,
                             const double &radius);
 
+  // Publish no-fly-zones and planning zone for Rviz visualization
   void PublishPathPlanningConfigMarkers(const pensa_msgs::PathPlanningConfig &path_planning_config,
                                         const std::string &inertial_frame_id);
 
+  // Publish markers of the planned trajectory (Rviz visualization)
   void PublishPathPlanningPathMarkers(const std::vector<Eigen::Vector3d> &path,
                                       const std::vector<Eigen::Vector3d> &pruned_path,
                                       const std::string &inertial_frame_id);
 
+  // Calls store_arbiter's service to retrieve path planning config
   void LoadPathPlanningConfig(const std::string &inertial_frame_id,
                               pensa_msgs::PathPlanningConfig *path_planning_config,
                               ros::NodeHandle *nh);

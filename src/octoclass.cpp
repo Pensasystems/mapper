@@ -1175,13 +1175,6 @@ bool OctoClass::NearestOccNodeWithinRadius(const geometry_msgs::Point &center_pt
     return there_are_nodes;
 }
 
-bool OctoClass::NearestOccNodeWithinRadius(const octomap::point3d &center_pt,
-                                           const double &radius,
-                                           double *distance) {
-    this->NearestOccNodeWithinRadius(msg_conversions::set_ros_point(center_pt.x(), center_pt.y(), center_pt.z()),
-                                     radius, distance);
-}
-
 bool OctoClass::NearestOccNodeWithinBox(const octomap::point3d &center_pt,
                                         const double &box_half_width,
                                         double *distance) {
