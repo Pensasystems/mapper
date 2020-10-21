@@ -180,7 +180,7 @@ class OctoClass{
                                     const double &radius,
                                     double *distance);
 
-    // Return nearest occupied node within a square box
+    // Return nearest occupied node within a square box whose width is 2*box_half_width
     bool NearestOccNodeWithinBox(const octomap::point3d &center_pt,
                                  const double &box_half_width,
                                  double *distance);
