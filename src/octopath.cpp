@@ -357,7 +357,7 @@ bool OctoClass::Astar(const octomap::point3d &p0,
   const ros::Time t0 = ros::Time::now();
 
   // Check whether p0 and pf are free nodes in the octomap
-  static int is_occ;
+  int is_occ;
   is_occ = this->CheckOccupancy(p0);
   if (is_occ == -1) {
     ROS_INFO("[mapper] A* failed: initial node is unknown in the octomap!");
@@ -378,20 +378,19 @@ bool OctoClass::Astar(const octomap::point3d &p0,
   // Get map info
   IndexedKeySet indexed_free_keys;
   std::vector<double> node_sizes;
-  static Eigen::Vector3d map_min, map_max;
+  Eigen::Vector3d map_min, map_max;
   tree_inflated_.getMetricMin(map_min[0], map_min[1], map_min[2]);
   tree_inflated_.getMetricMax(map_max[0], map_max[1], map_max[2]);
   this->BBXFreeNodes(map_min, map_max, &indexed_free_keys, &node_sizes);
   ROS_INFO("[mapper] A* computing trajectory from [%.3f, %.3f, %.3f] to [%.3f, %.3f, %.3f]",
            p0.x(), p0.y(), p0.z(), pf.x(), pf.y(), pf.z());
-  ROS_INFO("[mapper] Number of nodes: %d", static_cast<int>(indexed_free_keys.Size()));
+  ROS_DEBUG("[mapper] Number of nodes: %d", static_cast<int>(indexed_free_keys.Size()));
 
-  // Find initial and final indexes
-  static uint initial_index, final_index;
-  static octomap::OcTreeKey initial_key, final_key;
-  initial_key = tree_inflated_.coordToKey(p0);
-  final_key = tree_inflated_.coordToKey(pf);
+  // Find initial and final keys/indexes
+  const octomap::OcTreeKey initial_key = tree_inflated_.coordToKey(p0);
+  const octomap::OcTreeKey final_key = tree_inflated_.coordToKey(pf);
 
+  uint initial_index;
   if (!indexed_free_keys.Key2Index(initial_key, &initial_index)) {
     ROS_INFO("[mapper] Astar failed: Error retrieving index for initial node!");
     return false;
@@ -399,32 +398,27 @@ bool OctoClass::Astar(const octomap::point3d &p0,
 
   // Astar algorithm variables
   const uint n_nodes = indexed_free_keys.Size();
-  uint n_neighbors;
-  octomap::OcTreeKey current_key;
-  octomap::point3d current_pos, neighbor_pos;
-  uint current_index, neighbor_index;
-  double tentative_cost, priority;
   PriorityQueue<octomap::OcTreeKey, double> queue;      // octomap::OcTreeKey index, double cost
   std::vector<double> cost_so_far(n_nodes, std::numeric_limits<float>::infinity());
   std::vector<double> node_distance_to_wall(n_nodes, -1.0);
-  std::vector<octomap::OcTreeKey> come_from(n_nodes), neighbor_keys;
+  std::vector<octomap::OcTreeKey> come_from(n_nodes);
 
   // Initialize algorithm
   queue.put(initial_key, 0.0);
   come_from[initial_index] = initial_key;
   cost_so_far[initial_index] = 0.0;
   while (!queue.empty()) {
-    current_key = queue.get();
+    octomap::OcTreeKey current_key = queue.get();
+    uint current_index;
     if (!indexed_free_keys.Key2Index(current_key, &current_index)) {
       ROS_INFO("[mapper] Astar failed: Error retrieving index for current node!");
       return false;
     }
 
     // Check whether we reached the goal
+    octomap::point3d current_pos = tree_inflated_.keyToCoord(current_key);
     if (current_key == final_key) {
-      Eigen::Vector3d pos;
-      current_pos = tree_inflated_.keyToCoord(current_key);
-      pos = Eigen::Vector3d(current_pos.x(), current_pos.y(), current_pos.z());
+      Eigen::Vector3d pos = Eigen::Vector3d(current_pos.x(), current_pos.y(), current_pos.z());
       path->insert(path->begin(), pos);
       while (current_key != initial_key) {
         if (!indexed_free_keys.Key2Index(current_key, &current_index)) {
@@ -441,32 +435,33 @@ bool OctoClass::Astar(const octomap::point3d &p0,
     }
 
     // Check neighbors
-    neighbor_keys.clear();
+    std::vector<octomap::OcTreeKey> neighbor_keys;
     this->GetNodeNeighbors(current_key, node_sizes[current_index], &neighbor_keys);
-    n_neighbors = neighbor_keys.size();
-    current_pos = tree_inflated_.keyToCoord(current_key);
+    const uint n_neighbors = neighbor_keys.size();
     // ROS_INFO("Current index: %d (%f, %f, %f) has %d neighbors", int(current_index),
     //           current_pos.x(), current_pos.y(), current_pos.z(), int(n_neighbors));
+
     for (uint i = 0; i < n_neighbors; i++) {
       // Get neighbor index
+      uint neighbor_index;
       if (!indexed_free_keys.Key2Index(neighbor_keys[i], &neighbor_index)) {
         ROS_INFO("[mapper] Astar failed: Error retrieving index for neighbor node!");
         return false;
       }
 
       // Compute an added cost based on the distance between the neighbor and the nearest obstacle
-      neighbor_pos = tree_inflated_.keyToCoord(neighbor_keys[i]);
+      const octomap::point3d neighbor_pos = tree_inflated_.keyToCoord(neighbor_keys[i]);
       if (node_distance_to_wall[neighbor_index] < 0.0) {
         node_distance_to_wall[neighbor_index] = this->NearestObstaclePathCost(neighbor_pos);
       }
 
       // Check whether this neighbor leads to a new path
-      tentative_cost = cost_so_far[current_index] + (current_pos - neighbor_pos).norm()
-                                                  + node_distance_to_wall[neighbor_index];
+      const double tentative_cost = cost_so_far[current_index] + (current_pos - neighbor_pos).norm()
+                                                               + node_distance_to_wall[neighbor_index];
       if (tentative_cost < cost_so_far[neighbor_index]) {
         // Fill up A* information for neighbor
         cost_so_far[neighbor_index] = tentative_cost;
-        priority = tentative_cost + (neighbor_pos - pf).norm();
+        const double priority = tentative_cost + (neighbor_pos - pf).norm();
         queue.put(neighbor_keys[i], priority);
         come_from[neighbor_index] = current_key;
       }
