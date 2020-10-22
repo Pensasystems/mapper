@@ -797,6 +797,7 @@ void OctoClass::GetNodesBetweenWaypoints(const octomap::point3d &p1,
                                          std::vector<octomap::point3d> *intermediate_nodes) {
     octomap::KeyRay ray;
     tree_inflated_.computeRayKeys(p1, p2, ray);
+    const octomap::OcTreeNode* n;
     for (octomap::KeyRay::iterator it = ray.begin(); it != ray.end(); ++it) {
         intermediate_nodes->push_back(tree_inflated_.keyToCoord(*it));
     }
