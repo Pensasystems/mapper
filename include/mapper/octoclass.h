@@ -212,6 +212,7 @@ class OctoClass{
 
     // Reduce the number of waypoints by pruning intermediate ones, where the compressed_path
     // does not collide with the environment
+    // The algorithm is based on: https://ieeexplore.ieee.org/document/1521693
     void PathPruning(const std::vector<Eigen::Vector3d> &path,
                      const bool &free_space_only,
                      std::vector<Eigen::Vector3d> *compressed_path);
@@ -240,10 +241,11 @@ class OctoClass{
                  visualization_msgs::Marker *graph_markers);
 
     // A* implementation on the octomap
+    // Learn more about A* in: https://en.wikipedia.org/wiki/A*_search_algorithm
     bool Astar(const octomap::point3d &p0,
                const octomap::point3d &pf,
                const bool &prune_result,
-               double *plan_time,
+               double *plan_time_sec,
                std::vector<Eigen::Vector3d> *path,
                std::vector<Eigen::Vector3d> *pruned_path);
 

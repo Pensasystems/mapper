@@ -389,8 +389,8 @@ void MapperClass::LoadPathPlanningConfig(const std::string &inertial_frame_id,
                                          ros::NodeHandle *nh) {
     // Capture service name and wait for it to start existing
     const std::string srv_return_path_planning_config = nh->resolveName("/srv_return_path_planning_config");
-    while (ros::ok() && !ros::service::waitForService(srv_return_path_planning_config, ros::Duration(5.0))) {
-        ROS_INFO("[mapper]: Waiting for path planning config service...");
+    while (ros::ok() && !ros::service::waitForService(srv_return_path_planning_config, ros::Duration(0.1))) {
+        ROS_WARN_DELAYED_THROTTLE(5.0, "[mapper]: Waiting for path planning config service...");
     }
     ROS_INFO("[mapper]: Connected to path planning config service");
 

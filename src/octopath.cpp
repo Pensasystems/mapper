@@ -19,21 +19,22 @@ void OctoClass::DeleteColinearWaypoints(const std::vector<Eigen::Vector3d> &path
 
   static double epsilon = 0.0001, dist;
   int delete_index;
-  Eigen::Vector3d p1, p2, p;
+  int current_node_index = 1;
+  Eigen::Vector3d previous_point, current_point, next_point;
   while (true) {
     delete_index = -1;
-    for (int i = 1; i < compressed_points-1; i++) {
-      p1 << (*compressed_path)[i-1][0],
-            (*compressed_path)[i-1][1],
-            (*compressed_path)[i-1][2];
-      p2 << (*compressed_path)[i+1][0],
-            (*compressed_path)[i+1][1],
-            (*compressed_path)[i+1][2];
-      p  << (*compressed_path)[i][0],
-            (*compressed_path)[i][1],
-            (*compressed_path)[i][2];
-      algebra_3d::Line3d line(p1, p2);
-      line.DistancePoint2Line(p, &dist);
+    for (int i = current_node_index; i < compressed_points-1; i++) {
+      previous_point << (*compressed_path)[i-1][0],
+                        (*compressed_path)[i-1][1],
+                        (*compressed_path)[i-1][2];
+      current_point  << (*compressed_path)[i][0],
+                        (*compressed_path)[i][1],
+                        (*compressed_path)[i][2];
+      next_point     << (*compressed_path)[i+1][0],
+                        (*compressed_path)[i+1][1],
+                        (*compressed_path)[i+1][2];
+      algebra_3d::Line3d line(previous_point, next_point);
+      line.DistancePoint2Line(current_point, &dist);
       if (dist < epsilon) {
         delete_index = i;
         break;
@@ -42,19 +43,23 @@ void OctoClass::DeleteColinearWaypoints(const std::vector<Eigen::Vector3d> &path
     if (delete_index > 0) {
       compressed_path->erase(compressed_path->begin() + delete_index);
       compressed_points = compressed_points - 1;
+      current_node_index = delete_index;
     } else {
       break;
     }
   }
+  // ROS_WARN("Deleted %zd colinear waypoints!", path.size() - compressed_path->size());
 }
 
 // Prune a path to minimize waypoints
+// TODO(marcelino): make this algorithm O(n) and delete every waypoint that doesn't collide
+// or reduce average wall distance. Perhaps we don't need to use an O(n^2) algorithm
 void OctoClass::PathPruning(const std::vector<Eigen::Vector3d> &path,
                             const bool &free_space_only,
                             std::vector<Eigen::Vector3d> *compressed_path) {
   // first delete colinear points
   this->DeleteColinearWaypoints(path, compressed_path);
-  int compressed_points = static_cast<int>(path.size());
+  int compressed_points = static_cast<int>(compressed_path->size());
 
   // Compress the remaining points
   static uint min_points = 2;
@@ -62,29 +67,27 @@ void OctoClass::PathPruning(const std::vector<Eigen::Vector3d> &path,
   static bool do_not_add_final_waypoint = false;
   double dist, max_dist;
   int delete_index, col_check;
-  Eigen::Vector3d p1, p2, p;
+  Eigen::Vector3d previous_point, current_point, next_point;
   while (compressed_points > min_points) {
     // first find the point that deviates the least in the whole set
-    max_dist = -1;
+    max_dist = std::numeric_limits<float>::infinity();
     delete_index = -1;
     for (int i = 1; i < compressed_points-1; i++) {
-      p1 << (*compressed_path)[i-1][0],
-            (*compressed_path)[i-1][1],
-            (*compressed_path)[i-1][2];
-      p2 << (*compressed_path)[i+1][0],
-            (*compressed_path)[i+1][1],
-            (*compressed_path)[i+1][2];
-      p  << (*compressed_path)[i][0],
-            (*compressed_path)[i][1],
-            (*compressed_path)[i][2];
-      algebra_3d::Line3d line(p1, p2);
-      line.DistancePoint2Line(p, &dist);
+      previous_point << (*compressed_path)[i-1][0],
+                        (*compressed_path)[i-1][1],
+                        (*compressed_path)[i-1][2];
+      current_point  << (*compressed_path)[i][0],
+                        (*compressed_path)[i][1],
+                        (*compressed_path)[i][2];
+      next_point     << (*compressed_path)[i+1][0],
+                        (*compressed_path)[i+1][1],
+                        (*compressed_path)[i+1][2];
 
       // Check for collision
       if (free_space_only) {
-        col_check = CheckCollision(p1, p2);
+        col_check = CheckCollision(previous_point, next_point);
       } else {
-        col_check = CheckOccupancy(p1, p2);
+        col_check = CheckOccupancy(previous_point, next_point);
       }
 
       if (col_check == 1) {
@@ -93,15 +96,20 @@ void OctoClass::PathPruning(const std::vector<Eigen::Vector3d> &path,
 
       // If doesn't collide, check if new nodes get closer to walls
       // We don't allow to remove waypoints that decrease the distance to walls
-      std::vector<octomap::point3d> p1_to_p2_nodes, p1_to_p_to_p2_nodes;
-      this->GetNodesBetweenWaypoints(p1, p2, add_final_waypoint, &p1_to_p2_nodes);
-      this->GetNodesBetweenWaypoints(p1, p, do_not_add_final_waypoint, &p1_to_p_to_p2_nodes);
-      this->GetNodesBetweenWaypoints(p, p2, add_final_waypoint, &p1_to_p_to_p2_nodes);
-      if (this->AverageObstaclePathCost(p1_to_p2_nodes) > this->AverageObstaclePathCost(p1_to_p_to_p2_nodes)) {
+      std::vector<octomap::point3d> prev_to_next_nodes, prev_to_current_to_next_nodes;
+      this->GetNodesBetweenWaypoints(previous_point, next_point, add_final_waypoint, &prev_to_next_nodes);
+      this->GetNodesBetweenWaypoints(previous_point, current_point, do_not_add_final_waypoint,
+                                     &prev_to_current_to_next_nodes);
+      this->GetNodesBetweenWaypoints(current_point, next_point, add_final_waypoint, &prev_to_current_to_next_nodes);
+      if (this->AverageObstaclePathCost(prev_to_next_nodes) >
+          this->AverageObstaclePathCost(prev_to_current_to_next_nodes)) {
         continue;
       }
 
-      if (dist > max_dist) {
+      // Check how much the current_point deviates from the line from previous_point to next_point
+      algebra_3d::Line3d line(previous_point, next_point);
+      line.DistancePoint2Line(current_point, &dist);
+      if (dist < max_dist) {
         max_dist = dist;
         delete_index = i;
       }
@@ -351,7 +359,7 @@ bool OctoClass::OctoRRG(const Eigen::Vector3d &p0,
 bool OctoClass::Astar(const octomap::point3d &p0,
                       const octomap::point3d &pf,
                       const bool &prune_result,
-                      double *plan_time,
+                      double *plan_time_sec,
                       std::vector<Eigen::Vector3d> *path,
                       std::vector<Eigen::Vector3d> *pruned_path) {
   const ros::Time t0 = ros::Time::now();
@@ -361,21 +369,21 @@ bool OctoClass::Astar(const octomap::point3d &p0,
   is_occ = this->CheckOccupancy(p0);
   if (is_occ == -1) {
     ROS_INFO("[mapper] A* failed: initial node is unknown in the octomap!");
-    *plan_time = (ros::Time::now() - t0).toSec();
+    *plan_time_sec = (ros::Time::now() - t0).toSec();
     return false;
   } else if (is_occ == 1) {
     ROS_INFO("[mapper] A* failed: initial node is occupied in the octomap!");
-    *plan_time = (ros::Time::now() - t0).toSec();
+    *plan_time_sec = (ros::Time::now() - t0).toSec();
     return false;
   }
   is_occ = this->CheckOccupancy(pf);
   if (is_occ == -1) {
     ROS_INFO("[mapper] A* failed: final node is unknown in the octomap!");
-    *plan_time = (ros::Time::now() - t0).toSec();
+    *plan_time_sec = (ros::Time::now() - t0).toSec();
     return false;
   } else if (is_occ == 1) {
     ROS_INFO("[mapper] A* failed: final node is occupied in the octomap!");
-    *plan_time = (ros::Time::now() - t0).toSec();
+    *plan_time_sec = (ros::Time::now() - t0).toSec();
     return false;
   }
 
@@ -397,7 +405,7 @@ bool OctoClass::Astar(const octomap::point3d &p0,
   uint initial_index;
   if (!indexed_free_keys.Key2Index(initial_key, &initial_index)) {
     ROS_INFO("[mapper] Astar failed: Error retrieving index for initial node!");
-    *plan_time = (ros::Time::now() - t0).toSec();
+    *plan_time_sec = (ros::Time::now() - t0).toSec();
     return false;
   }
 
@@ -405,7 +413,7 @@ bool OctoClass::Astar(const octomap::point3d &p0,
   const uint n_nodes = indexed_free_keys.Size();
   PriorityQueue<octomap::OcTreeKey, double> queue;      // octomap::OcTreeKey index, double cost
   std::vector<double> cost_so_far(n_nodes, std::numeric_limits<float>::infinity());
-  std::vector<double> node_distance_to_wall(n_nodes, -1.0);
+  std::vector<double> obstacle_path_cost(n_nodes, -1.0);
   std::vector<octomap::OcTreeKey> come_from(n_nodes);
 
   // Initialize algorithm
@@ -417,7 +425,7 @@ bool OctoClass::Astar(const octomap::point3d &p0,
     uint current_index;
     if (!indexed_free_keys.Key2Index(current_key, &current_index)) {
       ROS_INFO("[mapper] Astar failed: Error retrieving index for current node!");
-      *plan_time = (ros::Time::now() - t0).toSec();
+      *plan_time_sec = (ros::Time::now() - t0).toSec();
       return false;
     }
 
@@ -429,7 +437,7 @@ bool OctoClass::Astar(const octomap::point3d &p0,
       while (current_key != initial_key) {
         if (!indexed_free_keys.Key2Index(current_key, &current_index)) {
           ROS_INFO("[mapper] Astar failed when retrieving path from initial to final point!");
-          *plan_time = (ros::Time::now() - t0).toSec();
+          *plan_time_sec = (ros::Time::now() - t0).toSec();
           return false;
         }
         // ROS_INFO("Come from: %d", int(current_index));
@@ -453,19 +461,25 @@ bool OctoClass::Astar(const octomap::point3d &p0,
       uint neighbor_index;
       if (!indexed_free_keys.Key2Index(neighbor_keys[i], &neighbor_index)) {
         ROS_INFO("[mapper] Astar failed: Error retrieving index for neighbor node!");
-        *plan_time = (ros::Time::now() - t0).toSec();
+        *plan_time_sec = (ros::Time::now() - t0).toSec();
         return false;
       }
 
-      // Compute an added cost based on the distance between the neighbor and the nearest obstacle
+      // This portion avoids us from computing NearestObstaclePathCost, which is an expensive function call.
+      // We can prematurely eliminate a neighbor that won't lead us anywhere
       const octomap::point3d neighbor_pos = tree_inflated_.keyToCoord(neighbor_keys[i]);
-      if (node_distance_to_wall[neighbor_index] < 0.0) {
-        node_distance_to_wall[neighbor_index] = this->NearestObstaclePathCost(neighbor_pos);
+      double tentative_cost = cost_so_far[current_index] + (current_pos - neighbor_pos).norm();
+      if (tentative_cost >= cost_so_far[neighbor_index]) {
+        continue;
+      }
+
+      // Compute an added cost based on the distance between the neighbor and the nearest obstacle
+      if (obstacle_path_cost[neighbor_index] < 0.0) {
+        obstacle_path_cost[neighbor_index] = this->NearestObstaclePathCost(neighbor_pos);
       }
 
       // Check whether this neighbor leads to a new path
-      const double tentative_cost = cost_so_far[current_index] + (current_pos - neighbor_pos).norm()
-                                                               + node_distance_to_wall[neighbor_index];
+      tentative_cost = tentative_cost + obstacle_path_cost[neighbor_index];
       if (tentative_cost < cost_so_far[neighbor_index]) {
         // Fill up A* information for neighbor
         cost_so_far[neighbor_index] = tentative_cost;
@@ -477,15 +491,16 @@ bool OctoClass::Astar(const octomap::point3d &p0,
   }
 
   // Prune results if requested
-  ROS_INFO("[mapper]: Path found with %zu waypoints", path->size());
   if (prune_result) {
     const bool free_space_only = true;
     this->PathPruning(*path, free_space_only, pruned_path);
-    ROS_INFO("[mapper]: Path compressed to %zu waypoints", pruned_path->size());
+    ROS_INFO("[mapper]: Path found with %zu waypoints and then compressed to %zu waypoints",
+             path->size(), pruned_path->size());
   } else {
+    ROS_INFO("[mapper]: Path found with %zu waypoints", path->size());
     pruned_path = path;
   }
-  *plan_time = (ros::Time::now() - t0).toSec();
+  *plan_time_sec = (ros::Time::now() - t0).toSec();
 
   return true;
 }
