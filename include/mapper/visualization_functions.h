@@ -129,11 +129,11 @@ void PathVisualization(const std::vector<Eigen::Vector3d> &total_path,
                        visualization_msgs::MarkerArray* markers);
 
 // Visualize a list of lines containing all intermediate waypoints
-void PathVisualization(const std::vector<Eigen::Vector3d> &total_path,
-                       const std_msgs::ColorRGBA &color,
-                       const std::string &inertial_frame_id,
-                       const std::string &ns,  // namespace
-                       visualization_msgs::MarkerArray *markers);
+void CreatePathMarker(const std::vector<Eigen::Vector3d> &total_path,
+                      const std_msgs::ColorRGBA &color,
+                      const std::string &inertial_frame_id,
+                      const std::string &ns,  // namespace
+                      visualization_msgs::MarkerArray *markers);
 
 void DrawArrowPoints(const Eigen::Vector3d &p1,
                      const Eigen::Vector3d &p2,
@@ -175,16 +175,16 @@ void VisualizeRange(const Eigen::Vector3d &pos,
                     visualization_msgs::Marker *range_marker);
 
 // Create a cuboid visualization marker
-void SetCuboidMarker(const Eigen::Vector3d &center,
-                     const double &x_dim,
-                     const double &y_dim,
-                     const double &z_dim,
-                     const std::string &frame_id,
-                     const std::string &ns,  // namespace
-                     const uint &id,
-                     const std_msgs::ColorRGBA &color,
-                     const double &lifetime,
-                     visualization_msgs::Marker *cuboid_marker);
+void CreateCuboidMarker(const Eigen::Vector3d &center,
+                        const double &x_dim,
+                        const double &y_dim,
+                        const double &z_dim,
+                        const std::string &frame_id,
+                        const std::string &ns,  // namespace
+                        const uint &id,
+                        const std_msgs::ColorRGBA &color,
+                        const double &lifetime,
+                        visualization_msgs::Marker *cuboid_marker);
 
 // Create an array of visualization markers for no-fly-zones
 void DrawPathPlanningConfig(const pensa_msgs::PathPlanningConfig &path_planning_config,

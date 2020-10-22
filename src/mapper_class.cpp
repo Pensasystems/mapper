@@ -378,9 +378,9 @@ void MapperClass::PublishPathPlanningPathMarkers(const std::vector<Eigen::Vector
     const std_msgs::ColorRGBA color_pruned_path = visualization_functions::Color::Purple();
     const std::string ns_path = "Astar";
     const std::string ns_path_pruned = "Astar_pruned";
-    visualization_functions::PathVisualization(path, color_path, inertial_frame_id, ns_path, &markers);
-    visualization_functions::PathVisualization(pruned_path, color_pruned_path, inertial_frame_id,
-                                               ns_path_pruned, &markers);
+    visualization_functions::CreatePathMarker(path, color_path, inertial_frame_id, ns_path, &markers);
+    visualization_functions::CreatePathMarker(pruned_path, color_pruned_path, inertial_frame_id,
+                                              ns_path_pruned, &markers);
     path_planning_path_marker_pub_.publish(markers);
 }
 

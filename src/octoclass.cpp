@@ -797,7 +797,6 @@ void OctoClass::GetNodesBetweenWaypoints(const octomap::point3d &p1,
                                          std::vector<octomap::point3d> *intermediate_nodes) {
     octomap::KeyRay ray;
     tree_inflated_.computeRayKeys(p1, p2, ray);
-    const octomap::OcTreeNode* n;
     for (octomap::KeyRay::iterator it = ray.begin(); it != ray.end(); ++it) {
         intermediate_nodes->push_back(tree_inflated_.keyToCoord(*it));
     }
@@ -1162,20 +1161,25 @@ bool OctoClass::NearestOccNodeWithinBox(const octomap::point3d &center_pt,
     std::vector<Eigen::Vector3d> candidates;
     std::vector<double> node_sizes;
 
-    // Initialize output
-    *distance = std::numeric_limits<double>::infinity();
-
     // get all occupied nodes within a box
     this->OccNodesWithinBox(box_min, box_max, &candidates, &node_sizes);
 
     // Check if any of the candidates are within radius
     bool there_are_nodes = false;
+    double best_dist_sqr = std::numeric_limits<double>::infinity();
     for (uint i = 0; i < candidates.size(); i++) {
         const Eigen::Vector3d dist_vec = candidates[i] - center;
-        if (dist_vec.norm() < *distance) {
-            *distance = dist_vec.norm();
+        const double dist_sqr = dist_vec.dot(dist_vec);
+        if (dist_sqr < best_dist_sqr) {
+            best_dist_sqr = dist_sqr;
+            *distance = sqrt(dist_sqr);
             there_are_nodes = true;
         }
+    }
+
+    // Set the output to "infinity" if no obstacles were found within the box
+    if (!there_are_nodes) {
+        *distance = std::numeric_limits<double>::infinity();
     }
 
     return there_are_nodes;
@@ -1240,10 +1244,14 @@ void OctoClass::InitializeMapToPathPlanningConfig() {
     tree_inflated_.clear();
 
     // Get min/max coordinates of the map based on the config
-    const double x_min = std::min(path_planning_config_.map_x_corner1, path_planning_config_.map_x_corner2) + 0.001;
-    const double x_max = std::max(path_planning_config_.map_x_corner1, path_planning_config_.map_x_corner2) + 0.001;
-    const double y_min = std::min(path_planning_config_.map_y_corner1, path_planning_config_.map_y_corner2) + 0.001;
-    const double y_max = std::max(path_planning_config_.map_y_corner1, path_planning_config_.map_y_corner2) + 0.001;
+    // Note: we add a small offset to 'x_min', 'x_max', 'y_min', 'y_max' to disambiguate the location
+    // where we want to set the node. For example, we cannot set the node [0.0, 0.0], as this is the border between
+    // four other nodes. Adding a small offset allows us to predictably know which node will be set
+    const double offset = resolution_/100.0;
+    const double x_min = std::min(path_planning_config_.map_x_corner1, path_planning_config_.map_x_corner2) + offset;
+    const double x_max = std::max(path_planning_config_.map_x_corner1, path_planning_config_.map_x_corner2) + offset;
+    const double y_min = std::min(path_planning_config_.map_y_corner1, path_planning_config_.map_y_corner2) + offset;
+    const double y_max = std::max(path_planning_config_.map_y_corner1, path_planning_config_.map_y_corner2) + offset;
     const uint n_x_nodes = ceil((x_max - x_min)/resolution_);
     const uint n_y_nodes = ceil((y_max - y_min)/resolution_);
 

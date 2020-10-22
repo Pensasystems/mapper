@@ -15,14 +15,14 @@ void OctoClass::DeleteColinearWaypoints(const std::vector<Eigen::Vector3d> &path
                                         std::vector<Eigen::Vector3d> *compressed_path) {
   // initialize compressed points as all samples
   *compressed_path = path;
-  uint compressed_points = path.size();
+  int compressed_points = static_cast<int>(path.size());
 
   static double epsilon = 0.0001, dist;
   int delete_index;
   Eigen::Vector3d p1, p2, p;
   while (true) {
     delete_index = -1;
-    for (uint i = 1; i < compressed_points-1; i++) {
+    for (int i = 1; i < compressed_points-1; i++) {
       p1 << (*compressed_path)[i-1][0],
             (*compressed_path)[i-1][1],
             (*compressed_path)[i-1][2];
@@ -54,7 +54,7 @@ void OctoClass::PathPruning(const std::vector<Eigen::Vector3d> &path,
                             std::vector<Eigen::Vector3d> *compressed_path) {
   // first delete colinear points
   this->DeleteColinearWaypoints(path, compressed_path);
-  uint compressed_points = compressed_path->size();
+  int compressed_points = static_cast<int>(path.size());
 
   // Compress the remaining points
   static uint min_points = 2;
@@ -67,7 +67,7 @@ void OctoClass::PathPruning(const std::vector<Eigen::Vector3d> &path,
     // first find the point that deviates the least in the whole set
     max_dist = -1;
     delete_index = -1;
-    for (uint i = 1; i < compressed_points-1; i++) {
+    for (int i = 1; i < compressed_points-1; i++) {
       p1 << (*compressed_path)[i-1][0],
             (*compressed_path)[i-1][1],
             (*compressed_path)[i-1][2];
@@ -361,17 +361,21 @@ bool OctoClass::Astar(const octomap::point3d &p0,
   is_occ = this->CheckOccupancy(p0);
   if (is_occ == -1) {
     ROS_INFO("[mapper] A* failed: initial node is unknown in the octomap!");
+    *plan_time = (ros::Time::now() - t0).toSec();
     return false;
   } else if (is_occ == 1) {
     ROS_INFO("[mapper] A* failed: initial node is occupied in the octomap!");
+    *plan_time = (ros::Time::now() - t0).toSec();
     return false;
   }
   is_occ = this->CheckOccupancy(pf);
   if (is_occ == -1) {
     ROS_INFO("[mapper] A* failed: final node is unknown in the octomap!");
+    *plan_time = (ros::Time::now() - t0).toSec();
     return false;
   } else if (is_occ == 1) {
     ROS_INFO("[mapper] A* failed: final node is occupied in the octomap!");
+    *plan_time = (ros::Time::now() - t0).toSec();
     return false;
   }
 
@@ -393,6 +397,7 @@ bool OctoClass::Astar(const octomap::point3d &p0,
   uint initial_index;
   if (!indexed_free_keys.Key2Index(initial_key, &initial_index)) {
     ROS_INFO("[mapper] Astar failed: Error retrieving index for initial node!");
+    *plan_time = (ros::Time::now() - t0).toSec();
     return false;
   }
 
@@ -412,6 +417,7 @@ bool OctoClass::Astar(const octomap::point3d &p0,
     uint current_index;
     if (!indexed_free_keys.Key2Index(current_key, &current_index)) {
       ROS_INFO("[mapper] Astar failed: Error retrieving index for current node!");
+      *plan_time = (ros::Time::now() - t0).toSec();
       return false;
     }
 
@@ -423,6 +429,7 @@ bool OctoClass::Astar(const octomap::point3d &p0,
       while (current_key != initial_key) {
         if (!indexed_free_keys.Key2Index(current_key, &current_index)) {
           ROS_INFO("[mapper] Astar failed when retrieving path from initial to final point!");
+          *plan_time = (ros::Time::now() - t0).toSec();
           return false;
         }
         // ROS_INFO("Come from: %d", int(current_index));
@@ -446,6 +453,7 @@ bool OctoClass::Astar(const octomap::point3d &p0,
       uint neighbor_index;
       if (!indexed_free_keys.Key2Index(neighbor_keys[i], &neighbor_index)) {
         ROS_INFO("[mapper] Astar failed: Error retrieving index for neighbor node!");
+        *plan_time = (ros::Time::now() - t0).toSec();
         return false;
       }
 

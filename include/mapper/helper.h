@@ -47,7 +47,7 @@ void FindNearestCollision(const std::vector<octomap::point3d> &colliding_nodes,
 
 struct timespec TimeFromNow(const uint& increment_sec);
 
-// Function that returns whether value1 == value2 (for double inputs)
-bool AreDoubleSame(const double &value1, const double &value2);
+// Function that returns whether value1 and value2 are close enough (for double inputs)
+bool AreDoubleApproxEqual(const double &value1, const double &value2, const double &epsilon);
 
 }  // namespace helper

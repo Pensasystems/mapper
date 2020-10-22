@@ -128,7 +128,7 @@ bool MapperClass::AStarService(pensa_msgs::Astar::Request &req,
     double plan_height;
     mutexes_.update_map.lock();
         const bool is_mapping_3d = globals_.octomap.IsMapping3D();
-        if (!is_mapping_3d && !helper::AreDoubleSame(p0.z(), pf.z())) {
+        if (!is_mapping_3d && !helper::AreDoubleApproxEqual(p0.z(), pf.z(), 0.0001)) {
             ROS_ERROR("[mapper]: Mapping in 2D and the waypoints are not at the same height. Cannot compute A*");
             res.success = false;
         } else {
@@ -141,7 +141,6 @@ bool MapperClass::AStarService(pensa_msgs::Astar::Request &req,
         }
     mutexes_.update_map.unlock();
     if (res.success) {
-        res.planning_time = planning_time;
         for (const auto& waypoint : pruned_path) {
             if (is_mapping_3d) {
                 res.path.push_back(msg_conversions::eigen_to_ros_point(waypoint));
@@ -150,6 +149,7 @@ bool MapperClass::AStarService(pensa_msgs::Astar::Request &req,
             }
         }
     }
+    res.planning_time = planning_time;
 
     // Publish path for Rviz visualization
     this->PublishPathPlanningPathMarkers(path, pruned_path, inertial_frame_id_);
