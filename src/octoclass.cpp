@@ -523,6 +523,18 @@ void OctoClass::FadeMemory(const double &rate) {  // rate at which this function
             tree_inflated_.deleteNode(key, it.getDepth());
         }
     }
+
+    // These if statements are a workaround for a bug in octomap. For some reason
+    // after we delete all nodes from the octree we end up with the root node
+    // not being deleted. If we have only the root node available (which we can
+    // capure by checking the depth of the iterator), then we can safely clear
+    // the tree, as it is not a use case we need
+    if (helper::IsTreeRootOnly(tree_)) {
+        tree_.clear();
+    }
+    if (helper::IsTreeRootOnly(tree_inflated_)) {
+        tree_inflated_.clear();
+    }
 }
 
 void OctoClass::InflateObstacles(const double &thickness) {
