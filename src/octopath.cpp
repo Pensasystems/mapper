@@ -65,12 +65,12 @@ void OctoClass::PathPruning(const std::vector<Eigen::Vector3d> &path,
   static uint min_points = 2;
   static bool add_final_waypoint = true;
   static bool do_not_add_final_waypoint = false;
-  double dist, max_dist;
+  double dist, min_dist;
   int delete_index, col_check;
   Eigen::Vector3d previous_point, current_point, next_point;
   while (compressed_points > min_points) {
     // first find the point that deviates the least in the whole set
-    max_dist = std::numeric_limits<float>::infinity();
+    min_dist = std::numeric_limits<float>::infinity();
     delete_index = -1;
     for (int i = 1; i < compressed_points-1; i++) {
       previous_point << (*compressed_path)[i-1][0],
@@ -109,8 +109,8 @@ void OctoClass::PathPruning(const std::vector<Eigen::Vector3d> &path,
       // Check how much the current_point deviates from the line from previous_point to next_point
       algebra_3d::Line3d line(previous_point, next_point);
       line.DistancePoint2Line(current_point, &dist);
-      if (dist < max_dist) {
-        max_dist = dist;
+      if (dist < min_dist) {
+        min_dist = dist;
         delete_index = i;
       }
     }
@@ -474,6 +474,8 @@ bool OctoClass::Astar(const octomap::point3d &p0,
       }
 
       // Compute an added cost based on the distance between the neighbor and the nearest obstacle
+      // Note that 'obstacle_path_cost' is initialized at '-1.0', so we check whether it is less
+      // than '0.0' to see it we have already computed the cost for a given 'neighbor_index'
       if (obstacle_path_cost[neighbor_index] < 0.0) {
         obstacle_path_cost[neighbor_index] = this->NearestObstaclePathCost(neighbor_pos);
       }
