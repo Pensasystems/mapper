@@ -541,6 +541,18 @@ void OctoClass::FadeMemory(const double &rate) {  // rate at which this function
             tree_inflated_.deleteNode(key, it.getDepth());
         }
     }
+
+    // These if statements are a workaround for a bug in octomap. For some reason
+    // after we delete all nodes from the octree we end up with the root node
+    // not being deleted. If we have only the root node available (which we can
+    // capure by checking the depth of the iterator), then we can safely clear
+    // the tree, as it is not a use case we need
+    if (helper::IsTreeRootOnly(tree_)) {
+        tree_.clear();
+    }
+    if (helper::IsTreeRootOnly(tree_inflated_)) {
+        tree_inflated_.clear();
+    }
 }
 
 void OctoClass::InflateObstacles(const double &thickness) {
@@ -725,7 +737,7 @@ void OctoClass::InflatedVisMarkers(visualization_msgs::MarkerArray* obstacles,
                                    visualization_msgs::MarkerArray* free) {  // publish occupied nodes
     // Markers: each marker array stores a set of nodes with similar size
     obstacles->markers.resize(tree_depth_+1);
-    free->markers.resize(tree_depth_+1);
+    // free->markers.resize(tree_depth_+1);
     const ros::Time rostime = ros::Time::now();
 
     // set tree_inflated_ min and max
@@ -750,8 +762,8 @@ void OctoClass::InflatedVisMarkers(visualization_msgs::MarkerArray* obstacles,
             obstacles->markers[idx].points.push_back(point_center);
             obstacles->markers[idx].colors.push_back(HeightMapColor(h, 1.0));
         } else {
-            free->markers[idx].points.push_back(point_center);
-            free->markers[idx].colors.push_back(HeightMapColor(h, 0.05));
+            // free->markers[idx].points.push_back(point_center);
+            // free->markers[idx].colors.push_back(HeightMapColor(h, 0.05));
         }
     }
 
@@ -769,12 +781,12 @@ void OctoClass::InflatedVisMarkers(visualization_msgs::MarkerArray* obstacles,
         obstacles->markers[i].scale.z = size;
         obstacles->markers[i].pose.orientation.w = 1.0;
 
-        free->markers[i].header = obstacles->markers[i].header;
-        free->markers[i].ns = obstacles->markers[i].ns;
-        free->markers[i].id = obstacles->markers[i].id;
-        free->markers[i].type = obstacles->markers[i].type;
-        free->markers[i].scale = obstacles->markers[i].scale;
-        free->markers[i].pose.orientation.w = 1.0;
+        // free->markers[i].header = obstacles->markers[i].header;
+        // free->markers[i].ns = obstacles->markers[i].ns;
+        // free->markers[i].id = obstacles->markers[i].id;
+        // free->markers[i].type = obstacles->markers[i].type;
+        // free->markers[i].scale = obstacles->markers[i].scale;
+        // free->markers[i].pose.orientation.w = 1.0;
 
         // ROS_INFO("Depth %d, npoints: %d", int(i), int(obstacles->markers[i].points.size()));
         // ROS_INFO("Depth %d, nFreePoints: %d", int(i), int(free->markers[i].points.size()));
@@ -784,10 +796,10 @@ void OctoClass::InflatedVisMarkers(visualization_msgs::MarkerArray* obstacles,
         else
             obstacles->markers[i].action = visualization_msgs::Marker::DELETE;
 
-        if (free->markers[i].points.size() > 0)
-            free->markers[i].action = visualization_msgs::Marker::ADD;
-        else
-            free->markers[i].action = visualization_msgs::Marker::DELETE;
+        // if (free->markers[i].points.size() > 0)
+        //     free->markers[i].action = visualization_msgs::Marker::ADD;
+        // else
+        //     free->markers[i].action = visualization_msgs::Marker::DELETE;
     }
 }
 

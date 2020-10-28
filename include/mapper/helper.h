@@ -45,6 +45,8 @@ void FindNearestCollision(const std::vector<octomap::point3d> &colliding_nodes,
                           geometry_msgs::Point *nearest_node,
                           double *min_dist);
 
+bool IsTreeRootOnly(const octomap::OcTree &tree);
+
 struct timespec TimeFromNow(const uint& increment_sec);
 
 // Function that returns whether value1 and value2 are close enough (for double inputs)

@@ -349,24 +349,24 @@ void MapperClass::OctomappingTask() {
 
         // Publish visualization markers iff at least one node is subscribed to it
         bool pub_obstacles, pub_free, pub_obstacles_inflated, pub_free_inflated;
-        pub_obstacles = (obstacle_marker_pub_.getNumSubscribers() > 0);
-        pub_free = (free_space_marker_pub_.getNumSubscribers() > 0);
+        // pub_obstacles = (obstacle_marker_pub_.getNumSubscribers() > 0);
+        // pub_free = (free_space_marker_pub_.getNumSubscribers() > 0);
         pub_obstacles_inflated = (inflated_obstacle_marker_pub_.getNumSubscribers() > 0);
-        pub_free_inflated = (inflated_free_space_marker_pub_.getNumSubscribers() > 0);
+        // pub_free_inflated = (inflated_free_space_marker_pub_.getNumSubscribers() > 0);
 
-        if (pub_obstacles || pub_free) {
-            visualization_msgs::MarkerArray obstacle_markers;
-            visualization_msgs::MarkerArray free_markers;
-            mutexes_.octomap.lock();
-                globals_.octomap.TreeVisMarkers(&obstacle_markers, &free_markers);
-            mutexes_.octomap.unlock();
-            if (pub_obstacles) {
-                obstacle_marker_pub_.publish(obstacle_markers);
-            }
-            if (pub_free) {
-                free_space_marker_pub_.publish(free_markers);
-            }
-        }
+        // if (pub_obstacles || pub_free) {
+        //     visualization_msgs::MarkerArray obstacle_markers;
+        //     visualization_msgs::MarkerArray free_markers;
+        //     mutexes_.octomap.lock();
+        //         globals_.octomap.TreeVisMarkers(&obstacle_markers, &free_markers);
+        //     mutexes_.octomap.unlock();
+        //     if (pub_obstacles) {
+        //         obstacle_marker_pub_.publish(obstacle_markers);
+        //     }
+        //     if (pub_free) {
+        //         free_space_marker_pub_.publish(free_markers);
+        //     }
+        // }
 
         if (pub_obstacles_inflated || pub_free_inflated) {
             visualization_msgs::MarkerArray inflated_markers;
@@ -377,9 +377,9 @@ void MapperClass::OctomappingTask() {
             if (pub_obstacles_inflated) {
                 inflated_obstacle_marker_pub_.publish(inflated_markers);
             }
-            if (pub_free_inflated) {
-                inflated_free_space_marker_pub_.publish(inflated_free_markers);
-            }
+            // if (pub_free_inflated) {
+            //     inflated_free_space_marker_pub_.publish(inflated_free_markers);
+            // }
         }
 
         if ((!is_lidar) && (cam_frustum_pub_.getNumSubscribers() > 0)) {
