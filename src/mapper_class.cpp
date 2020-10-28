@@ -168,10 +168,9 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     terminate_node_ = false;
 
     // Load path planning config
-    pensa_msgs::PathPlanningConfig path_planning_config;
     double desired_obstacle_planning_distance;
     nh->getParam("desired_obstacle_planning_distance", desired_obstacle_planning_distance);
-    this->LoadPathPlanningConfig(inertial_frame_id_, &path_planning_config, nh);
+    this->LoadPathPlanningConfig(inertial_frame_id_, &path_planning_config_, nh);
 
     // update tree parameters
     globals_.octomap.SetResolution(map_resolution);
@@ -186,7 +185,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     globals_.octomap.SetHitMissProbabilities(probability_hit, probability_miss);
     globals_.octomap.SetClampingThresholds(clamping_threshold_min, clamping_threshold_max);
     globals_.octomap.SetMap3d(map_3d);
-    globals_.octomap.SetPathPlanningConfig(path_planning_config, desired_obstacle_planning_distance);
+    globals_.octomap.SetPathPlanningConfig(path_planning_config_, desired_obstacle_planning_distance);
 
     // update trajectory discretization parameters (used in collision check)
     globals_.sampled_traj.SetMaxDev(compression_max_dev);
@@ -252,7 +251,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
         nh->advertise<visualization_msgs::MarkerArray>(path_planning_path_markers_topic, 10, true);
 
     // Publish no-fly-zones for Rviz visualization
-    this->PublishPathPlanningConfigMarkers(path_planning_config, inertial_frame_id_);
+    this->PublishPathPlanningConfigMarkers();
 
     // threads --------------------------------------------------
     h_octo_thread_ = std::thread(&MapperClass::OctomappingTask, this);
@@ -356,16 +355,15 @@ void MapperClass::PublishRadiusMarkers(const Eigen::Vector3d &center,
     obstacle_radius_marker_pub_.publish(obstacle_radius_marker);
 }
 
-void MapperClass::PublishPathPlanningConfigMarkers(const pensa_msgs::PathPlanningConfig &path_planning_config,
-                                                   const std::string &inertial_frame_id) {
-    const std::string ns = "path_planning_config";
-    const double thickness = 0.1;
+void MapperClass::PublishPathPlanningConfigMarkers() {
+    static const std::string ns = "path_planning_config";
+    static const double thickness = 0.1;
     std_msgs::ColorRGBA no_fly_zone_color = visualization_functions::Color::Red();
     std_msgs::ColorRGBA fly_zone_color = visualization_functions::Color::Green();
     no_fly_zone_color.a = 0.3;  // make them slightly transparent
     fly_zone_color.a = 0.15;    // make them slightly transparent
     visualization_msgs::MarkerArray no_fly_zones_markers;
-    visualization_functions::DrawPathPlanningConfig(path_planning_config, ns, inertial_frame_id, no_fly_zone_color,
+    visualization_functions::DrawPathPlanningConfig(path_planning_config_, ns, inertial_frame_id_, no_fly_zone_color,
                                                     fly_zone_color, thickness, &no_fly_zones_markers);
     path_planning_config_pub_.publish(no_fly_zones_markers);
 }

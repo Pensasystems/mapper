@@ -104,8 +104,7 @@ class MapperClass {
                             const double &radius);
 
   // Publish no-fly-zones and planning zone for Rviz visualization
-  void PublishPathPlanningConfigMarkers(const pensa_msgs::PathPlanningConfig &path_planning_config,
-                                        const std::string &inertial_frame_id);
+  void PublishPathPlanningConfigMarkers();
 
   // Publish markers of the planned trajectory (Rviz visualization)
   void PublishPathPlanningPathMarkers(const std::vector<Eigen::Vector3d> &path,
@@ -275,6 +274,9 @@ class MapperClass {
 
   // Path planning publishers
   ros::Publisher graph_tree_marker_pub_;
+
+  // Path planning config (for Rviz visualization)
+  pensa_msgs::PathPlanningConfig path_planning_config_;
 
   // Boolean to terminate all threads
   std::atomic<bool> terminate_node_;

@@ -74,6 +74,9 @@ bool MapperClass::InitializeMapToPathPlanningConfig(std_srvs::Trigger::Request &
         globals_.octomap.SetMemory(-1.0);  // Infinite memory
     mutexes_.octomap.unlock();
 
+    // Publish path planning config (make sure that we capture it in the bag)
+    this->PublishPathPlanningConfigMarkers();
+
     res.success = true;
     res.message = "Map has been reset to path planning config!";
     return true;
