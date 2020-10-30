@@ -492,6 +492,13 @@ bool OctoClass::Astar(const octomap::point3d &p0,
     }
   }
 
+  // If the path is empty, it means that we ran out of free nodes to explore and we didn't reach the goal
+  if (path->size() == 0) {
+    ROS_INFO("[mapper] Astar failed: No path was found between origin and destination!");
+    *plan_time_sec = (ros::Time::now() - t0).toSec();
+    return false;
+  }
+
   // Prune results if requested
   if (prune_result) {
     const bool free_space_only = true;
