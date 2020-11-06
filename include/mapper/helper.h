@@ -49,4 +49,7 @@ bool IsTreeRootOnly(const octomap::OcTree &tree);
 
 struct timespec TimeFromNow(const uint& increment_sec);
 
+// Function that returns whether value1 and value2 are close enough (for double inputs)
+bool AreDoubleApproxEqual(const double &value1, const double &value2, const double &epsilon);
+
 }  // namespace helper

@@ -56,14 +56,29 @@ bool MapperClass::MapInflation(pensa_msgs::SetFloat::Request &req,
     return true;
 }
 
-bool MapperClass::ResetMap(std_srvs::Trigger::Request &req,
-                           std_srvs::Trigger::Response &res) {
+bool MapperClass::ResetMap(pensa_msgs::SetFloat::Request &req,
+                           pensa_msgs::SetFloat::Response &res) {
     mutexes_.octomap.lock();
         globals_.octomap.ResetMap();
+        globals_.octomap.SetMemory(req.data);
     mutexes_.octomap.unlock();
 
     res.success = true;
-    res.message = "Map has been reset!";
+    return true;
+}
+
+bool MapperClass::InitializeMapToPathPlanningConfig(std_srvs::Trigger::Request &req,
+                                                    std_srvs::Trigger::Response &res) {
+    mutexes_.octomap.lock();
+        globals_.octomap.InitializeMapToPathPlanningConfig();
+        globals_.octomap.SetMemory(-1.0);  // Infinite memory
+    mutexes_.octomap.unlock();
+
+    // Publish path planning config (make sure that we capture it in the bag)
+    this->PublishPathPlanningConfigMarkers();
+
+    res.success = true;
+    res.message = "Map has been reset to path planning config!";
     return true;
 }
 
@@ -104,6 +119,53 @@ bool MapperClass::OctomapProcessPCL(std_srvs::SetBool::Request &req,
     } else {
         ROS_INFO("[mapper]: PCL data will not be processed!");
     }
+    return true;
+}
+
+bool MapperClass::AStarService(pensa_msgs::Astar::Request &req,
+                               pensa_msgs::Astar::Response &res) {
+    octomap::point3d p0(req.origin.x,           req.origin.y,      req.origin.z);
+    octomap::point3d pf(req.destination.x, req.destination.y, req.destination.z);
+    double planning_time;
+    std::vector<Eigen::Vector3d> path, pruned_path;
+    double plan_height;
+    mutexes_.update_map.lock();
+        const bool is_mapping_3d = globals_.octomap.IsMapping3D();
+        if (!is_mapping_3d && !helper::AreDoubleApproxEqual(p0.z(), pf.z(), 0.0001)) {
+            ROS_ERROR("[mapper]: Mapping in 2D and the waypoints are not at the same height. Cannot compute A*");
+            res.success = false;
+        } else {
+            if (!is_mapping_3d) {
+                plan_height = p0.z();
+                p0.z() = 0.0;
+                pf.z() = 0.0;
+            }
+            res.success = globals_.octomap.Astar(p0, pf, req.prune_result, &planning_time, &path, &pruned_path);
+        }
+    mutexes_.update_map.unlock();
+    if (res.success) {
+        for (const auto& waypoint : pruned_path) {
+            if (is_mapping_3d) {
+                res.path.push_back(msg_conversions::eigen_to_ros_point(waypoint));
+            } else {
+                res.path.push_back(msg_conversions::set_ros_point(waypoint[0], waypoint[1], plan_height));
+            }
+        }
+    }
+    res.planning_time = planning_time;
+
+    // Publish path for Rviz visualization
+    this->PublishPathPlanningPathMarkers(path, pruned_path, inertial_frame_id_);
+
+    return true;
+}
+
+bool MapperClass::ClearAstarTrajectoryInRviz(std_srvs::Trigger::Request &req,
+                                             std_srvs::Trigger::Response &res) {
+    // Request to publish an empty trajectory, which should delete the previous one
+    std::vector<Eigen::Vector3d> path, pruned_path;
+    this->PublishPathPlanningPathMarkers(path, pruned_path, inertial_frame_id_);
+    res.success = true;
     return true;
 }
 

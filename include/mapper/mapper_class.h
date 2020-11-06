@@ -37,7 +37,9 @@
 #include <visualization_msgs/MarkerArray.h>
 
 // Pensa messages/services
+#include <pensa_msgs/Astar.h>
 #include <pensa_msgs/ObstacleInPath.h>
+#include <pensa_msgs/PathPlanningConfig.h>
 #include <pensa_msgs/RRT_RRG_PRM.h>
 #include <pensa_msgs/SetFloat.h>
 
@@ -101,6 +103,19 @@ class MapperClass {
   void PublishRadiusMarkers(const Eigen::Vector3d &center,
                             const double &radius);
 
+  // Publish no-fly-zones and planning zone for Rviz visualization
+  void PublishPathPlanningConfigMarkers();
+
+  // Publish markers of the planned trajectory (Rviz visualization)
+  void PublishPathPlanningPathMarkers(const std::vector<Eigen::Vector3d> &path,
+                                      const std::vector<Eigen::Vector3d> &pruned_path,
+                                      const std::string &inertial_frame_id);
+
+  // Calls store_arbiter's service to retrieve path planning config
+  void LoadPathPlanningConfig(const std::string &inertial_frame_id,
+                              pensa_msgs::PathPlanningConfig *path_planning_config,
+                              ros::NodeHandle *nh);
+
   // Callbacks (see callbacks.cc for implementation) ----------------
   // Callback for handling incoming camera point cloud messages
   void CameraPclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg,
@@ -135,9 +150,13 @@ class MapperClass {
   bool MapInflation(pensa_msgs::SetFloat::Request &req,
                     pensa_msgs::SetFloat::Response &res);
 
-  // Reset the map
-  bool ResetMap(std_srvs::Trigger::Request &req,
-                std_srvs::Trigger::Response &res);
+  // Reset the map and update the map's memory time through the SetFloat parameter
+  bool ResetMap(pensa_msgs::SetFloat::Request &req,
+                pensa_msgs::SetFloat::Response &res);
+
+  // Reset the map and load it as the path planning config
+  bool InitializeMapToPathPlanningConfig(std_srvs::Trigger::Request &req,
+                                         std_srvs::Trigger::Response &res);
 
   // Save octomap
   bool SaveMap(std_srvs::Trigger::Request &req,
@@ -150,6 +169,14 @@ class MapperClass {
   // Process PCL data or not
   bool OctomapProcessPCL(std_srvs::SetBool::Request &req,
                          std_srvs::SetBool::Response &res);
+
+  // A* path planning service
+  bool AStarService(pensa_msgs::Astar::Request &req,
+                    pensa_msgs::Astar::Response &res);
+
+  // Service to clear A* path visualization in Rviz
+  bool ClearAstarTrajectoryInRviz(std_srvs::Trigger::Request &req,
+                                  std_srvs::Trigger::Response &res);
 
   // RRG path planning
   bool RRGService(pensa_msgs::RRT_RRG_PRM::Request &req,
@@ -205,7 +232,13 @@ class MapperClass {
   // Octomap services
   ros::ServiceServer resolution_srv_, memory_time_srv_;
   ros::ServiceServer map_inflation_srv_, reset_map_srv_;
+  ros::ServiceServer initialize_map_to_path_planning_config_srv_;
   ros::ServiceServer save_map_srv_, load_map_srv_, process_pcl_srv_;
+  ros::ServiceServer a_star_path_planning_srv_;
+  ros::ServiceServer clear_a_star_visualization_rviz_srv_;
+
+  // Service clients
+  ros::ServiceClient load_path_planning_config_client_;
 
   // Thread rates (hz)
   double tf_update_rate_, fading_memory_update_rate_, collision_check_rate_;
@@ -236,9 +269,14 @@ class MapperClass {
   ros::Publisher path_marker_pub_;
   ros::Publisher cam_frustum_pub_;
   ros::Publisher obstacle_radius_marker_pub_;
+  ros::Publisher path_planning_config_pub_;
+  ros::Publisher path_planning_path_marker_pub_;
 
   // Path planning publishers
   ros::Publisher graph_tree_marker_pub_;
+
+  // Path planning config (for Rviz visualization)
+  pensa_msgs::PathPlanningConfig path_planning_config_;
 
   // Boolean to terminate all threads
   std::atomic<bool> terminate_node_;

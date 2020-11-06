@@ -20,6 +20,8 @@
 
 #include "mapper/msg_conversions.h"
 
+#include <pensa_msgs/PathPlanningConfig.h>
+
 #include <octomap/octomap.h>
 #include <octomap/OcTree.h>
 #include <pcl/point_cloud.h>
@@ -126,6 +128,13 @@ void PathVisualization(const std::vector<Eigen::Vector3d> &total_path,
                        const std::string &ns,  // namespace
                        visualization_msgs::MarkerArray* markers);
 
+// Visualize a list of lines containing all intermediate waypoints
+void CreatePathMarker(const std::vector<Eigen::Vector3d> &total_path,
+                      const std_msgs::ColorRGBA &color,
+                      const std::string &inertial_frame_id,
+                      const std::string &ns,  // namespace
+                      visualization_msgs::MarkerArray *markers);
+
 void DrawArrowPoints(const Eigen::Vector3d &p1,
                      const Eigen::Vector3d &p2,
                      const std_msgs::ColorRGBA &color,
@@ -164,5 +173,26 @@ void VisualizeRange(const Eigen::Vector3d &pos,
                     const std::string &ns,
                     const std_msgs::ColorRGBA &color,
                     visualization_msgs::Marker *range_marker);
+
+// Create a cuboid visualization marker
+void CreateCuboidMarker(const Eigen::Vector3d &center,
+                        const double &x_dim,
+                        const double &y_dim,
+                        const double &z_dim,
+                        const std::string &frame_id,
+                        const std::string &ns,  // namespace
+                        const uint &id,
+                        const std_msgs::ColorRGBA &color,
+                        const double &lifetime,
+                        visualization_msgs::Marker *cuboid_marker);
+
+// Create an array of visualization markers for no-fly-zones
+void DrawPathPlanningConfig(const pensa_msgs::PathPlanningConfig &path_planning_config,
+                            const std::string &ns,  // namespace
+                            const std::string &inertial_frame_id,
+                            const std_msgs::ColorRGBA &no_fly_zone_color,
+                            const std_msgs::ColorRGBA &fly_zone_color,
+                            const double &thickness,  // in meters
+                            visualization_msgs::MarkerArray *marker_array);
 
 }  // namespace visualization_functions

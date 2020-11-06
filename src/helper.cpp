@@ -94,4 +94,8 @@ struct timespec TimeFromNow(const uint& increment_sec) {
   return ts;
 }
 
+bool AreDoubleApproxEqual(const double &value1, const double &value2, const double &epsilon) {
+  return std::fabs(value1 - value2) < epsilon;
+}
+
 }  // namespace helper

@@ -269,6 +269,41 @@ void PathVisualization(const std::vector<Eigen::Vector3d> &total_path,
     markers->markers.push_back(line_list);
 }
 
+void CreatePathMarker(const std::vector<Eigen::Vector3d> &total_path,
+                      const std_msgs::ColorRGBA &color,
+                      const std::string &inertial_frame_id,
+                      const std::string &ns,  // namespace
+                      visualization_msgs::MarkerArray *markers) {
+    // Initialize edges marker
+    visualization_msgs::Marker line_list;
+    line_list.header.frame_id = inertial_frame_id;
+    line_list.header.stamp = ros::Time::now();
+    line_list.ns = ns;
+    line_list.action = visualization_msgs::Marker::ADD;
+    line_list.type = visualization_msgs::Marker::LINE_LIST;
+    line_list.id = 0;
+    line_list.scale.x = 0.02;  // Line width
+    line_list.pose.orientation.w = 1.0;
+    line_list.color = color;
+
+    // Populate edges
+    uint path_n_points = total_path.size();
+    geometry_msgs::Point node;
+    if (path_n_points >= 2) {
+        node = msg_conversions::eigen_to_ros_point(total_path[0]);
+        line_list.points.push_back(node);
+        for (uint i = 1; i < total_path.size()-1; i++) {
+            node = msg_conversions::eigen_to_ros_point(total_path[i]);
+            line_list.points.push_back(node);
+            line_list.points.push_back(node);
+        }
+        node = msg_conversions::eigen_to_ros_point(total_path[total_path.size()-1]);
+        line_list.points.push_back(node);
+    }
+
+    markers->markers.push_back(line_list);
+}
+
 void DrawArrowPoints(const Eigen::Vector3d& p1,
                      const Eigen::Vector3d& p2,
                      const std_msgs::ColorRGBA &color,
@@ -423,6 +458,74 @@ void VisualizeRange(const Eigen::Vector3d &pos,
     range_marker->scale.z = 0.01;
     range_marker->color = color;
     range_marker->lifetime = ros::Duration(1);  // Disappears in 1 second
+}
+
+void CreateCuboidMarker(const Eigen::Vector3d &center,
+                        const double &x_dim,
+                        const double &y_dim,
+                        const double &z_dim,
+                        const std::string &frame_id,
+                        const std::string &ns,  // namespace
+                        const uint &id,
+                        const std_msgs::ColorRGBA &color,
+                        const double &lifetime,
+                        visualization_msgs::Marker *cuboid_marker) {
+    // Initialize array
+    cuboid_marker->header.frame_id = frame_id;
+    cuboid_marker->header.stamp = ros::Time::now();
+    cuboid_marker->ns = ns;
+    cuboid_marker->action = visualization_msgs::Marker::ADD;
+    cuboid_marker->pose.position = msg_conversions::eigen_to_ros_point(center);
+    cuboid_marker->pose.orientation = msg_conversions::identity_quaternion();
+    cuboid_marker->type = visualization_msgs::Marker::CUBE;
+    cuboid_marker->id = id;
+    cuboid_marker->scale.x = x_dim;
+    cuboid_marker->scale.y = y_dim;
+    cuboid_marker->scale.z = z_dim;
+    cuboid_marker->color = color;
+    cuboid_marker->lifetime = ros::Duration(lifetime);
+}
+
+void DrawPathPlanningConfig(const pensa_msgs::PathPlanningConfig &path_planning_config,
+                            const std::string &ns,  // namespace
+                            const std::string &inertial_frame_id,
+                            const std_msgs::ColorRGBA &no_fly_zone_color,
+                            const std_msgs::ColorRGBA &fly_zone_color,
+                            const double &thickness,  // in meters
+                            visualization_msgs::MarkerArray *marker_array) {
+  const double lifetime = 0.0;  // Should not disappear over time
+  uint id = 0;
+
+  // Markers for no-fly-zones
+  for (const auto& no_fly_zone : path_planning_config.no_fly_zones) {
+    // Compute marker dimensions
+    const double x_center = 0.5*(no_fly_zone.x_corner1 + no_fly_zone.x_corner2);
+    const double y_center = 0.5*(no_fly_zone.y_corner1 + no_fly_zone.y_corner2);
+    const double x_width = std::fabs(no_fly_zone.x_corner1 - no_fly_zone.x_corner2);
+    const double y_width = std::fabs(no_fly_zone.y_corner1 - no_fly_zone.y_corner2);
+    const double z_width = thickness;
+    Eigen::Vector3d center(x_center, y_center, 0.0);
+
+    // Get marker
+    visualization_msgs::Marker no_fly_zone_marker;
+    CreateCuboidMarker(center, x_width, y_width, z_width, no_fly_zone.frame_id,
+                       ns, id++, no_fly_zone_color, lifetime, &no_fly_zone_marker);
+    marker_array->markers.push_back(no_fly_zone_marker);
+  }
+
+  // Markers for allowed area
+  const double x_center = 0.5*(path_planning_config.map_x_corner1 + path_planning_config.map_x_corner2);
+  const double y_center = 0.5*(path_planning_config.map_y_corner1 + path_planning_config.map_y_corner2);
+  const double x_width = std::fabs(path_planning_config.map_x_corner1 - path_planning_config.map_x_corner2);
+  const double y_width = std::fabs(path_planning_config.map_y_corner1 - path_planning_config.map_y_corner2);
+  const double z_width = thickness;
+  Eigen::Vector3d center(x_center, y_center, 0.0);
+
+  // Get marker
+  visualization_msgs::Marker fly_zone_marker;
+  CreateCuboidMarker(center, x_width, y_width, z_width, inertial_frame_id,
+                     ns, id++, fly_zone_color, lifetime, &fly_zone_marker);
+  marker_array->markers.push_back(fly_zone_marker);
 }
 
 }  // namespace visualization_functions

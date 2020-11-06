@@ -16,9 +16,13 @@
  * under the License.
  */
 
-// Standard includes
+// Local includes
 #include <mapper/mapper_class.h>
 
+// Pensa includes
+#include <pensa_msgs/PathPlanningConfigInFrame.h>
+
+// Cpp includes
 #include <string>
 #include <vector>
 
@@ -100,23 +104,29 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
 
     // Check if number of cameras/lidar added match the number of frame_id for each of them
     if (depth_cam_names.size() != cam_frame_id.size()) {
-        ROS_ERROR("Number of cameras is different from camera tf frame_ids!");
+        ROS_ERROR("[mapper]: Number of cameras is different from camera tf frame_ids!");
     }
     if (lidar_names.size() != lidar_frame_id.size()) {
-        ROS_ERROR("Number of lidar topics is different from lidar tf frame_ids!");
+        ROS_ERROR("[mapper]: Number of lidar topics is different from lidar tf frame_ids!");
     }
 
     // Load service names
     std::string resolution_srv_name, memory_time_srv_name;
     std::string map_inflation_srv_name, reset_map_srv_name, rrg_srv_name;
     std::string save_map_srv_name, load_map_srv_name, process_pcl_srv_name;
+    std::string initialize_map_to_path_planning_config_srv_name;
+    std::string a_star_path_planning_srv_name;
+    std::string clear_a_star_visualization_rviz_srv_name;
     nh->getParam("update_resolution", resolution_srv_name);
     nh->getParam("update_memory_time", memory_time_srv_name);
     nh->getParam("update_inflation_radius", map_inflation_srv_name);
     nh->getParam("reset_map", reset_map_srv_name);
     nh->getParam("save_map", save_map_srv_name);
     nh->getParam("load_map", load_map_srv_name);
+    nh->getParam("initialize_map_to_path_planning_config", initialize_map_to_path_planning_config_srv_name);
     nh->getParam("process_pcl", process_pcl_srv_name);
+    nh->getParam("a_star_path_planning", a_star_path_planning_srv_name);
+    nh->getParam("clear_a_star_visualization_rviz", clear_a_star_visualization_rviz_srv_name);
     nh->getParam("rrg_service", rrg_srv_name);
 
     // Load publisher names
@@ -125,6 +135,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     std::string frustum_markers_topic, discrete_trajectory_markers_topic;
     std::string path_obstacle_detection_topic, graph_tree_marker_topic;
     std::string obstacle_radius_detection_topic, obstacle_radius_markers_topic;
+    std::string path_planning_config_markers_topic, path_planning_path_markers_topic;
     nh->getParam("obstacle_markers", obstacle_markers_topic);
     nh->getParam("free_space_markers", free_space_markers_topic);
     nh->getParam("inflated_obstacle_markers", inflated_obstacle_markers_topic);
@@ -134,6 +145,8 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     nh->getParam("discrete_trajectory_markers", discrete_trajectory_markers_topic);
     nh->getParam("path_obstacle_detection", path_obstacle_detection_topic);
     nh->getParam("obstacle_radius_detection", obstacle_radius_detection_topic);
+    nh->getParam("path_planning_config_markers", path_planning_config_markers_topic);
+    nh->getParam("path_planning_path_markers", path_planning_path_markers_topic);
     nh->getParam("graph_tree_marker_topic", graph_tree_marker_topic);
 
     // Load current package path
@@ -154,6 +167,11 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     // Shutdown ROS if sigint is detected
     terminate_node_ = false;
 
+    // Load path planning config
+    double desired_obstacle_planning_distance;
+    nh->getParam("desired_obstacle_planning_distance", desired_obstacle_planning_distance);
+    this->LoadPathPlanningConfig(inertial_frame_id_, &path_planning_config_, nh);
+
     // update tree parameters
     globals_.octomap.SetResolution(map_resolution);
     globals_.octomap.SetMaxRange(max_range);
@@ -167,6 +185,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     globals_.octomap.SetHitMissProbabilities(probability_hit, probability_miss);
     globals_.octomap.SetClampingThresholds(clamping_threshold_min, clamping_threshold_max);
     globals_.octomap.SetMap3d(map_3d);
+    globals_.octomap.SetPathPlanningConfig(path_planning_config_, desired_obstacle_planning_distance);
 
     // update trajectory discretization parameters (used in collision check)
     globals_.sampled_traj.SetMaxDev(compression_max_dev);
@@ -194,8 +213,14 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
         save_map_srv_name, &MapperClass::SaveMap, this);
     load_map_srv_ = nh->advertiseService(
         load_map_srv_name, &MapperClass::LoadMap, this);
+    initialize_map_to_path_planning_config_srv_ = nh->advertiseService(
+        initialize_map_to_path_planning_config_srv_name, &MapperClass::InitializeMapToPathPlanningConfig, this);
     process_pcl_srv_ = nh->advertiseService(
         process_pcl_srv_name, &MapperClass::OctomapProcessPCL, this);
+    a_star_path_planning_srv_ = nh->advertiseService(
+        a_star_path_planning_srv_name, &MapperClass::AStarService, this);
+    clear_a_star_visualization_rviz_srv_ = nh->advertiseService(
+        clear_a_star_visualization_rviz_srv_name, &MapperClass::ClearAstarTrajectoryInRviz, this);
     rrg_srv_ = nh->advertiseService(
         rrg_srv_name, &MapperClass::RRGService, this);
 
@@ -220,6 +245,13 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
         nh->advertise<visualization_msgs::Marker>(obstacle_radius_markers_topic, 10);
     graph_tree_marker_pub_ =
         nh->advertise<visualization_msgs::Marker>(graph_tree_marker_topic, 10);
+    path_planning_config_pub_ =
+        nh->advertise<visualization_msgs::MarkerArray>(path_planning_config_markers_topic, 10, true);
+    path_planning_path_marker_pub_ =
+        nh->advertise<visualization_msgs::MarkerArray>(path_planning_path_markers_topic, 10, true);
+
+    // Publish no-fly-zones for Rviz visualization
+    this->PublishPathPlanningConfigMarkers();
 
     // threads --------------------------------------------------
     h_octo_thread_ = std::thread(&MapperClass::OctomappingTask, this);
@@ -321,6 +353,57 @@ void MapperClass::PublishRadiusMarkers(const Eigen::Vector3d &center,
     visualization_functions::VisualizeRange(center, radius,
         inertial_frame_id_, ns, color, &obstacle_radius_marker);
     obstacle_radius_marker_pub_.publish(obstacle_radius_marker);
+}
+
+void MapperClass::PublishPathPlanningConfigMarkers() {
+    static const std::string ns = "path_planning_config";
+    static const double thickness = 0.1;
+    std_msgs::ColorRGBA no_fly_zone_color = visualization_functions::Color::Red();
+    std_msgs::ColorRGBA fly_zone_color = visualization_functions::Color::Green();
+    no_fly_zone_color.a = 0.3;  // make them slightly transparent
+    fly_zone_color.a = 0.15;    // make them slightly transparent
+    visualization_msgs::MarkerArray no_fly_zones_markers;
+    visualization_functions::DrawPathPlanningConfig(path_planning_config_, ns, inertial_frame_id_, no_fly_zone_color,
+                                                    fly_zone_color, thickness, &no_fly_zones_markers);
+    path_planning_config_pub_.publish(no_fly_zones_markers);
+}
+
+void MapperClass::PublishPathPlanningPathMarkers(const std::vector<Eigen::Vector3d> &path,
+                                                 const std::vector<Eigen::Vector3d> &pruned_path,
+                                                 const std::string &inertial_frame_id) {
+    visualization_msgs::MarkerArray markers;
+    const std_msgs::ColorRGBA color_path = visualization_functions::Color::Yellow();
+    const std_msgs::ColorRGBA color_pruned_path = visualization_functions::Color::Purple();
+    const std::string ns_path = "Astar";
+    const std::string ns_path_pruned = "Astar_pruned";
+    visualization_functions::CreatePathMarker(path, color_path, inertial_frame_id, ns_path, &markers);
+    visualization_functions::CreatePathMarker(pruned_path, color_pruned_path, inertial_frame_id,
+                                              ns_path_pruned, &markers);
+    path_planning_path_marker_pub_.publish(markers);
+}
+
+void MapperClass::LoadPathPlanningConfig(const std::string &inertial_frame_id,
+                                         pensa_msgs::PathPlanningConfig *path_planning_config,
+                                         ros::NodeHandle *nh) {
+    // Capture service name and wait for it to start existing
+    const std::string srv_return_path_planning_config = nh->resolveName("/srv_return_path_planning_config");
+    while (ros::ok() && !ros::service::waitForService(srv_return_path_planning_config, ros::Duration(0.1))) {
+        ROS_WARN_DELAYED_THROTTLE(5.0, "[mapper]: Waiting for path planning config service...");
+    }
+    ROS_INFO("[mapper]: Connected to path planning config service");
+
+    // Start client
+    load_path_planning_config_client_ =
+        nh->serviceClient<pensa_msgs::PathPlanningConfigInFrame>(srv_return_path_planning_config);
+
+    // Call service to capture the planner config
+    pensa_msgs::PathPlanningConfigInFrame load_path_planning_config_msg;
+    load_path_planning_config_msg.request.frame_id = inertial_frame_id;
+    if (!load_path_planning_config_client_.call(load_path_planning_config_msg)) {
+        ROS_ERROR("[mapper]: Could not call service to load path planning config!");
+        return;
+    }
+    *path_planning_config = load_path_planning_config_msg.response.config;
 }
 
 // PLUGINLIB_EXPORT_CLASS(mapper::MapperClass, nodelet::Nodelet);

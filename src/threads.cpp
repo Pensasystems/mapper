@@ -256,12 +256,10 @@ void MapperClass::RadiusCollisionCheck() {
         // get all occupied nodes within a radius
         Eigen::Vector3d box_min = center - Eigen::Vector3d(radius, radius, radius);
         Eigen::Vector3d box_max = center + Eigen::Vector3d(radius, radius, radius);
-        Eigen::Vector3d nearest_node_center;
         double nearest_node_dist;
         mutexes_.octomap.lock();
             const bool there_are_nodes =
-                globals_.octomap.NearestOccNodeWithinRadius(robot_position, radius,
-                                                            &nearest_node_center, &nearest_node_dist);
+                globals_.octomap.NearestOccNodeWithinRadius(robot_position, radius, &nearest_node_dist);
         mutexes_.octomap.unlock();
 
         if (!there_are_nodes) {

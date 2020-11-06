@@ -151,7 +151,7 @@ class Plane3d{
 
     Plane3d() {}
 
-    void transformPlane(const Eigen::Affine3d &transform,
+    void TransformPlane(const Eigen::Affine3d &transform,
                         Plane3d *transformedPlane) {
         transformedPlane->origin_ = transform*origin_;
         transformedPlane->normal_ = (transform.linear()*normal_).normalized();
@@ -212,10 +212,10 @@ class FrustumPlanes{
 
     void TransformFrustum(const Eigen::Affine3d &transform,
                           FrustumPlanes *transformed_frustum) {
-        left_plane_.transformPlane(transform, &transformed_frustum->left_plane_);
-        right_plane_.transformPlane(transform, &transformed_frustum->right_plane_);
-        up_plane_.transformPlane(transform, &transformed_frustum->up_plane_);
-        down_plane_.transformPlane(transform, &transformed_frustum->down_plane_);
+        left_plane_.TransformPlane(transform, &transformed_frustum->left_plane_);
+        right_plane_.TransformPlane(transform, &transformed_frustum->right_plane_);
+        up_plane_.TransformPlane(transform, &transformed_frustum->up_plane_);
+        down_plane_.TransformPlane(transform, &transformed_frustum->down_plane_);
         transformed_frustum->origin_ = transform*origin_;
         transformed_frustum->UL_ = transform*UL_;
         transformed_frustum->UR_ = transform*UR_;
