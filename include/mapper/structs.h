@@ -41,7 +41,7 @@ namespace mapper {
 
 struct stampedPcl {
     pcl::PointCloud<pcl::PointXYZ> cloud;
-    tf::StampedTransform tf_cam2world;
+    tf::StampedTransform tf_pcl2world;
     bool is_lidar;
 };
 

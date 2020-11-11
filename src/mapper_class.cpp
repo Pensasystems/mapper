@@ -70,7 +70,6 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     nh->getParam("clamping_threshold_max", clamping_threshold_max);
     nh->getParam("traj_compression_max_dev", compression_max_dev);
     nh->getParam("traj_compression_resolution", traj_resolution);
-    nh->getParam("tf_update_rate", tf_update_rate_);
     nh->getParam("fading_memory_update_rate", fading_memory_update_rate_);
     nh->getParam("collision_check_rate", collision_check_rate_);
 
@@ -80,35 +79,15 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     // Load radius for radius collision-checking
     nh->getParam("radius_collision_check", radius_collision_check_);
 
-    // Load depth camera names
-    std::vector<std::string> depth_cam_names;
-    std::string depth_cam_prefix, depth_cam_suffix;
-    nh->getParam("depth_cam_names", depth_cam_names);
-    nh->getParam("depth_cam_prefix", depth_cam_prefix);
-    nh->getParam("depth_cam_suffix", depth_cam_suffix);
-
-    // Load lidar topic names
-    std::vector<std::string> lidar_names;
-    std::string lidar_prefix, lidar_suffix;
-    nh->getParam("lidar_names", lidar_names);
-    nh->getParam("lidar_prefix", lidar_prefix);
-    nh->getParam("lidar_suffix", lidar_suffix);
+    // Load lidar topic name
+    std::string lidar_topic;
+    nh->getParam("lidar_topic", lidar_topic);
 
     // Load frame ids
-    std::vector<std::string> cam_frame_id;
-    std::vector<std::string> lidar_frame_id;
+    std::string lidar_frame_id;
     nh->getParam("inertial_frame_id", inertial_frame_id_);
-    nh->getParam("robot_frame_id", robot_frame_id_);
-    nh->getParam("cam_frame_id", cam_frame_id);
+    nh->getParam("robot_base_link_frame_id", robot_base_link_frame_id_);
     nh->getParam("lidar_frame_id", lidar_frame_id);
-
-    // Check if number of cameras/lidar added match the number of frame_id for each of them
-    if (depth_cam_names.size() != cam_frame_id.size()) {
-        ROS_ERROR("[mapper]: Number of cameras is different from camera tf frame_ids!");
-    }
-    if (lidar_names.size() != lidar_frame_id.size()) {
-        ROS_ERROR("[mapper]: Number of lidar topics is different from lidar tf frame_ids!");
-    }
 
     // Load service names
     std::string resolution_srv_name, memory_time_srv_name;
@@ -192,14 +171,6 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     globals_.sampled_traj.SetResolution(traj_resolution);
     globals_.sampled_traj.SetInertialFrame(inertial_frame_id_);
 
-    // Set tf vector to have as many entries as the number of cameras
-    globals_.tf_cameras2world.resize(depth_cam_names.size());
-    globals_.tf_lidar2world.resize(lidar_names.size());
-    h_cameras_tf_thread_.resize(depth_cam_names.size());
-    h_lidar_tf_thread_.resize(lidar_names.size());
-    cameras_sub_.resize(depth_cam_names.size());
-    lidar_sub_.resize(lidar_names.size());
-
     // Create services ------------------------------------------
     resolution_srv_ = nh->advertiseService(
         resolution_srv_name, &MapperClass::UpdateResolution, this);
@@ -258,7 +229,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     h_fade_thread_ = std::thread(&MapperClass::FadeTask, this);
     h_collision_check_thread_ = std::thread(&MapperClass::PathCollisionCheckTask, this);
     h_radius_collision_thread_ = std::thread(&MapperClass::RadiusCollisionCheck, this);
-    h_body_tf_thread_ = std::thread(&MapperClass::BodyTfTask, this, inertial_frame_id_, robot_frame_id_);
+    // h_body_tf_thread_ = std::thread(&MapperClass::BodyTfTask, this, inertial_frame_id_, robot_frame_id_);
     // h_keyboard_thread_ = std::thread(&MapperClass::KeyboardTask, this);
 
     // Subscriber for trajectories
@@ -267,23 +238,11 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     trajectory_status_sub_ = nh->subscribe<pensa_msgs::trapezoidal_p2pActionFeedback>
         ("/trapezoidal_p2p_action/feedback", 1, &MapperClass::TrajectoryStatusCallback, this);
 
-    // Camera subscribers and tf threads ----------------------------------------------
-    for (uint i = 0; i < depth_cam_names.size(); i++) {
-        std::string cam_topic = depth_cam_prefix + depth_cam_names[i] + depth_cam_suffix;
-        cameras_sub_[i] = nh->subscribe<sensor_msgs::PointCloud2>
-              (cam_topic, 10, boost::bind(&MapperClass::CameraPclCallback, this, _1, i));
-        h_cameras_tf_thread_[i] = std::thread(&MapperClass::CameraTfTask, this, inertial_frame_id_, cam_frame_id[i], i);
-        ROS_INFO("[mapper] Subscribed to camera topic: %s", cameras_sub_[i].getTopic().c_str());
-    }
-
-    // Lidar subscribers and tf threads ----------------------------------------------
-    for (uint i = 0; i < lidar_names.size(); i++) {
-        std::string lidar_topic = lidar_prefix + lidar_names[i] + lidar_suffix;
-        lidar_sub_[i] = nh->subscribe<sensor_msgs::PointCloud2>
-              (lidar_topic, 10, boost::bind(&MapperClass::LidarPclCallback, this, _1, i));
-        h_lidar_tf_thread_[i] = std::thread(&MapperClass::LidarTfTask, this, inertial_frame_id_, lidar_frame_id[i], i);
-        ROS_INFO("[mapper] Subscribed to lidar topic: %s", lidar_sub_[i].getTopic().c_str());
-    }
+    // Lidar synchronized subscriber -------------------------------------------------
+    lidar_sync_sub_ = new message_filters::Subscriber<sensor_msgs::PointCloud2>(*nh, lidar_topic, 10);
+    base_link_pose_sync_sub_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(*nh, lidar_topic, 10);
+    sync_.reset(new Sync(SyncPolicyApprox(10), *lidar_sync_sub_, *base_link_pose_sync_sub_));
+    sync_->registerCallback(boost::bind(&MapperClass::LidarSyncCallback, this, _1, _2));
 
     // Notify initialization complete
     ROS_DEBUG("Initialization complete");

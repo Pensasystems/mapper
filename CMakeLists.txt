@@ -10,6 +10,7 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   geometry_msgs
+  message_filters
   pcl_conversions
   pcl_ros
   pensa_msgs
@@ -18,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   std_srvs
+  tf2_utils
   trajectory_msgs
   visualization_msgs)
 

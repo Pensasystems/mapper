@@ -23,60 +23,36 @@
 
 namespace mapper {
 
-void MapperClass::CameraPclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg,
-                                    const uint& cam_index) {
-    // Structure to include pcl and its frame
-    stampedPcl new_pcl;
-    const uint max_queue_size = globals_.max_queue_size;
+// void MapperClass::LidarPclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg,
+//                                    const uint& lidar_index) {
+//     // Structure to include pcl and its frame
+//     stampedPcl new_pcl;
+//     const uint max_queue_size = globals_.max_queue_size;
 
-    // Convert message into pcl type
-    pcl::PointCloud< pcl::PointXYZ > cloud;
-    pcl_conversions::FromROSMsg(*msg, &cloud);
-    new_pcl.cloud = cloud;
+//     // Convert message into pcl type
+//     pcl::PointCloud< pcl::PointXYZ > cloud;
+//     pcl_conversions::FromROSMsg(*msg, &cloud);
+//     new_pcl.cloud = cloud;
 
-    // Get transform from camera to world
-    mutexes_.cam_tf.lock();
-        new_pcl.tf_cam2world = globals_.tf_cameras2world[cam_index];
-    mutexes_.cam_tf.unlock();
-    new_pcl.is_lidar = false;
+//     // Get transform from camera to world
+//     new_pcl.tf_pcl2world = globals_.tf_lidar2world[lidar_index];
+//     new_pcl.is_lidar = true;
 
-    // save into global variables
-    mutexes_.point_cloud.lock();
-        globals_.pcl_queue.push(new_pcl);
-        if (globals_.pcl_queue.size() > max_queue_size) {
-            globals_.pcl_queue.pop();
-        } else {
-            // signal octomap thread to process new pcl data
-            sem_post(&semaphores_.pcl);
-        }
-    mutexes_.point_cloud.unlock();
-}
+//     // save into global variables
+//     mutexes_.point_cloud.lock();
+//         globals_.pcl_queue.push(new_pcl);
+//         if (globals_.pcl_queue.size() > max_queue_size) {
+//             globals_.pcl_queue.pop();
+//         } else {
+//             // signal octomap thread to process new pcl data
+//             sem_post(&semaphores_.pcl);
+//         }
+//     mutexes_.point_cloud.unlock();
+// }
 
-void MapperClass::LidarPclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg,
-                                   const uint& lidar_index) {
-    // Structure to include pcl and its frame
-    stampedPcl new_pcl;
-    const uint max_queue_size = globals_.max_queue_size;
+void MapperClass::LidarSyncCallback(const sensor_msgs::PointCloud2::ConstPtr &lidar_msg,
+                                    const geometry_msgs::PoseStamped::ConstPtr &base_link_pose_msg) {
 
-    // Convert message into pcl type
-    pcl::PointCloud< pcl::PointXYZ > cloud;
-    pcl_conversions::FromROSMsg(*msg, &cloud);
-    new_pcl.cloud = cloud;
-
-    // Get transform from camera to world
-    new_pcl.tf_cam2world = globals_.tf_lidar2world[lidar_index];
-    new_pcl.is_lidar = true;
-
-    // save into global variables
-    mutexes_.point_cloud.lock();
-        globals_.pcl_queue.push(new_pcl);
-        if (globals_.pcl_queue.size() > max_queue_size) {
-            globals_.pcl_queue.pop();
-        } else {
-            // signal octomap thread to process new pcl data
-            sem_post(&semaphores_.pcl);
-        }
-    mutexes_.point_cloud.unlock();
 }
 
 
