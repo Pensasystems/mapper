@@ -79,15 +79,21 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     // Load radius for radius collision-checking
     nh->getParam("radius_collision_check", radius_collision_check_);
 
-    // Load lidar topic name
-    std::string lidar_topic;
+    // Load lidar and base_link pose topics
+    std::string lidar_topic, base_link_pose_topic;
     nh->getParam("lidar_topic", lidar_topic);
+    nh->getParam("base_link_pose_topic", base_link_pose_topic);
 
     // Load frame ids
-    std::string lidar_frame_id;
+    std::string lidar_frame_id, robot_base_link_frame_id;
     nh->getParam("inertial_frame_id", inertial_frame_id_);
-    nh->getParam("robot_base_link_frame_id", robot_base_link_frame_id_);
+    nh->getParam("robot_base_link_frame_id", robot_base_link_frame_id);
     nh->getParam("lidar_frame_id", lidar_frame_id);
+
+    // Load transform between base_link and lidar
+    if (!helper::LookupTransform(robot_base_link_frame_id, lidar_frame_id, &tf_lidar_in_base_link_frame_)) {
+        return;
+    }
 
     // Load service names
     std::string resolution_srv_name, memory_time_srv_name;
@@ -240,7 +246,8 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
 
     // Lidar synchronized subscriber -------------------------------------------------
     lidar_sync_sub_ = new message_filters::Subscriber<sensor_msgs::PointCloud2>(*nh, lidar_topic, 10);
-    base_link_pose_sync_sub_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(*nh, lidar_topic, 10);
+    base_link_pose_sync_sub_ =
+        new message_filters::Subscriber<geometry_msgs::PoseStamped>(*nh, base_link_pose_topic, 10);
     sync_.reset(new Sync(SyncPolicyApprox(10), *lidar_sync_sub_, *base_link_pose_sync_sub_));
     sync_->registerCallback(boost::bind(&MapperClass::LidarSyncCallback, this, _1, _2));
 
@@ -250,7 +257,7 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
 
 geometry_msgs::Point MapperClass::GetTfBodyToWorld() {
     mutexes_.body_tf.lock();
-        const tf::StampedTransform tf_body2world = globals_.tf_body2world;
+        const tf2::Transform tf_body2world = globals_.tf_body2world;
     mutexes_.body_tf.unlock();
     return msg_conversions::tf_vector3_to_ros_point(tf_body2world.getOrigin());
 }

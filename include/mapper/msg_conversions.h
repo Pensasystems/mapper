@@ -45,10 +45,8 @@ namespace msg_conversions {
   void                   ros_to_array_point(const geometry_msgs::Point & p, float* array);
   geometry_msgs::Point   array_to_ros_point(float* array);
   geometry_msgs::Point   set_ros_point(const double & x, const double & y, const double & z);
-  geometry_msgs::Point   pcl_to_ros_vector(const pcl::PointXYZ& pt);
-
-  Eigen::Vector3d        tf_vector3_to_eigen_vector(const tf::Vector3 & v);
-  geometry_msgs::Point   tf_vector3_to_ros_point(const tf::Vector3 & v);
+  geometry_msgs::Point   pcl_to_ros_point(const pcl::PointXYZ& pt);
+  geometry_msgs::Point   tf_vector3_to_ros_point(const tf2::Vector3 & v);
 
   Eigen::Quaterniond        ros_to_eigen_quat(const geometry_msgs::Quaternion & q);
   geometry_msgs::Quaternion eigen_to_ros_quat(const Eigen::Quaterniond & q);

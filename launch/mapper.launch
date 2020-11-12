@@ -7,7 +7,8 @@
     <arg name="inertial_frame_id" default="/map" />
     <arg name="robot_base_link_frame_id" default="/robot" />
     <arg name="lidar_topic" default="/laser/scan/cloud" />
-    <arg name="lidar_frame_id" default="/laser_frame" />
+    <arg name="base_link_pose_topic" default="/vision_pose/pose_base_link" />
+    <arg name="lidar_frame_id" default="laser_frame" />
     <arg name="map_resolution" default="0.1" />
     <arg name="max_range" default="6.0" />
     <arg name="min_range" default="0.25" />
@@ -24,6 +25,9 @@
 
         <!-- Lidar topic -->
         <param name="lidar_topic" value="$(arg lidar_topic)"/>
+
+        <!-- Base link pose topic (we assume that this topic returns the pose of the base_link w.r.t. the inertial frame) -->
+        <param name="base_link_pose_topic" value="$(arg base_link_pose_topic)"/>
 
         <!-- tf frame ID for the lidars above -->
         <param name="lidar_frame_id" value="$(arg lidar_frame_id)"/>

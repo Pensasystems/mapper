@@ -23,36 +23,36 @@
 
 namespace mapper {
 
-// void MapperClass::LidarPclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg,
-//                                    const uint& lidar_index) {
-//     // Structure to include pcl and its frame
-//     stampedPcl new_pcl;
-//     const uint max_queue_size = globals_.max_queue_size;
-
-//     // Convert message into pcl type
-//     pcl::PointCloud< pcl::PointXYZ > cloud;
-//     pcl_conversions::FromROSMsg(*msg, &cloud);
-//     new_pcl.cloud = cloud;
-
-//     // Get transform from camera to world
-//     new_pcl.tf_pcl2world = globals_.tf_lidar2world[lidar_index];
-//     new_pcl.is_lidar = true;
-
-//     // save into global variables
-//     mutexes_.point_cloud.lock();
-//         globals_.pcl_queue.push(new_pcl);
-//         if (globals_.pcl_queue.size() > max_queue_size) {
-//             globals_.pcl_queue.pop();
-//         } else {
-//             // signal octomap thread to process new pcl data
-//             sem_post(&semaphores_.pcl);
-//         }
-//     mutexes_.point_cloud.unlock();
-// }
-
 void MapperClass::LidarSyncCallback(const sensor_msgs::PointCloud2::ConstPtr &lidar_msg,
                                     const geometry_msgs::PoseStamped::ConstPtr &base_link_pose_msg) {
+    // Get lidar pose in inertial frame
+    const tf2::Transform tf_base_link_in_inertial_frame = helper::PoseToTransform(base_link_pose_msg->pose);
+    const tf2::Transform tf_lidar_in_inertial_frame = tf_base_link_in_inertial_frame * tf_lidar_in_base_link_frame_;
 
+    // Structure to include pcl and its frame
+    StampedPcl new_pcl;
+    const uint max_queue_size = globals_.max_queue_size;
+
+    // Populate StampedPcl
+    pcl_conversions::FromROSMsg(*lidar_msg, &new_pcl.cloud);
+    new_pcl.tf_pcl2world = tf_lidar_in_inertial_frame;
+    new_pcl.is_lidar = true;
+
+    // save into global variables
+    mutexes_.point_cloud.lock();
+        globals_.pcl_queue.push(new_pcl);
+        if (globals_.pcl_queue.size() > max_queue_size) {
+            globals_.pcl_queue.pop();
+        } else {
+            // signal octomap thread to process new pcl data
+            sem_post(&semaphores_.pcl);
+        }
+    mutexes_.point_cloud.unlock();
+
+    // Save drone's base_link into global variable for obstacle detection
+    mutexes_.body_tf.lock();
+        globals_.tf_body2world = tf_lidar_in_inertial_frame;
+    mutexes_.body_tf.unlock();
 }
 
 

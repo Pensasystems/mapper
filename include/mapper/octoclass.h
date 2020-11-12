@@ -24,7 +24,6 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
-#include <tf/transform_broadcaster.h>
 #include <visualization_msgs/MarkerArray.h>
 
 #include "mapper/graphs.h"
@@ -87,11 +86,11 @@ class OctoClass{
     void PointsOctomapToPointCloud2(const octomap::point3d_list& points,
                                     sensor_msgs::PointCloud2& cloud);  // Convert from octomap to pointcloud2
     void PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
-                          const tf::StampedTransform &tf_pcl2world,
-                          const algebra_3d::FrustumPlanes &frustum);    // Map obstacles and free area
+                         const tf2::Transform &tf_pcl2world,
+                         const algebra_3d::FrustumPlanes &frustum);    // Map obstacles and free area
     // Same as above, but without frustum filtering (for lidar)
     void PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
-                          const tf::StampedTransform &tf_pcl2world);
+                          const tf2::Transform &tf_pcl2world);
     void ComputeUpdate(const octomap::KeySet &occ_inflated,  // Inflated endpoints
                        const octomap::KeySet &occ_slim,      // Non-inflated endpoints
                        const octomap::point3d& origin,

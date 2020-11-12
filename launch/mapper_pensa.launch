@@ -9,7 +9,7 @@
     <arg name="process_pcl_at_startup"   value="false" />
     <arg name="map_3d"                   value="false" />
     <arg name="inertial_frame_id"        value="$(arg inertial_frame_id)" />
-    <arg name="lidar_frame_id"           value="/laser_frame" />
+    <arg name="lidar_frame_id"           value="laser_frame" />
     <arg name="lidar_topic"              value="/laser/cloud" />
     <arg name="robot_base_link_frame_id" value="$(arg robot_base_link_frame_id)" />
     <arg name="max_range"                value="6.0" />

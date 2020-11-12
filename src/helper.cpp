@@ -3,8 +3,12 @@
 
 #include "mapper/helper.h"
 
+// ROS includes
+#include <tf2_ros/transform_listener.h>
+
 // C++ libraries
 #include <limits>
+#include <string>
 #include <vector>
 
 namespace helper {
@@ -96,6 +100,31 @@ struct timespec TimeFromNow(const uint& increment_sec) {
 
 bool AreDoubleApproxEqual(const double &value1, const double &value2, const double &epsilon) {
   return std::fabs(value1 - value2) < epsilon;
+}
+
+tf2::Transform PoseToTransform(const geometry_msgs::Pose &pose) {
+  tf2::Vector3 pos(pose.position.x, pose.position.y, pose.position.z);
+  tf2::Quaternion q(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
+  tf2::Transform tf2_transform(q, pos);
+  return tf2_transform;
+}
+
+bool LookupTransform(const std::string &from_frame,
+                     const std::string &to_frame,
+                     tf2::Transform *tf_output) {
+    // Create tf listener
+    static tf2_ros::Buffer tf_buffer;
+    static tf2_ros::TransformListener tf_listener(tf_buffer);
+    try {
+        const geometry_msgs::TransformStamped transform =
+            tf_buffer.lookupTransform(from_frame, to_frame, ros::Time(0), ros::Duration(10.0));
+        tf2::fromMsg(transform.transform, *tf_output);
+    } catch (tf2::TransformException &ex) {
+        ROS_WARN("[mapper]: Transform between frame \"%s\" and frame \"%s\" was not found: %s",
+                 from_frame.c_str(), to_frame.c_str(), ex.what());
+        return false;
+    }
+    return true;
 }
 
 }  // namespace helper

@@ -229,10 +229,10 @@ void OctoClass::PointsOctomapToPointCloud2(const octomap::point3d_list& points,
 }
 
 void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
-                                const tf::StampedTransform &tf_pcl2world,
+                                const tf2::Transform &tf_pcl2world,
                                 const algebra_3d::FrustumPlanes &frustum) {
     // set camera origin
-    tf::Vector3 v = tf_pcl2world.getOrigin();
+    tf2::Vector3 v = tf_pcl2world.getOrigin();
     if (!map_3d_) {
         v.setZ(0.0);
     }
@@ -338,9 +338,9 @@ void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
 }
 
 void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
-                                const tf::StampedTransform &tf_pcl2world) {
+                                const tf2::Transform &tf_pcl2world) {
     // set camera origin
-    tf::Vector3 v = tf_pcl2world.getOrigin();
+    tf2::Vector3 v = tf_pcl2world.getOrigin();
     if (!map_3d_) {
         v.setZ(0.0);
     }

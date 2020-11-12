@@ -36,7 +36,6 @@
 #include <std_msgs/Float32.h>
 #include <std_srvs/Trigger.h>
 #include <std_srvs/SetBool.h>
-#include <tf/transform_listener.h>
 #include <visualization_msgs/MarkerArray.h>
 
 // Pensa messages/services
@@ -252,7 +251,10 @@ class MapperClass {
   std::string local_path_;
 
   // Inertial and robot frame ids
-  std::string inertial_frame_id_, robot_base_link_frame_id_;
+  std::string inertial_frame_id_;
+
+  // Variable for transform between base_link and lidar
+  tf2::Transform tf_lidar_in_base_link_frame_;
 
   // Collision publishers
   ros::Publisher obstacle_path_pub_, obstacle_radius_pub_;

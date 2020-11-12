@@ -255,7 +255,7 @@ void MapperClass::RadiusCollisionCheck() {
 
 void MapperClass::OctomappingTask() {
     ROS_DEBUG("[mapper]: OctomappingTask Thread started!");
-    tf::StampedTransform tf_pcl2world;
+    tf2::Transform tf_pcl2world;
     pcl::PointCloud< pcl::PointXYZ > pcl_world;
 
     uint semaphore_timeout = 1;  // seconds
@@ -274,22 +274,17 @@ void MapperClass::OctomappingTask() {
         // Get Point Cloud
         mutexes_.point_cloud.lock();
             // Get data from queue
-            pcl::PointCloud< pcl::PointXYZ > point_cloud = globals_.pcl_queue.front().cloud;
-            const tf::StampedTransform tf_pcl2world = globals_.pcl_queue.front().tf_pcl2world;
+            pcl::PointCloud< pcl::PointXYZ > pcl_sensor_frame = globals_.pcl_queue.front().cloud;
+            tf_pcl2world = globals_.pcl_queue.front().tf_pcl2world;
             const bool is_lidar = globals_.pcl_queue.front().is_lidar;
 
             // Remove data from queue
             globals_.pcl_queue.pop();
         mutexes_.point_cloud.unlock();
 
-        // Check if a tf message has been received already. If not, return
-        if (tf_pcl2world.stamp_.toSec() == 0) {
-            continue;
-        }
-
         // Get camera transform
-        tf::Quaternion q = tf_pcl2world.getRotation();
-        tf::Vector3 v = tf_pcl2world.getOrigin();
+        const tf2::Quaternion q = tf_pcl2world.getRotation();
+        const tf2::Vector3 v = tf_pcl2world.getOrigin();
         Eigen::Affine3d transform = Eigen::Affine3d::Identity();
         transform.translation() << v.getX(), v.getY(), v.getZ();
         transform.rotate(Eigen::Quaterniond(q.getW(), q.getX(), q.getY(), q.getZ()));
@@ -308,7 +303,7 @@ void MapperClass::OctomappingTask() {
         // Process PCL data
         if (update_map) {
             // Transform pcl into world frame
-            pcl::transformPointCloud(point_cloud, pcl_world, transform);
+            pcl::transformPointCloud(pcl_sensor_frame, pcl_world, transform);
 
             // Save into octomap
             mutexes_.octomap.lock();
@@ -362,7 +357,7 @@ void MapperClass::OctomappingTask() {
         if ((!is_lidar) && (cam_frustum_pub_.getNumSubscribers() > 0)) {
             visualization_msgs::Marker frustum_markers;
             mutexes_.octomap.lock();
-                globals_.octomap.cam_frustum_.VisualizeFrustum(point_cloud.header.frame_id, &frustum_markers);
+                globals_.octomap.cam_frustum_.VisualizeFrustum(pcl_sensor_frame.header.frame_id, &frustum_markers);
             mutexes_.octomap.unlock();
             cam_frustum_pub_.publish(frustum_markers);
         } else if ((is_lidar) && (cam_frustum_pub_.getNumSubscribers() > 0)) {
