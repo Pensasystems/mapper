@@ -238,13 +238,15 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     // h_body_tf_thread_ = std::thread(&MapperClass::BodyTfTask, this, inertial_frame_id_, robot_frame_id_);
     // h_keyboard_thread_ = std::thread(&MapperClass::KeyboardTask, this);
 
-    // Subscriber for trajectories
+    // Subscribers -----------------------------------------------
     waypoints_sub_ = nh->subscribe<pensa_msgs::WaypointSet>
         ("/drone_arbiter/check_collision", 1, &MapperClass::WaypointsCallback, this);
     trajectory_status_sub_ = nh->subscribe<pensa_msgs::trapezoidal_p2pActionFeedback>
         ("/trapezoidal_p2p_action/feedback", 1, &MapperClass::TrajectoryStatusCallback, this);
+    base_link_pose_sub_ = nh->subscribe<geometry_msgs::PoseStamped>
+        (base_link_pose_topic, 5, &MapperClass::BaseLinkPoseCallback, this);
 
-    // Lidar synchronized subscriber -------------------------------------------------
+    // Lidar synchronized subscriber
     lidar_sync_sub_ = new message_filters::Subscriber<sensor_msgs::PointCloud2>(*nh, lidar_topic, 10);
     base_link_pose_sync_sub_ =
         new message_filters::Subscriber<geometry_msgs::PoseStamped>(*nh, base_link_pose_topic, 10);

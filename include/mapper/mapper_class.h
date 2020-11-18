@@ -127,6 +127,9 @@ class MapperClass {
   void LidarSyncCallback(const sensor_msgs::PointCloud2::ConstPtr &lidar_msg,
                          const geometry_msgs::PoseStamped::ConstPtr &base_link_pose_msg);
 
+  // Callback for saving drone's base_link into global variable for obstacle detection
+  void BaseLinkPoseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg);
+
   // Callback for handling incoming sampled trajectory
   void SampledTrajectoryCallback(const pensa_msgs::VecPVA_4d::ConstPtr &msg);
 
@@ -214,10 +217,9 @@ class MapperClass {
   std::thread h_radius_collision_thread_;
 
   // Subscriber variables
-  ros::Subscriber trajectory_sub_, trajectory_status_sub_;
+  ros::Subscriber base_link_pose_sub_;
+  ros::Subscriber trajectory_status_sub_;
   ros::Subscriber waypoints_sub_;
-  std::vector<ros::Subscriber> cameras_sub_;
-  std::vector<ros::Subscriber> lidar_sub_;
 
   // Synchronized subscribers
   boost::shared_ptr<Sync> sync_;

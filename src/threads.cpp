@@ -51,49 +51,6 @@ void MapperClass::FadeTask() {
     ROS_DEBUG("[mapper]: Exiting Fading Memory Thread...");
 }
 
-// // Thread for updating the body tfTree values
-// void MapperClass::BodyTfTask(const std::string& parent_frame,
-//                              const std::string& child_frame) {
-//     ROS_DEBUG("[mapper]: robot frame tf Thread started with rate %f: ", tf_update_rate_);
-//     tf_listener::TfClass obj_body2world;
-//     ros::Rate loop_rate(tf_update_rate_);
-
-//     while (!terminate_node_) {
-//         // Get the transform
-//         obj_body2world.GetTransform(child_frame, parent_frame);
-//         // obj_body2world.PrintOrigin();
-
-//         mutexes_.body_tf.lock();
-//             globals_.tf_body2world = obj_body2world.transform_;
-//         mutexes_.body_tf.unlock();
-//         loop_rate.sleep();
-//     }
-
-//     ROS_DEBUG("[mapper]: Exiting body tf Thread...");
-// }
-
-// void MapperClass::LidarTfTask(const std::string& parent_frame,
-//                               const std::string& child_frame,
-//                               const uint& index) {
-//     ROS_DEBUG("tf Thread from frame `%s` to `%s` started with rate %f: ",
-//               child_frame.c_str(), parent_frame.c_str(), tf_update_rate_);
-//     tf_listener::TfClass obj_tf;
-//     ros::Rate loop_rate(tf_update_rate_);
-
-//     while (!terminate_node_) {
-//         // Get the transform
-//         obj_tf.GetTransform(child_frame, parent_frame);
-//         // obj_tf.PrintOrigin();
-
-//         mutexes_.lidar_tf.lock();
-//             globals_.tf_lidar2world[index] = obj_tf.transform_;
-//         mutexes_.lidar_tf.unlock();
-//         loop_rate.sleep();
-//     }
-
-//     ROS_DEBUG("[mapper]: Exiting lidar tf Thread...");
-// }
-
 void MapperClass::PathCollisionCheckTask() {
     ROS_DEBUG("[mapper]: collisionCheck Thread started!");
 

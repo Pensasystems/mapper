@@ -48,10 +48,13 @@ void MapperClass::LidarSyncCallback(const sensor_msgs::PointCloud2::ConstPtr &li
             sem_post(&semaphores_.pcl);
         }
     mutexes_.point_cloud.unlock();
+}
 
+void MapperClass::BaseLinkPoseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg) {
     // Save drone's base_link into global variable for obstacle detection
+    const tf2::Transform tf_base_link_in_inertial_frame = helper::PoseToTransform(msg->pose);
     mutexes_.body_tf.lock();
-        globals_.tf_body2world = tf_lidar_in_inertial_frame;
+        globals_.tf_body2world = tf_base_link_in_inertial_frame;
     mutexes_.body_tf.unlock();
 }
 
@@ -199,15 +202,11 @@ void MapperClass::TrajectoryStatusCallback(const pensa_msgs::trapezoidal_p2pActi
 }
 
 void MapperClass::DestroyAllCallbacks() {
-    trajectory_sub_.shutdown();
     trajectory_status_sub_.shutdown();
     waypoints_sub_.shutdown();
-    for (uint i = 0; i < cameras_sub_.size(); i++) {
-        cameras_sub_[i].shutdown();
-    }
-    for (uint i = 0; i < lidar_sub_.size(); i++) {
-        lidar_sub_[i].shutdown();
-    }
+    base_link_pose_sub_.shutdown();
+    lidar_sync_sub_->unsubscribe();
+    base_link_pose_sync_sub_->unsubscribe();
     ROS_DEBUG("[mapper]: All subscribers have been destroyed!");
 }
 
