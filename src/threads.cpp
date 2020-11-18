@@ -239,17 +239,11 @@ void MapperClass::OctomappingTask() {
             globals_.pcl_queue.pop();
         mutexes_.point_cloud.unlock();
 
-        // Get camera transform
-        const tf2::Quaternion q = tf_pcl2world.getRotation();
-        const tf2::Vector3 v = tf_pcl2world.getOrigin();
-        Eigen::Affine3d transform = Eigen::Affine3d::Identity();
-        transform.translation() << v.getX(), v.getY(), v.getZ();
-        transform.rotate(Eigen::Quaterniond(q.getW(), q.getX(), q.getY(), q.getZ()));
-
         // Update frustum orientation
+        const Eigen::Affine3d eigen_pcl2world = msg_conversions::tf_transform_to_eigen_transform(tf_pcl2world);
         algebra_3d::FrustumPlanes world_frustum;
         mutexes_.octomap.lock();
-            globals_.octomap.cam_frustum_.TransformFrustum(transform, &world_frustum);
+            globals_.octomap.cam_frustum_.TransformFrustum(eigen_pcl2world, &world_frustum);
         mutexes_.octomap.unlock();
 
         // Should we process PCL data?
@@ -260,7 +254,7 @@ void MapperClass::OctomappingTask() {
         // Process PCL data
         if (update_map) {
             // Transform pcl into world frame
-            pcl::transformPointCloud(pcl_sensor_frame, pcl_world, transform);
+            pcl::transformPointCloud(pcl_sensor_frame, pcl_world, eigen_pcl2world);
 
             // Save into octomap
             mutexes_.octomap.lock();
@@ -319,7 +313,7 @@ void MapperClass::OctomappingTask() {
             cam_frustum_pub_.publish(frustum_markers);
         } else if ((is_lidar) && (cam_frustum_pub_.getNumSubscribers() > 0)) {
             visualization_msgs::Marker lidar_range_marker;
-            Eigen::Vector3d lidar_origin = transform.translation();
+            Eigen::Vector3d lidar_origin = eigen_pcl2world.translation();
             if (!globals_.map_3d) {
                 lidar_origin[2] = 0.0;
             }

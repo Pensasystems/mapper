@@ -27,7 +27,7 @@
 #include <geometry_msgs/Transform.h>
 #include <geometry_msgs/Vector3.h>
 #include <pcl/point_types.h>
-#include <tf/tf.h>
+#include <tf2/LinearMath/Transform.h>
 
 namespace msg_conversions {
 
@@ -57,5 +57,6 @@ namespace msg_conversions {
   geometry_msgs::Quaternion identity_quaternion();
   Eigen::Affine3d           ros_pose_to_eigen_transform(const geometry_msgs::Pose & p);
   Eigen::Affine3d           ros_to_eigen_transform(const geometry_msgs::Transform & p);
+  Eigen::Affine3d           tf_transform_to_eigen_transform(const tf2::Transform & transform);
 
 }  // namespace msg_conversions

@@ -180,4 +180,13 @@ Eigen::Affine3d ros_to_eigen_transform(const geometry_msgs::Transform & p) {
   return transform;
 }
 
+Eigen::Affine3d tf_transform_to_eigen_transform(const tf2::Transform & transform) {
+  const tf2::Quaternion q = transform.getRotation();
+  const tf2::Vector3 v = transform.getOrigin();
+  Eigen::Affine3d eigen_transform = Eigen::Affine3d::Identity();
+  eigen_transform.translation() << v.getX(), v.getY(), v.getZ();
+  eigen_transform.rotate(Eigen::Quaterniond(q.getW(), q.getX(), q.getY(), q.getZ()));
+  return eigen_transform;
+}
+
 }  // end namespace msg_conversions

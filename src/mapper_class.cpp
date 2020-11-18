@@ -235,7 +235,6 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     h_fade_thread_ = std::thread(&MapperClass::FadeTask, this);
     h_collision_check_thread_ = std::thread(&MapperClass::PathCollisionCheckTask, this);
     h_radius_collision_thread_ = std::thread(&MapperClass::RadiusCollisionCheck, this);
-    // h_body_tf_thread_ = std::thread(&MapperClass::BodyTfTask, this, inertial_frame_id_, robot_frame_id_);
     // h_keyboard_thread_ = std::thread(&MapperClass::KeyboardTask, this);
 
     // Subscribers -----------------------------------------------
