@@ -56,9 +56,6 @@ struct timespec TimeFromNow(const uint& increment_sec);
 // Function that returns whether value1 and value2 are close enough (for double inputs)
 bool AreDoubleApproxEqual(const double &value1, const double &value2, const double &epsilon);
 
-// Convert geometry_msgs::Pose to tf2::Transform
-tf2::Transform PoseToTransform(const geometry_msgs::Pose &pose);
-
 // Function to lookup an arbitrary transform in the tf tree
 bool LookupTransform(const std::string &from_frame,
                      const std::string &to_frame,

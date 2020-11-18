@@ -26,7 +26,8 @@ namespace mapper {
 void MapperClass::LidarSyncCallback(const sensor_msgs::PointCloud2::ConstPtr &lidar_msg,
                                     const geometry_msgs::PoseStamped::ConstPtr &base_link_pose_msg) {
     // Get lidar pose in inertial frame
-    const tf2::Transform tf_base_link_in_inertial_frame = helper::PoseToTransform(base_link_pose_msg->pose);
+    const tf2::Transform tf_base_link_in_inertial_frame =
+            msg_conversions::ros_pose_to_tf2_transform(base_link_pose_msg->pose);
     const tf2::Transform tf_lidar_in_inertial_frame = tf_base_link_in_inertial_frame * tf_lidar_in_base_link_frame_;
 
     // Structure to include pcl and its frame
@@ -52,7 +53,7 @@ void MapperClass::LidarSyncCallback(const sensor_msgs::PointCloud2::ConstPtr &li
 
 void MapperClass::BaseLinkPoseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg) {
     // Save drone's base_link into global variable for obstacle detection
-    const tf2::Transform tf_base_link_in_inertial_frame = helper::PoseToTransform(msg->pose);
+    const tf2::Transform tf_base_link_in_inertial_frame = msg_conversions::ros_pose_to_tf2_transform(msg->pose);
     mutexes_.body_tf.lock();
         globals_.tf_body2world = tf_base_link_in_inertial_frame;
     mutexes_.body_tf.unlock();

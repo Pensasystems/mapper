@@ -102,13 +102,6 @@ bool AreDoubleApproxEqual(const double &value1, const double &value2, const doub
   return std::fabs(value1 - value2) < epsilon;
 }
 
-tf2::Transform PoseToTransform(const geometry_msgs::Pose &pose) {
-  tf2::Vector3 pos(pose.position.x, pose.position.y, pose.position.z);
-  tf2::Quaternion q(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
-  tf2::Transform tf2_transform(q, pos);
-  return tf2_transform;
-}
-
 bool LookupTransform(const std::string &from_frame,
                      const std::string &to_frame,
                      tf2::Transform *tf_output) {
