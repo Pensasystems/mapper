@@ -12,7 +12,7 @@
     <arg name="lidar_prefix" default="/" />
     <arg name="lidar_frame_id" default="['/laser_frame']" />
     <arg name="lidar_suffix" default="" />
-    <arg name="map_resolution" default="0.1" />
+    <arg name="map_resolution" default="0.075" />
     <arg name="max_range" default="6.0" />
     <arg name="min_range" default="0.25" />
     <arg name="memory_time" default="-10" />
@@ -60,8 +60,8 @@
         <param name="fading_memory_update_rate" value="1"/><!-- Hz -->
 
         <!-- Map inflation parameters -->
-        <param name="inflate_radius_xy" value="0.30"/>       <!-- meters -->
-        <param name="inflate_radius_z" value="0.30"/>       <!-- meters -->
+        <param name="inflate_radius_xy" value="0.225"/>       <!-- meters -->
+        <param name="inflate_radius_z" value="0.225"/>       <!-- meters -->
 
         <!-- Camera FOV (radians): map is only updated within this FOV -->
         <param name="cam_fov" value="0.8"/>             <!-- radians -->
