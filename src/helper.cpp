@@ -4,6 +4,7 @@
 #include "mapper/helper.h"
 
 // ROS includes
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/transform_listener.h>
 
 // C++ libraries
@@ -113,7 +114,7 @@ bool LookupTransform(const std::string &from_frame,
             tf_buffer.lookupTransform(from_frame, to_frame, ros::Time(0), ros::Duration(10.0));
         tf2::fromMsg(transform.transform, *tf_output);
     } catch (tf2::TransformException &ex) {
-        ROS_WARN("[mapper]: Transform between frame \"%s\" and frame \"%s\" was not found: %s",
+        ROS_ERROR("[mapper]: Transform between frame \"%s\" and frame \"%s\" was not found: %s",
                  from_frame.c_str(), to_frame.c_str(), ex.what());
         return false;
     }

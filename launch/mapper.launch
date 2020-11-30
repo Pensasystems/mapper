@@ -1,6 +1,5 @@
 <launch>
 
-    <arg name="namespace" default="LM_Mapper"/>
     <arg name="launch_rviz" default="true" />
     <arg name="process_pcl_at_startup" default="true" />
     <arg name="map_3d" default="true" />
@@ -19,9 +18,6 @@
         type="mapper"
         name="mapper_node"
         output="screen">
-
-        <!-- Namespace -->
-        <param name="namespace" value="$(arg namespace)"/>
 
         <!-- Lidar topic -->
         <param name="lidar_topic" value="$(arg lidar_topic)"/>

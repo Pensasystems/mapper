@@ -10,7 +10,6 @@
 #include <octomap/octomap.h>
 #include <pcl/point_cloud.h>
 #include <tf2/LinearMath/Transform.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 // Cpp includes
 #include <string>
@@ -57,6 +56,9 @@ struct timespec TimeFromNow(const uint& increment_sec);
 bool AreDoubleApproxEqual(const double &value1, const double &value2, const double &epsilon);
 
 // Function to lookup an arbitrary transform in the tf tree
+// Note that this function initializes a listener at the first time it
+// is called. This means that anything published to /tf before this
+// function is called for the first time will not be captured
 bool LookupTransform(const std::string &from_frame,
                      const std::string &to_frame,
                      tf2::Transform *tf_output);

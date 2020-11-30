@@ -73,9 +73,6 @@ void MapperClass::Initialize(ros::NodeHandle *nh) {
     nh->getParam("fading_memory_update_rate", fading_memory_update_rate_);
     nh->getParam("collision_check_rate", collision_check_rate_);
 
-    // Get namespace of current node
-    nh->getParam("namespace", ns_);
-
     // Load radius for radius collision-checking
     nh->getParam("radius_collision_check", radius_collision_check_);
 

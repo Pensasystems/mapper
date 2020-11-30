@@ -115,10 +115,9 @@ geometry_msgs::Point tf_vector3_to_ros_point(const tf2::Vector3 & v) {
 }
 
 tf2::Transform ros_pose_to_tf2_transform(const geometry_msgs::Pose &pose) {
-  tf2::Vector3 pos(pose.position.x, pose.position.y, pose.position.z);
-  tf2::Quaternion q(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
-  tf2::Transform tf2_transform(q, pos);
-  return tf2_transform;
+  const tf2::Vector3 pos(pose.position.x, pose.position.y, pose.position.z);
+  const tf2::Quaternion q(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
+  return tf2::Transform(q, pos);
 }
 
 geometry_msgs::Quaternion array_to_ros_quat(float* array) {

@@ -245,9 +245,6 @@ class MapperClass {
   // Path planning services
   ros::ServiceServer rrg_srv_;
 
-  // Node namespace
-  std::string ns_;
-
   // Path strings
   std::string local_path_;
 

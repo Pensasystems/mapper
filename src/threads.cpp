@@ -231,7 +231,7 @@ void MapperClass::OctomappingTask() {
         // Get Point Cloud
         mutexes_.point_cloud.lock();
             // Get data from queue
-            pcl::PointCloud< pcl::PointXYZ > pcl_sensor_frame = globals_.pcl_queue.front().cloud;
+            pcl::PointCloud< pcl::PointXYZ > cloud_in_sensor_frame = globals_.pcl_queue.front().cloud;
             tf_pcl2world = globals_.pcl_queue.front().tf_pcl2world;
             const bool is_lidar = globals_.pcl_queue.front().is_lidar;
 
@@ -254,7 +254,7 @@ void MapperClass::OctomappingTask() {
         // Process PCL data
         if (update_map) {
             // Transform pcl into world frame
-            pcl::transformPointCloud(pcl_sensor_frame, pcl_world, eigen_pcl2world);
+            pcl::transformPointCloud(cloud_in_sensor_frame, pcl_world, eigen_pcl2world);
 
             // Save into octomap
             mutexes_.octomap.lock();
@@ -308,7 +308,7 @@ void MapperClass::OctomappingTask() {
         if ((!is_lidar) && (cam_frustum_pub_.getNumSubscribers() > 0)) {
             visualization_msgs::Marker frustum_markers;
             mutexes_.octomap.lock();
-                globals_.octomap.cam_frustum_.VisualizeFrustum(pcl_sensor_frame.header.frame_id, &frustum_markers);
+               globals_.octomap.cam_frustum_.VisualizeFrustum(cloud_in_sensor_frame.header.frame_id, &frustum_markers);
             mutexes_.octomap.unlock();
             cam_frustum_pub_.publish(frustum_markers);
         } else if ((is_lidar) && (cam_frustum_pub_.getNumSubscribers() > 0)) {
