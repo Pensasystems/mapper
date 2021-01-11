@@ -308,7 +308,8 @@ void MapperClass::OctomappingTask() {
         if ((!is_lidar) && (cam_frustum_pub_.getNumSubscribers() > 0)) {
             visualization_msgs::Marker frustum_markers;
             mutexes_.octomap.lock();
-               globals_.octomap.cam_frustum_.VisualizeFrustum(cloud_in_sensor_frame.header.frame_id, &frustum_markers);
+                globals_.octomap.cam_frustum_.VisualizeFrustum(cloud_in_sensor_frame.header.frame_id,
+                                                              &frustum_markers);
             mutexes_.octomap.unlock();
             cam_frustum_pub_.publish(frustum_markers);
         } else if ((is_lidar) && (cam_frustum_pub_.getNumSubscribers() > 0)) {
