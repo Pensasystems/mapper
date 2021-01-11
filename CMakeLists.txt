@@ -42,7 +42,8 @@ roslint_cpp()
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  DEPENDS Eigen
+  INCLUDE_DIRS include
+  DEPENDS EIGEN3
   CATKIN_DEPENDS
     cmake_modules
     roscpp
