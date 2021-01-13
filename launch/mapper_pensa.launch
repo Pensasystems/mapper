@@ -1,20 +1,19 @@
 <launch>
 
-  <arg name="robot_frame_id"    default="/c0001_bl" />
-  <arg name="inertial_frame_id" default="store" />
+  <arg name="robot_base_link_frame_id" />
+  <arg name="inertial_frame_id"        />
 
   <include file="$(find mapper)/launch/mapper.launch">
-    <arg name="namespace"              value="cinderella" />
-    <arg name="launch_rviz"            value="false" />
-    <arg name="process_pcl_at_startup" value="false" />
-    <arg name="map_3d"                 value="false" />
-    <arg name="inertial_frame_id"      value="$(arg inertial_frame_id)" />
-    <arg name="lidar_frame_id"         value="['/laser_frame']" />
-    <arg name="lidar_names"            value="['/laser/cloud']" />
-    <arg name="robot_frame_id"         value="$(arg robot_frame_id)" />
-    <arg name="max_range"              value="6.0" />
-    <arg name="min_range"              value="0.5" />
-    <arg name="memory_time"            value="-1.0" />
+    <arg name="launch_rviz"              value="false" />
+    <arg name="process_pcl_at_startup"   value="false" />
+    <arg name="map_3d"                   value="false" />
+    <arg name="inertial_frame_id"        value="$(arg inertial_frame_id)" />
+    <arg name="lidar_frame_id"           value="laser_frame" />
+    <arg name="lidar_topic"              value="/laser/cloud" />
+    <arg name="robot_base_link_frame_id" value="$(arg robot_base_link_frame_id)" />
+    <arg name="max_range"                value="6.0" />
+    <arg name="min_range"                value="0.5" />
+    <arg name="memory_time"              value="-1.0" />
   </include>
 
 </launch>

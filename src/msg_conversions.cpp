@@ -106,16 +106,18 @@ geometry_msgs::Point set_ros_point(const double & x, const double & y, const dou
   return v;
 }
 
-geometry_msgs::Point pcl_to_ros_vector(const pcl::PointXYZ& pt) {
+geometry_msgs::Point pcl_to_ros_point(const pcl::PointXYZ& pt) {
   return set_ros_point(pt.x, pt.y, pt.z);
 }
 
-Eigen::Vector3d tf_vector3_to_eigen_vector(const tf::Vector3 & v) {
-  return Eigen::Vector3d(v.getX(), v.getY(), v.getZ());
+geometry_msgs::Point tf_vector3_to_ros_point(const tf2::Vector3 & v) {
+  return set_ros_point(v.getX(), v.getY(), v.getZ());
 }
 
-geometry_msgs::Point tf_vector3_to_ros_point(const tf::Vector3 & v) {
-  return set_ros_point(v.getX(), v.getY(), v.getZ());
+tf2::Transform ros_pose_to_tf2_transform(const geometry_msgs::Pose &pose) {
+  const tf2::Vector3 pos(pose.position.x, pose.position.y, pose.position.z);
+  const tf2::Quaternion q(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
+  return tf2::Transform(q, pos);
 }
 
 geometry_msgs::Quaternion array_to_ros_quat(float* array) {
@@ -182,6 +184,15 @@ Eigen::Affine3d ros_to_eigen_transform(const geometry_msgs::Transform & p) {
   transform.linear() = Eigen::Quaterniond(
     p.rotation.w, p.rotation.x, p.rotation.y, p.rotation.z).toRotationMatrix();
   return transform;
+}
+
+Eigen::Affine3d tf_transform_to_eigen_transform(const tf2::Transform & transform) {
+  const tf2::Quaternion q = transform.getRotation();
+  const tf2::Vector3 v = transform.getOrigin();
+  Eigen::Affine3d eigen_transform = Eigen::Affine3d::Identity();
+  eigen_transform.translation() << v.getX(), v.getY(), v.getZ();
+  eigen_transform.rotate(Eigen::Quaterniond(q.getW(), q.getX(), q.getY(), q.getZ()));
+  return eigen_transform;
 }
 
 }  // end namespace msg_conversions

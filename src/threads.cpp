@@ -51,72 +51,6 @@ void MapperClass::FadeTask() {
     ROS_DEBUG("[mapper]: Exiting Fading Memory Thread...");
 }
 
-// Thread for updating the body tfTree values
-void MapperClass::BodyTfTask(const std::string& parent_frame,
-                             const std::string& child_frame) {
-    ROS_DEBUG("[mapper]: robot frame tf Thread started with rate %f: ", tf_update_rate_);
-    tf_listener::TfClass obj_body2world;
-    ros::Rate loop_rate(tf_update_rate_);
-
-    while (!terminate_node_) {
-        // Get the transform
-        obj_body2world.GetTransform(child_frame, parent_frame);
-        // obj_body2world.PrintOrigin();
-
-        mutexes_.body_tf.lock();
-            globals_.tf_body2world = obj_body2world.transform_;
-        mutexes_.body_tf.unlock();
-        loop_rate.sleep();
-    }
-
-    ROS_DEBUG("[mapper]: Exiting body tf Thread...");
-}
-
-// Thread for updating the tfTree values
-void MapperClass::CameraTfTask(const std::string& parent_frame,
-                               const std::string& child_frame,
-                               const uint& index) {
-    ROS_DEBUG("tf Thread from frame `%s` to `%s` started with rate %f: ",
-              child_frame.c_str(), parent_frame.c_str(), tf_update_rate_);
-    tf_listener::TfClass obj_tf;
-    ros::Rate loop_rate(tf_update_rate_);
-
-    while (!terminate_node_) {
-        // Get the transform
-        obj_tf.GetTransform(child_frame, parent_frame);
-        // obj_tf.PrintOrigin();
-
-        mutexes_.cam_tf.lock();
-            globals_.tf_cameras2world[index] = obj_tf.transform_;
-        mutexes_.cam_tf.unlock();
-        loop_rate.sleep();
-    }
-
-    ROS_DEBUG("[mapper]: Exiting camera tf Thread...");
-}
-
-void MapperClass::LidarTfTask(const std::string& parent_frame,
-                              const std::string& child_frame,
-                              const uint& index) {
-    ROS_DEBUG("tf Thread from frame `%s` to `%s` started with rate %f: ",
-              child_frame.c_str(), parent_frame.c_str(), tf_update_rate_);
-    tf_listener::TfClass obj_tf;
-    ros::Rate loop_rate(tf_update_rate_);
-
-    while (!terminate_node_) {
-        // Get the transform
-        obj_tf.GetTransform(child_frame, parent_frame);
-        // obj_tf.PrintOrigin();
-
-        mutexes_.lidar_tf.lock();
-            globals_.tf_lidar2world[index] = obj_tf.transform_;
-        mutexes_.lidar_tf.unlock();
-        loop_rate.sleep();
-    }
-
-    ROS_DEBUG("[mapper]: Exiting lidar tf Thread...");
-}
-
 void MapperClass::PathCollisionCheckTask() {
     ROS_DEBUG("[mapper]: collisionCheck Thread started!");
 
@@ -278,7 +212,7 @@ void MapperClass::RadiusCollisionCheck() {
 
 void MapperClass::OctomappingTask() {
     ROS_DEBUG("[mapper]: OctomappingTask Thread started!");
-    tf::StampedTransform tf_cam2world;
+    tf2::Transform tf_pcl2world;
     pcl::PointCloud< pcl::PointXYZ > pcl_world;
 
     uint semaphore_timeout = 1;  // seconds
@@ -297,30 +231,19 @@ void MapperClass::OctomappingTask() {
         // Get Point Cloud
         mutexes_.point_cloud.lock();
             // Get data from queue
-            pcl::PointCloud< pcl::PointXYZ > point_cloud = globals_.pcl_queue.front().cloud;
-            const tf::StampedTransform tf_cam2world = globals_.pcl_queue.front().tf_cam2world;
+            pcl::PointCloud< pcl::PointXYZ > cloud_in_sensor_frame = globals_.pcl_queue.front().cloud;
+            tf_pcl2world = globals_.pcl_queue.front().tf_pcl2world;
             const bool is_lidar = globals_.pcl_queue.front().is_lidar;
 
             // Remove data from queue
             globals_.pcl_queue.pop();
         mutexes_.point_cloud.unlock();
 
-        // Check if a tf message has been received already. If not, return
-        if (tf_cam2world.stamp_.toSec() == 0) {
-            continue;
-        }
-
-        // Get camera transform
-        tf::Quaternion q = tf_cam2world.getRotation();
-        tf::Vector3 v = tf_cam2world.getOrigin();
-        Eigen::Affine3d transform = Eigen::Affine3d::Identity();
-        transform.translation() << v.getX(), v.getY(), v.getZ();
-        transform.rotate(Eigen::Quaterniond(q.getW(), q.getX(), q.getY(), q.getZ()));
-
         // Update frustum orientation
+        const Eigen::Affine3d eigen_pcl2world = msg_conversions::tf_transform_to_eigen_transform(tf_pcl2world);
         algebra_3d::FrustumPlanes world_frustum;
         mutexes_.octomap.lock();
-            globals_.octomap.cam_frustum_.TransformFrustum(transform, &world_frustum);
+            globals_.octomap.cam_frustum_.TransformFrustum(eigen_pcl2world, &world_frustum);
         mutexes_.octomap.unlock();
 
         // Should we process PCL data?
@@ -331,14 +254,14 @@ void MapperClass::OctomappingTask() {
         // Process PCL data
         if (update_map) {
             // Transform pcl into world frame
-            pcl::transformPointCloud(point_cloud, pcl_world, transform);
+            pcl::transformPointCloud(cloud_in_sensor_frame, pcl_world, eigen_pcl2world);
 
             // Save into octomap
             mutexes_.octomap.lock();
                 if (is_lidar) {
-                    globals_.octomap.PclToRayOctomap(pcl_world, tf_cam2world);
+                    globals_.octomap.PclToRayOctomap(pcl_world, tf_pcl2world);
                 } else {
-                    globals_.octomap.PclToRayOctomap(pcl_world, tf_cam2world, world_frustum);
+                    globals_.octomap.PclToRayOctomap(pcl_world, tf_pcl2world, world_frustum);
                 }
                 if (globals_.map_3d) {
                     globals_.octomap.tree_.prune();   // prune the tree before visualizing
@@ -385,12 +308,13 @@ void MapperClass::OctomappingTask() {
         if ((!is_lidar) && (cam_frustum_pub_.getNumSubscribers() > 0)) {
             visualization_msgs::Marker frustum_markers;
             mutexes_.octomap.lock();
-                globals_.octomap.cam_frustum_.VisualizeFrustum(point_cloud.header.frame_id, &frustum_markers);
+                globals_.octomap.cam_frustum_.VisualizeFrustum(cloud_in_sensor_frame.header.frame_id,
+                                                              &frustum_markers);
             mutexes_.octomap.unlock();
             cam_frustum_pub_.publish(frustum_markers);
         } else if ((is_lidar) && (cam_frustum_pub_.getNumSubscribers() > 0)) {
             visualization_msgs::Marker lidar_range_marker;
-            Eigen::Vector3d lidar_origin = transform.translation();
+            Eigen::Vector3d lidar_origin = eigen_pcl2world.translation();
             if (!globals_.map_3d) {
                 lidar_origin[2] = 0.0;
             }
@@ -445,18 +369,11 @@ void MapperClass::KeyboardTask() {
 
 void MapperClass::WaitForThreadsToEnd() {
     ROS_DEBUG("[mapper]: Wait for threads to return!");
-    h_body_tf_thread_.join();
     h_octo_thread_.join();
     h_fade_thread_.join();
     h_collision_check_thread_.join();
     h_radius_collision_thread_.join();
 
-    for (uint i = 0; i < h_cameras_tf_thread_.size(); i++) {
-      h_cameras_tf_thread_[i].join();
-    }
-    for (uint i = 0; i < h_lidar_tf_thread_.size(); i++) {
-      h_lidar_tf_thread_[i].join();
-    }
     ROS_DEBUG("[mapper]: All threads have returned!");
 }
 

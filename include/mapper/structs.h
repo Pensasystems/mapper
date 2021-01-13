@@ -39,21 +39,21 @@
 
 namespace mapper {
 
-struct stampedPcl {
+struct StampedPcl {
     pcl::PointCloud<pcl::PointXYZ> cloud;
-    tf::StampedTransform tf_cam2world;
+    tf2::Transform tf_pcl2world;
     bool is_lidar;
 };
 
 struct globalVariables {
     // Mutex protected variables
-    tf::StampedTransform tf_body2world;
+    tf2::Transform tf_body2world;
     std::vector<tf::StampedTransform> tf_cameras2world;
     std::vector<tf::StampedTransform> tf_lidar2world;
     octoclass::OctoClass octomap = octoclass::OctoClass(0.05, "map", true);
     sampled_traj::SampledTrajectory3D sampled_traj;
     pensa_msgs::trapezoidal_p2pFeedback traj_status;
-    std::queue<stampedPcl> pcl_queue;
+    std::queue<StampedPcl> pcl_queue;
     bool update_map;
     bool map_3d;
     const uint max_queue_size = 2;

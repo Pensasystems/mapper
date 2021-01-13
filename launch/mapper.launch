@@ -1,17 +1,13 @@
 <launch>
 
-    <arg name="namespace" default="LM_Mapper"/>
     <arg name="launch_rviz" default="true" />
     <arg name="process_pcl_at_startup" default="true" />
     <arg name="map_3d" default="true" />
     <arg name="inertial_frame_id" default="/map" />
-    <arg name="robot_frame_id" default="/robot" />
-    <arg name="depth_cam_prefix" default="/" />
-    <arg name="depth_cam_suffix" default="/camera/depth/compressed_points" />
-    <arg name="lidar_names" default="['/laser/scan/cloud']" />
-    <arg name="lidar_prefix" default="/" />
-    <arg name="lidar_frame_id" default="['/laser_frame']" />
-    <arg name="lidar_suffix" default="" />
+    <arg name="robot_base_link_frame_id" default="/robot" />
+    <arg name="lidar_topic" default="/laser/scan/cloud" />
+    <arg name="base_link_pose_topic" default="/vision_pose/pose_base_link" />
+    <arg name="lidar_frame_id" default="laser_frame" />
     <arg name="map_resolution" default="0.075" />
     <arg name="max_range" default="6.0" />
     <arg name="min_range" default="0.25" />
@@ -23,50 +19,42 @@
         name="mapper_node"
         output="screen">
 
-        <!-- Namespace -->
-        <param name="namespace" value="$(arg namespace)"/>
+        <!-- Lidar topic -->
+        <param name="lidar_topic" value="$(arg lidar_topic)"/>
 
-        <!-- Set of depth camera topics -->
-        <param name="depth_cam_prefix" value="$(arg depth_cam_prefix)"/>
-        <rosparam param="depth_cam_names"> [] </rosparam>
-        <param name="depth_cam_suffix" value="$(arg depth_cam_suffix)"/>
-
-        <!-- tf frame ID for the cameras above -->
-        <rosparam param="cam_frame_id"> [] </rosparam>
-
-        <!-- Set of lidar topics -->
-        <param name="lidar_prefix" value="$(arg lidar_prefix)"/>
-        <rosparam param="lidar_names" subst_value="True"> $(arg lidar_names) </rosparam>
-        <param name="lidar_suffix" value="$(arg lidar_suffix)"/>
+        <!-- Base link pose topic (we assume that this topic returns the pose of the base_link w.r.t. the inertial frame) -->
+        <param name="base_link_pose_topic" value="$(arg base_link_pose_topic)"/>
 
         <!-- tf frame ID for the lidars above -->
-        <rosparam param="lidar_frame_id" subst_value="True"> $(arg lidar_frame_id) </rosparam>
+        <param name="lidar_frame_id" value="$(arg lidar_frame_id)"/>
 
         <!-- Robot Center tf Frame ID -->
-        <param name="robot_frame_id" value="$(arg robot_frame_id)"/>
+        <param name="robot_base_link_frame_id" value="$(arg robot_base_link_frame_id)"/>
 
         <!-- Inertial frame name (used for getting tf tree information) -->
         <param name="inertial_frame_id" value="$(arg inertial_frame_id)"/>
 
         <!-- Set parameters for the mapper -->
-        <param name="map_resolution" value="0.10"/>          <!-- meters -->
-        <param name="max_range" value="$(arg max_range)"/>                 <!-- meters -->
-        <param name="min_range" value="$(arg min_range)"/>              <!-- meters -->
+        <param name="map_resolution" value="0.10"/>            <!-- meters -->
+        <param name="max_range" value="$(arg max_range)"/>     <!-- meters -->
+        <param name="min_range" value="$(arg min_range)"/>     <!-- meters -->
 
         <!-- Time to forget information (set as negative if infinity) -->
-        <param name="memory_time" value="$(arg memory_time)"/>           <!-- seconds -->
+        <param name="memory_time" value="$(arg memory_time)"/> <!-- seconds -->
 
         <!-- Fading memory thread update rate (Hz) -->
-        <param name="fading_memory_update_rate" value="1"/><!-- Hz -->
+        <param name="fading_memory_update_rate" value="1"/>    <!-- Hz -->
 
         <!-- Map inflation parameters -->
         <param name="inflate_radius_xy" value="0.225"/>       <!-- meters -->
-        <param name="inflate_radius_z" value="0.225"/>       <!-- meters -->
+        <param name="inflate_radius_z" value="0.225"/>        <!-- meters -->
 
         <!-- Camera FOV (radians): map is only updated within this FOV -->
-        <param name="cam_fov" value="0.8"/>             <!-- radians -->
+        <!-- This parameter is currently not used until we use depth cameras -->
+        <param name="cam_fov" value="0.8"/>                    <!-- radians -->
 
         <!-- Camera's width divided by height (unitless) -->
+        <!-- This parameter is currently not used until we use depth cameras -->
         <param name="cam_aspect_ratio" value="1.3099"/>
 
         <!-- Map probabilities -->
@@ -79,13 +67,10 @@
         <!-- Path Collision Checking parameters -->
         <param name="traj_compression_max_dev" value="0.01"/>     <!-- meters -->
         <param name="traj_compression_resolution" value="0.02"/>  <!-- meters -->
-        <param name="collision_check_rate" value="10"/>         <!-- Hz -->
+        <param name="collision_check_rate" value="10"/>           <!-- Hz -->
 
         <!-- Radius Collistion Checking parameters -->
-        <param name="radius_collision_check" value="0.1"/>     <!-- meters -->
-
-        <!-- Frequency at which tf listeners update tf -->
-        <param name="tf_update_rate" value="50"/>            <!-- Hz -->
+        <param name="radius_collision_check" value="0.1"/>        <!-- meters -->
 
         <!-- Desired minimum distance from obstacles for path planning (in meters) -->
         <param name="desired_obstacle_planning_distance" value="0.3"/>
