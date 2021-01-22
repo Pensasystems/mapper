@@ -430,7 +430,7 @@ void TrajVisMarkers(const pcl::PointCloud<pcl::PointXYZ> &pcl_traj,
 
     for (uint i = 0; i < pcl_traj.size(); i++) {
       geometry_msgs::Point point_center =
-          msg_conversions::pcl_to_ros_vector(pcl_traj.points[i]);
+          msg_conversions::pcl_to_ros_point(pcl_traj.points[i]);
       markers.points.push_back(point_center);
       markers.colors.push_back(color);
     }

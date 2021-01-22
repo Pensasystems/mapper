@@ -27,13 +27,14 @@
 #include <sensor_msgs/PointCloud2.h>
 
 // ROS libraries
+#include <message_filters/subscriber.h>
+#include <message_filters/sync_policies/approximate_time.h>
 #include <ros/ros.h>
 #include <ros/publisher.h>
 #include <ros/subscriber.h>
 #include <std_msgs/Float32.h>
 #include <std_srvs/Trigger.h>
 #include <std_srvs/SetBool.h>
-#include <tf/transform_listener.h>
 #include <visualization_msgs/MarkerArray.h>
 
 // Pensa messages/services
@@ -69,6 +70,10 @@
 #include "mapper/visualization_functions.h"
 
 namespace mapper {
+
+typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::PointCloud2,
+                                                        geometry_msgs::PoseStamped> SyncPolicyApprox;
+typedef message_filters::Synchronizer<SyncPolicyApprox> Sync;
 
 class MapperClass {
  public:
@@ -117,13 +122,12 @@ class MapperClass {
                               ros::NodeHandle *nh);
 
   // Callbacks (see callbacks.cc for implementation) ----------------
-  // Callback for handling incoming camera point cloud messages
-  void CameraPclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg,
-                         const uint& cam_index);
+  // Callback that subscribes to both lidar and base link localization measurements
+  void LidarSyncCallback(const sensor_msgs::PointCloud2::ConstPtr &lidar_msg,
+                         const geometry_msgs::PoseStamped::ConstPtr &base_link_pose_msg);
 
-  // Callback for handling incoming lidar point cloud messages
-  void LidarPclCallback(const sensor_msgs::PointCloud2::ConstPtr &msg,
-                         const uint& cam_index);
+  // Callback for saving drone's base_link into global variable for obstacle detection
+  void BaseLinkPoseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg);
 
   // Callback for handling incoming sampled trajectory
   void SampledTrajectoryCallback(const pensa_msgs::VecPVA_4d::ConstPtr &msg);
@@ -186,16 +190,6 @@ class MapperClass {
   // Thread for fading memory of the octomap
   void FadeTask();
 
-  // Threads for constantly updating the tfTree values
-  void BodyTfTask(const std::string& parent_frame,
-                  const std::string& child_frame);
-  void CameraTfTask(const std::string& parent_frame,
-                    const std::string& child_frame,
-                    const uint& index);  // Returns the transform from child to parent frame, expressed in parent frame
-  void LidarTfTask(const std::string& parent_frame,
-                   const std::string& child_frame,
-                   const uint& index);  // Same as before, but for lidar data
-
   // Thread for collision checking along the robot's path
   void PathCollisionCheckTask();
 
@@ -219,15 +213,17 @@ class MapperClass {
 
   // Thread variables
   std::thread h_octo_thread_, h_fade_thread_, h_collision_check_thread_;
-  std::thread h_body_tf_thread_, h_radius_collision_thread_;
-  std::vector<std::thread> h_cameras_tf_thread_;
-  std::vector<std::thread> h_lidar_tf_thread_;
+  std::thread h_radius_collision_thread_;
 
   // Subscriber variables
-  ros::Subscriber trajectory_sub_, trajectory_status_sub_;
+  ros::Subscriber base_link_pose_sub_;
+  ros::Subscriber trajectory_status_sub_;
   ros::Subscriber waypoints_sub_;
-  std::vector<ros::Subscriber> cameras_sub_;
-  std::vector<ros::Subscriber> lidar_sub_;
+
+  // Synchronized subscribers
+  boost::shared_ptr<Sync> sync_;
+  message_filters::Subscriber<sensor_msgs::PointCloud2> *lidar_sync_sub_;
+  message_filters::Subscriber<geometry_msgs::PoseStamped> *base_link_pose_sync_sub_;
 
   // Octomap services
   ros::ServiceServer resolution_srv_, memory_time_srv_;
@@ -241,7 +237,7 @@ class MapperClass {
   ros::ServiceClient load_path_planning_config_client_;
 
   // Thread rates (hz)
-  double tf_update_rate_, fading_memory_update_rate_, collision_check_rate_;
+  double fading_memory_update_rate_, collision_check_rate_;
 
   // Collision checking parameters
   double radius_collision_check_;
@@ -249,14 +245,14 @@ class MapperClass {
   // Path planning services
   ros::ServiceServer rrg_srv_;
 
-  // Node namespace
-  std::string ns_;
-
   // Path strings
   std::string local_path_;
 
   // Inertial and robot frame ids
-  std::string inertial_frame_id_, robot_frame_id_;
+  std::string inertial_frame_id_;
+
+  // Variable for transform between base_link and lidar
+  tf2::Transform tf_lidar_in_base_link_frame_;
 
   // Collision publishers
   ros::Publisher obstacle_path_pub_, obstacle_radius_pub_;
