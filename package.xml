@@ -4,14 +4,14 @@
   <version>0.0.0</version>
   <description>The mapper package</description>
 
-  <!-- One maintainer tag required, multiple allowed, one person per tag -->
-  <maintainer email="marcelino.malmeidan@utexas.edu">Marcelino Almeida</maintainer>
-
+  <maintainer email="robotics@pensasystems.com">Pensa Robotics</maintainer>
+  
+  <author email="marcelino@pensasystems.com">Marcelino Almeida</author>
 
   <!-- One license tag required, multiple allowed, one license per tag -->
   <!-- Commonly used license strings: -->
   <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
-  <license>TODO</license>
+  <license>Confidential and Proprietary. Copyright (c) 2020 by Pensa Systems, Inc. -- All rights reserved</license>
 
   <buildtool_depend>catkin</buildtool_depend>
 
