@@ -2,16 +2,20 @@
 <package format="2">
   <name>mapper</name>
   <version>0.0.0</version>
-  <description>The mapper package</description>
+  <description>Interface for the mapping system</description>
 
-  <!-- One maintainer tag required, multiple allowed, one person per tag -->
-  <maintainer email="marcelino.malmeidan@utexas.edu">Marcelino Almeida</maintainer>
+  <maintainer email="robotics@pensasystems.com">Pensa Robotics</maintainer>
 
+  <author email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </author>
+  <author email="marcelino@pensasystems.com">
+    Marcelino Almeida
+  </author>
 
-  <!-- One license tag required, multiple allowed, one license per tag -->
-  <!-- Commonly used license strings: -->
-  <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
-  <license>TODO</license>
+  <license>
+    Apache License, Version 2.0
+  </license>
 
   <buildtool_depend>catkin</buildtool_depend>
 
