@@ -112,14 +112,8 @@ void MapperClass::PathCollisionCheckTask() {
             current_set_point.z = 0.0;
         }
 
-        // Shift trajectory PCL so it passes along drone position
-        Eigen::Vector3d vec_traj_to_drone;
-        pcl::PointCloud<pcl::PointXYZ> point_cloud_traj_through_drone;
-        helper::SubtractRosPoints(robot_projected_on_traj, robot_position, &vec_traj_to_drone);
-        helper::ShiftPcl(point_cloud_traj, vec_traj_to_drone, &point_cloud_traj_through_drone);
-
         // Check if trajectory collides with points in the map
-        this->GetCollidingNodesPcl(point_cloud_traj_through_drone, &colliding_nodes);
+        this->GetCollidingNodesPcl(point_cloud_traj, &colliding_nodes);
         // ROS_INFO("Colliding nodes: %d", int(colliding_nodes.size()) );
 
         // If there are collisions, find the nearest one and publish it
@@ -134,10 +128,6 @@ void MapperClass::PathCollisionCheckTask() {
         }
 
         // Visualization markers -------------------------------------------------------------------------------------
-        // Visualization markers for shifted trajectory
-        visualization_functions::TrajVisMarkers(point_cloud_traj_through_drone,
-            inertial_frame_id_, traj_sample_size, &traj_markers);
-
         // Get visualization marker for current set point and robot position (projected and not projected)
         visualization_functions::ReferenceVisMarker(current_set_point, inertial_frame_id_, &traj_markers);
         visualization_functions::RobotPosVisMarker(robot_position, inertial_frame_id_, &traj_markers);
