@@ -49,7 +49,7 @@
         <param name="inertial_frame_id" value="$(arg inertial_frame_id)"/>
 
         <!-- Set parameters for the mapper -->
-        <param name="map_resolution" value="0.10"/>          <!-- meters -->
+        <param name="map_resolution" value="$(arg map_resolution)"/>          <!-- meters -->
         <param name="max_range" value="$(arg max_range)"/>                 <!-- meters -->
         <param name="min_range" value="$(arg min_range)"/>              <!-- meters -->
 
